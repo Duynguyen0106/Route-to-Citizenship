@@ -1,12 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { formatLongDate } from "@/lib/format";
-import { buildRouteComparison } from "@/lib/comparison";
+import { applyRouteSwitch, buildRouteComparison } from "@/lib/comparison";
 import { fromIsoDate } from "@/lib/calculate";
-import { inferPathway } from "@/lib/pathways";
-import { simulateSwitch } from "@/lib/simulate";
-import { toIsoDate } from "@/lib/dates";
+import { formatLongDate } from "@/lib/format";
 import type { PlanResult, Profile } from "@/lib/types";
 
 export function RouteComparison({
@@ -19,39 +17,30 @@ export function RouteComparison({
   onSwitch: (profile: Profile) => void;
 }) {
   const cards = buildRouteComparison(profile, plan, fromIsoDate(plan.asOf));
+  const [pendingKey, setPendingKey] = useState<string | null>(null);
 
-  function switchTo(toVisaId: string) {
-    const simulation = simulateSwitch(
-      profile,
-      toVisaId,
-      fromIsoDate(plan.asOf),
-      plan.ilrEligibleOn && plan.route.id !== "ilr" ? fromIsoDate(plan.ilrEligibleOn) : null,
-      plan.citizenshipEligibleOn ? fromIsoDate(plan.citizenshipEligibleOn) : null,
-    );
-    onSwitch({
-      ...profile,
-      currentVisaId: toVisaId,
-      pathwayId: inferPathway(toVisaId),
-      visaGrantedOn: toIsoDate(fromIsoDate(plan.asOf)),
-      qualifyingResidenceStart: simulation.newQualifyingStart,
-      plannedSwitchOn: "",
-      plannedSwitchTo: toVisaId === "skilled-worker" ? "skilled-worker" : profile.plannedSwitchTo,
-    });
+  function switchTo(key: string, toVisaId: string) {
+    if (pendingKey !== key) {
+      setPendingKey(key);
+      return;
+    }
+    onSwitch(applyRouteSwitch(profile, plan, toVisaId));
+    setPendingKey(null);
   }
 
   return (
-    <div className="mt-6 grid gap-4 md:grid-cols-2">
+    <div className="mt-6 grid gap-4 xl:grid-cols-2">
       {cards.map((card) => (
         <article
           key={card.key}
-          className={`rounded-2xl border bg-paper-50 p-5 shadow-card ${
+          className={`rounded-2xl border bg-paper-50 p-4 shadow-card sm:p-5 ${
             card.current ? "border-moss" : "border-navy/10"
           }`}
         >
           <div className="flex items-start justify-between gap-3">
-            <h3 className="font-serif text-xl text-navy">{card.name}</h3>
+            <h3 className="font-serif text-lg text-navy sm:text-xl">{card.name}</h3>
             {card.current ? (
-              <span className="rounded-full bg-moss/15 px-2 py-0.5 text-xs text-moss">Current</span>
+              <span className="shrink-0 rounded-full bg-moss/15 px-2 py-0.5 text-xs text-moss">Current</span>
             ) : null}
           </div>
           <dl className="mt-4 grid grid-cols-2 gap-3 text-sm">
@@ -82,13 +71,28 @@ export function RouteComparison({
           </ul>
           <div className="mt-4 flex flex-wrap items-center gap-3">
             {card.eligibleToSwitch ? (
-              <button
-                type="button"
-                onClick={() => switchTo(card.toVisaId)}
-                className="rounded-full bg-navy px-4 py-2 text-sm text-paper-50"
-              >
-                Switch to this route
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={() => switchTo(card.key, card.toVisaId)}
+                  className={`min-h-11 rounded-full px-4 py-2 text-sm ${
+                    pendingKey === card.key
+                      ? "bg-clay text-white"
+                      : "bg-navy text-paper-50"
+                  }`}
+                >
+                  {pendingKey === card.key ? "Confirm switch" : "Switch to this route"}
+                </button>
+                {pendingKey === card.key ? (
+                  <button
+                    type="button"
+                    className="text-sm text-ink-muted"
+                    onClick={() => setPendingKey(null)}
+                  >
+                    Cancel
+                  </button>
+                ) : null}
+              </>
             ) : card.current ? (
               <p className="text-xs text-ink-muted">This is the path we are modelling now.</p>
             ) : (

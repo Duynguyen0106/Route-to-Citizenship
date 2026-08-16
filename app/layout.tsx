@@ -28,10 +28,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-GB" className={`${fraunces.variable} ${publicSans.variable}`}>
-      <body className="min-h-screen font-sans antialiased">
-        <div className="paper-grid min-h-screen">
+      <body className="min-h-dvh font-sans antialiased">
+        <div className="paper-grid flex min-h-dvh flex-col">
           <SiteHeader />
-          <main>{children}</main>
+          <main id="main" className="flex-1">
+            {children}
+          </main>
           <SiteFooter />
         </div>
       </body>

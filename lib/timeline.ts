@@ -46,5 +46,20 @@ export function timelineX(date: string, scale: TimelineScale): number {
 }
 
 export function daysSpentInUk(residenceStart: string, asOf: string): number {
-  return Math.max(0, differenceInCalendarDays(parseISO(asOf), parseISO(residenceStart)));
+  const start = parseISO(residenceStart);
+  const end = parseISO(asOf);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return 0;
+  return Math.max(0, differenceInCalendarDays(end, start));
+}
+
+const KEY_KINDS: TimelineEvent["kind"][] = ["now", "visa", "ilr", "citizenship"];
+
+/** Spec markers: today, visa expiry, ILR, citizenship. Extra stage events stay off the SVG. */
+export function keyTimelineEvents(events: TimelineEvent[]): TimelineEvent[] {
+  const picked: TimelineEvent[] = [];
+  for (const kind of KEY_KINDS) {
+    const match = events.find((event) => event.kind === kind);
+    if (match) picked.push(match);
+  }
+  return picked;
 }

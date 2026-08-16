@@ -50,7 +50,7 @@ export const onboardingSchema = z
         message: "Expiry must be after the visa start date",
       });
     }
-    if (value.ukEntryDate && value.ukEntryDate > value.visaGrantDate) {
+    if (value.ukEntryDate && value.visaGrantDate && value.ukEntryDate > value.visaGrantDate) {
       ctx.addIssue({
         code: "custom",
         path: ["ukEntryDate"],
@@ -115,11 +115,33 @@ export function profileToOnboarding(profile: Profile): OnboardingValues {
   };
 }
 
+export function firstInvalidOnboardingStep(values: OnboardingValues): number | null {
+  const parsed = onboardingSchema.safeParse(values);
+  if (parsed.success) return null;
+  const paths = new Set(parsed.error.issues.map((issue) => String(issue.path[0] ?? "")));
+  const index = ONBOARDING_STEPS.findIndex((step) =>
+    step.fields.some((field) => paths.has(field)),
+  );
+  return index === -1 ? 0 : index;
+}
+
+export function resolvePathwayId(
+  visaId: string,
+  previous?: Profile | null,
+): Profile["pathwayId"] {
+  const inferred = inferPathway(visaId);
+  if (visaId === "long-residence") return "long-residence";
+  if (previous?.pathwayId === "long-residence" && visaId !== "ilr") {
+    return "long-residence";
+  }
+  return inferred;
+}
+
 export function onboardingToProfile(
   values: OnboardingValues,
   previous?: Profile | null,
 ): Profile {
-  const pathwayId = inferPathway(values.currentVisaId);
+  const pathwayId = resolvePathwayId(values.currentVisaId, previous);
   const ukEntryDate = values.ukEntryDate?.trim() || "";
   const qualifyingResidenceStart =
     pathwayId === "long-residence" ? ukEntryDate || values.visaGrantDate : values.visaGrantDate;
@@ -155,6 +177,6 @@ export function onboardingToProfile(
   return createProfile({ ...emptyProfile(), ...patch });
 }
 
-export function pathwayHint(visaId: string): string {
-  return getRouteForPathway(inferPathway(visaId)).name;
+export function pathwayHint(visaId: string, previous?: Profile | null): string {
+  return getRouteForPathway(resolvePathwayId(visaId, previous)).name;
 }

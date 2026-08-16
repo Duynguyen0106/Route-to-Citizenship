@@ -1,15 +1,25 @@
 import { differenceInCalendarDays, format, parseISO } from "date-fns";
 
+function parseValid(iso: string): Date | null {
+  if (!iso) return null;
+  const date = parseISO(iso);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
 export function formatLongDate(iso: string): string {
-  return format(parseISO(iso), "d MMMM yyyy");
+  const date = parseValid(iso);
+  return date ? format(date, "d MMMM yyyy") : "—";
 }
 
 export function formatShortDate(iso: string): string {
-  return format(parseISO(iso), "d MMM yyyy");
+  const date = parseValid(iso);
+  return date ? format(date, "d MMM yyyy") : "—";
 }
 
 export function daysUntil(iso: string, asOf: Date = new Date()): number {
-  return differenceInCalendarDays(parseISO(iso), asOf);
+  const date = parseValid(iso);
+  if (!date) return 0;
+  return differenceInCalendarDays(date, asOf);
 }
 
 export function formatDaysUntil(iso: string, asOf: Date = new Date()): string {

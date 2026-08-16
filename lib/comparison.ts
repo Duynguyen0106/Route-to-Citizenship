@@ -1,4 +1,6 @@
+import { addYears, parseISO } from "date-fns";
 import { toIsoDate } from "@/lib/dates";
+import { inferPathway } from "@/lib/pathways";
 import {
   effectiveMinYearsToILR,
   getRouteForPathway,
@@ -6,7 +8,8 @@ import {
   visaIdToCurrentVisaType,
   type RouteDefinition,
 } from "@/lib/routes";
-import { getPossibleSwitches } from "@/lib/simulate";
+import { getPossibleSwitches, simulateSwitch } from "@/lib/simulate";
+import { getRoute } from "@/lib/visas";
 import type { PlanResult, PossibleSwitch, Profile } from "@/lib/types";
 
 export interface RouteComparisonCard {
@@ -95,4 +98,31 @@ export function buildRouteComparison(
       clockNote: option?.clockNote,
     };
   });
+}
+
+export function expiryAfterSwitch(toVisaId: string, asOf: string, currentExpiry: string): string {
+  if (currentExpiry && currentExpiry > asOf) return currentExpiry;
+  const years = getRoute(toVisaId).typicalGrantYears ?? 3;
+  return toIsoDate(addYears(parseISO(asOf), years));
+}
+
+export function applyRouteSwitch(profile: Profile, plan: PlanResult, toVisaId: string): Profile {
+  const asOf = parseISO(plan.asOf);
+  const simulation = simulateSwitch(
+    profile,
+    toVisaId,
+    asOf,
+    plan.ilrEligibleOn && plan.route.id !== "ilr" ? parseISO(plan.ilrEligibleOn) : null,
+    plan.citizenshipEligibleOn ? parseISO(plan.citizenshipEligibleOn) : null,
+  );
+  return {
+    ...profile,
+    currentVisaId: toVisaId,
+    pathwayId: inferPathway(toVisaId),
+    visaGrantedOn: plan.asOf,
+    visaExpiresOn: expiryAfterSwitch(toVisaId, plan.asOf, profile.visaExpiresOn),
+    qualifyingResidenceStart: simulation.newQualifyingStart,
+    plannedSwitchOn: "",
+    plannedSwitchTo: toVisaId === "skilled-worker" ? "skilled-worker" : profile.plannedSwitchTo,
+  };
 }

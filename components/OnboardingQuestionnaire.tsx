@@ -8,6 +8,7 @@ import {
   ONBOARDING_STEPS,
   ONBOARDING_VISA_OPTIONS,
   emptyOnboardingValues,
+  firstInvalidOnboardingStep,
   onboardingSchema,
   onboardingToProfile,
   pathwayHint,
@@ -26,6 +27,8 @@ type Props = {
 
 export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadSample }: Props) {
   const [step, setStep] = useState(0);
+  const [maxReached, setMaxReached] = useState(initial ? ONBOARDING_STEPS.length - 1 : 0);
+  const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<OnboardingValues>({
     resolver: zodResolver(onboardingSchema),
     defaultValues: initial ? profileToOnboarding(initial) : emptyOnboardingValues(),
@@ -34,26 +37,44 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
 
   const current = ONBOARDING_STEPS[step];
   const visaId = form.watch("currentVisaId");
+  const progress = ((step + 1) / ONBOARDING_STEPS.length) * 100;
+
+  async function goTo(index: number) {
+    if (index < 0 || index >= ONBOARDING_STEPS.length) return;
+    if (index > maxReached) return;
+    setFormError(null);
+    setStep(index);
+  }
 
   async function next() {
+    setFormError(null);
     const valid = await form.trigger([...current.fields]);
     if (!valid) return;
     if (step < ONBOARDING_STEPS.length - 1) {
-      setStep(step + 1);
+      const nextStep = step + 1;
+      setStep(nextStep);
+      setMaxReached((currentMax) => Math.max(currentMax, nextStep));
       return;
     }
-    const parsed = onboardingSchema.safeParse(form.getValues());
-    if (!parsed.success) return;
+    const values = form.getValues();
+    const parsed = onboardingSchema.safeParse(values);
+    if (!parsed.success) {
+      const invalid = firstInvalidOnboardingStep(values) ?? 0;
+      setStep(invalid);
+      setFormError("Please complete the highlighted fields before we can build a timeline.");
+      await form.trigger();
+      return;
+    }
     onComplete(onboardingToProfile(parsed.data, initial));
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
+    <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
       <p className="text-xs uppercase tracking-[0.22em] text-moss">Onboarding</p>
-      <h1 className="mt-2 font-serif text-4xl text-navy">
+      <h1 className="mt-2 font-serif text-3xl text-navy sm:text-4xl">
         {initial ? "Edit your immigration profile" : "Seven questions to sketch your route"}
       </h1>
-      <p className="mt-3 text-ink-muted">
+      <p className="mt-3 text-sm text-ink-muted sm:text-base">
         We map your answers onto one of five MVP paths. We never ask for passport numbers. This is
         not immigration advice.
       </p>
@@ -65,7 +86,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
               key={sample.id}
               type="button"
               onClick={() => (onLoadSample ?? onComplete)({ ...sample.profile, id: crypto.randomUUID() })}
-              className="rounded-xl border border-navy/10 bg-paper-50 p-4 text-left hover:border-moss/40"
+              className="min-h-16 rounded-xl border border-navy/10 bg-paper-50 p-4 text-left hover:border-moss/40"
             >
               <p className="font-medium text-navy">{sample.title}</p>
               <p className="mt-1 text-xs leading-relaxed text-ink-muted">{sample.blurb}</p>
@@ -74,17 +95,32 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
         </div>
       )}
 
-      <p className="mt-8 text-xs font-semibold uppercase tracking-wide text-moss">
-        Step {step + 1} of {ONBOARDING_STEPS.length}
-      </p>
-      <ol className="mt-3 flex flex-wrap gap-2 text-xs">
+      <div className="mt-8">
+        <div className="flex items-baseline justify-between gap-3">
+          <p className="text-xs font-semibold uppercase tracking-wide text-moss">
+            Step {step + 1} of {ONBOARDING_STEPS.length}
+            <span className="ml-2 normal-case tracking-normal text-ink-muted">· {current.title}</span>
+          </p>
+          <p className="text-xs text-ink-muted">{Math.round(progress)}%</p>
+        </div>
+        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-navy/10" aria-hidden>
+          <div className="h-full rounded-full bg-moss transition-[width]" style={{ width: `${progress}%` }} />
+        </div>
+      </div>
+
+      <ol className="mt-3 hidden flex-wrap gap-2 text-xs sm:flex">
         {ONBOARDING_STEPS.map((item, index) => (
           <li key={item.id}>
             <button
               type="button"
-              onClick={() => setStep(index)}
-              className={`rounded-full px-3 py-1 ${
-                index === step ? "bg-navy text-paper-50" : index < step ? "bg-moss/15 text-moss" : "bg-navy/10 text-navy"
+              onClick={() => void goTo(index)}
+              disabled={index > maxReached}
+              className={`rounded-full px-3 py-1.5 ${
+                index === step
+                  ? "bg-navy text-paper-50"
+                  : index <= maxReached
+                    ? "bg-moss/15 text-moss"
+                    : "cursor-not-allowed bg-navy/10 text-ink-faint"
               }`}
             >
               {index + 1}. {item.title}
@@ -94,7 +130,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
       </ol>
 
       <form
-        className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 p-6 shadow-card"
+        className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 p-4 shadow-card sm:p-6"
         onSubmit={(event) => {
           event.preventDefault();
           void next();
@@ -112,7 +148,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-xs text-ink-muted">
+              <p className="mt-2 text-xs font-normal text-ink-muted">
                 Used only as a coarse English-language exemption. Do not enter passport numbers.
               </p>
             </Field>
@@ -127,7 +163,15 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-xs text-ink-muted">Maps to MVP pathway: {pathwayHint(visaId)}</p>
+              <p className="mt-2 text-xs font-normal text-ink-muted">
+                Maps to MVP pathway: {pathwayHint(visaId, initial)}
+              </p>
+              {visaId === "student" || visaId === "graduate" ? (
+                <p className="mt-2 text-xs font-normal text-clay-600">
+                  Student and Graduate leave do not count toward ILR until you switch to Skilled
+                  Worker or another qualifying route.
+                </p>
+              ) : null}
             </Field>
           ) : null}
 
@@ -148,7 +192,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
               error={form.formState.errors.ukEntryDate?.message}
             >
               <input className="field-input" type="date" {...form.register("ukEntryDate")} />
-              <p className="mt-2 text-xs text-ink-muted">
+              <p className="mt-2 text-xs font-normal text-ink-muted">
                 Used for the 10-year long residence route and citizenship residence. Leave blank if
                 you are not counting from first arrival.
               </p>
@@ -174,7 +218,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                     ).map(([value, label]) => (
                       <label
                         key={value}
-                        className={`flex cursor-pointer items-center gap-2 rounded-xl border px-3 py-2 text-sm ${
+                        className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 text-sm ${
                           field.value === value ? "border-moss bg-moss/10" : "border-navy/10"
                         }`}
                       >
@@ -211,11 +255,11 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
               render={({ field }) => (
                 <fieldset>
                   <legend className="text-sm font-medium text-navy">Have you passed the Life in the UK test?</legend>
-                  <div className="mt-3 flex gap-3">
+                  <div className="mt-3 grid grid-cols-2 gap-3">
                     {(["yes", "no"] as const).map((value) => (
                       <label
                         key={value}
-                        className={`flex cursor-pointer items-center gap-2 rounded-xl border px-4 py-2 text-sm ${
+                        className={`flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm ${
                           field.value === value ? "border-moss bg-moss/10" : "border-navy/10"
                         }`}
                       >
@@ -235,22 +279,27 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
           ) : null}
         </div>
 
+        {formError ? <p className="mt-4 text-sm text-clay">{formError}</p> : null}
+
         <div className="mt-8 flex flex-wrap items-center justify-between gap-3">
           <button
             type="button"
-            className="text-sm text-ink-muted disabled:opacity-40"
+            className="min-h-11 px-2 text-sm text-ink-muted disabled:opacity-40"
             disabled={step === 0}
-            onClick={() => setStep(step - 1)}
+            onClick={() => void goTo(step - 1)}
           >
             Back
           </button>
           <div className="flex gap-3">
             {onCancel ? (
-              <button type="button" onClick={onCancel} className="text-sm text-ink-muted">
+              <button type="button" onClick={onCancel} className="min-h-11 px-2 text-sm text-ink-muted">
                 Cancel
               </button>
             ) : null}
-            <button type="submit" className="rounded-full bg-navy px-5 py-2 text-sm text-paper-50">
+            <button
+              type="submit"
+              className="min-h-11 rounded-full bg-navy px-5 py-2 text-sm text-paper-50"
+            >
               {step === ONBOARDING_STEPS.length - 1 ? "See my timeline" : "Continue"}
             </button>
           </div>
@@ -273,7 +322,7 @@ function Field({
     <label className="block text-sm font-medium text-navy">
       {label}
       {children}
-      {error ? <p className="mt-1 text-xs text-clay">{error}</p> : null}
+      {error ? <p className="mt-1 text-xs font-normal text-clay">{error}</p> : null}
     </label>
   );
 }

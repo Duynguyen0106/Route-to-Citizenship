@@ -202,9 +202,14 @@ export function getPossibleSwitches(
   const fromType = visaIdToCurrentVisaType(profile.currentVisaId);
   const stayIlrOn = null;
   const stayCitizenshipOn = null;
+  const longResidenceDestinations = new Set(["skilled-worker", "family", "global-talent"]);
 
   return listRoutes().flatMap((route) => {
-    if (!canSwitchToRouteInCountry(fromType, route)) return [];
+    const allowed =
+      profile.currentVisaId === "long-residence"
+        ? longResidenceDestinations.has(route.key)
+        : canSwitchToRouteInCountry(fromType, route);
+    if (!allowed) return [];
     if (route.key === "family" && !meetsFamilySwitchCriteria(profile)) return [];
 
     const toVisaId = switchTargetVisaId(route);

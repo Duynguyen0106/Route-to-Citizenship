@@ -9,36 +9,32 @@ import { toIsoDate } from "@/lib/dates";
 import type { PlanResult, Profile } from "@/lib/types";
 
 export function SwitchSimulator({ profile, plan }: { profile: Profile; plan: PlanResult }) {
-  const defaultTarget =
-    profile.currentVisaId === "student"
-      ? "graduate"
-      : profile.currentVisaId === "graduate"
-        ? "skilled-worker"
-        : "global-talent-talent";
-  const [toVisaId, setToVisaId] = useState(defaultTarget);
+  const targets = SWITCH_TARGETS.filter((target) => target.visaId !== profile.currentVisaId);
+  const [toVisaId, setToVisaId] = useState(targets[0]?.visaId ?? "skilled-worker");
   const [switchOn, setSwitchOn] = useState(toIsoDate(new Date()));
 
   const possible = useMemo(
     () => getPossibleSwitches(profile, fromIsoDate(plan.asOf)),
     [profile, plan.asOf],
   );
+  const selected = targets.some((target) => target.visaId === toVisaId)
+    ? toVisaId
+    : (targets[0]?.visaId ?? "skilled-worker");
 
   const simulation = useMemo(
     () =>
       simulateSwitch(
         profile,
-        toVisaId,
+        selected,
         fromIsoDate(switchOn),
         plan.ilrEligibleOn && plan.route.id !== "ilr" ? fromIsoDate(plan.ilrEligibleOn) : null,
         plan.citizenshipEligibleOn ? fromIsoDate(plan.citizenshipEligibleOn) : null,
       ),
-    [profile, toVisaId, switchOn, plan],
+    [profile, selected, switchOn, plan],
   );
 
-  const targets = SWITCH_TARGETS.filter((target) => target.visaId !== profile.currentVisaId);
-
   return (
-    <div className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 p-5">
+    <div className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 p-4 sm:p-5">
       {possible.length > 0 ? (
         <div className="mb-6">
           <p className="text-sm font-medium text-navy">In-country switches from your current visa</p>
@@ -48,8 +44,8 @@ export function SwitchSimulator({ profile, plan }: { profile: Profile; plan: Pla
                 <button
                   type="button"
                   onClick={() => setToVisaId(option.toVisaId)}
-                  className={`w-full rounded-xl border px-4 py-3 text-left ${
-                    toVisaId === option.toVisaId ? "border-moss bg-moss/10" : "border-navy/10 bg-white"
+                  className={`min-h-16 w-full rounded-xl border px-4 py-3 text-left ${
+                    selected === option.toVisaId ? "border-moss bg-moss/10" : "border-navy/10 bg-white"
                   }`}
                 >
                   <p className="font-medium text-navy">{option.name}</p>
@@ -81,9 +77,9 @@ export function SwitchSimulator({ profile, plan }: { profile: Profile; plan: Pla
         <label className="text-sm">
           <span className="font-medium text-navy">Switch onto</span>
           <select
-            value={toVisaId}
+            value={selected}
             onChange={(event) => setToVisaId(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2"
+            className="field-input"
           >
             {targets.map((target) => (
               <option key={target.visaId} value={target.visaId}>
@@ -98,7 +94,7 @@ export function SwitchSimulator({ profile, plan }: { profile: Profile; plan: Pla
             type="date"
             value={switchOn}
             onChange={(event) => setSwitchOn(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2"
+            className="field-input"
           />
         </label>
       </div>

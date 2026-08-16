@@ -39,7 +39,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2"
+            className="field-input"
           />
         </label>
       )}
@@ -50,7 +50,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           required
           value={email}
           onChange={(event) => setEmail(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2"
+          className="field-input"
         />
       </label>
       <label className="block text-sm">
@@ -61,14 +61,14 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
           minLength={8}
           value={password}
           onChange={(event) => setPassword(event.target.value)}
-          className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2"
+          className="field-input"
         />
       </label>
       {error && <p className="text-sm text-clay">{error}</p>}
       <button
         type="submit"
         disabled={pending}
-        className="rounded-full bg-navy px-5 py-2 text-sm text-paper-50 disabled:opacity-60"
+        className="min-h-11 rounded-full bg-navy px-5 py-2 text-sm text-paper-50 disabled:opacity-60"
       >
         {pending ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
       </button>

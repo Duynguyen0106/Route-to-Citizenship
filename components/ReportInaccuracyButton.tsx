@@ -20,7 +20,7 @@ export function ReportInaccuracyButton({
   return (
     <Link
       href={href}
-      className="inline-flex items-center rounded-full border border-navy/20 bg-white px-4 py-2 text-sm text-navy hover:border-clay/50 hover:bg-clay/10"
+      className="inline-flex min-h-11 items-center rounded-full border border-navy/20 bg-white px-4 py-2 text-sm text-navy hover:border-clay/50 hover:bg-clay/10"
     >
       Report inaccurate information
     </Link>

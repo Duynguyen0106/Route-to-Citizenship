@@ -35,22 +35,22 @@ export function Dashboard({
   const rule = getRouteForPathway(plan.pathwayId);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
+        <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.22em] text-moss">{pathway.title}</p>
-          <h1 className="mt-2 font-serif text-4xl text-navy">{plan.route.name}</h1>
+          <h1 className="mt-2 font-serif text-3xl text-navy sm:text-4xl">{plan.route.name}</h1>
           <p className="mt-2">
             <LastReviewed date={rule.lastReviewedOn} />
           </p>
           <p className="mt-3 max-w-2xl text-ink-muted">{plan.summary}</p>
         </div>
-        <div className="flex flex-wrap gap-3 text-sm">
-          <button type="button" onClick={onEdit} className="rounded-full border border-navy/20 px-4 py-2">
+        <div className="flex flex-wrap gap-2 text-sm sm:gap-3">
+          <button type="button" onClick={onEdit} className="min-h-11 rounded-full border border-navy/20 px-4 py-2">
             Edit profile
           </button>
           <ReportInaccuracyButton routeKey={rule.key} />
-          <button type="button" onClick={onReset} className="rounded-full px-4 py-2 text-ink-muted">
+          <button type="button" onClick={onReset} className="min-h-11 rounded-full px-4 py-2 text-ink-muted">
             Start over
           </button>
         </div>
@@ -76,7 +76,7 @@ export function Dashboard({
 
       <DashboardAlerts reminders={plan.reminders} />
 
-      <nav className="mt-8 flex flex-wrap gap-2 text-sm">
+      <nav className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-1 text-sm sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {[
           ["timeline", "Timeline"],
           ["routes", "Routes"],
@@ -87,7 +87,11 @@ export function Dashboard({
           ["eligibility", "Eligibility"],
           ["reminders", "Reminders"],
         ].map(([id, label]) => (
-          <a key={id} href={`#${id}`} className="rounded-full bg-navy/10 px-3 py-1 text-navy hover:bg-navy/15">
+          <a
+            key={id}
+            href={`#${id}`}
+            className="shrink-0 rounded-full bg-navy/10 px-3 py-2 text-navy hover:bg-navy/15"
+          >
             {label}
           </a>
         ))}
@@ -135,8 +139,8 @@ export function Dashboard({
         </div>
       )}
 
-      <section id="timeline" className="mt-12">
-        <h2 className="font-serif text-3xl text-navy">Timeline</h2>
+      <section id="timeline" className="mt-12 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Timeline</h2>
         <p className="mt-2 text-sm text-ink-muted">
           Current date, visa expiry, ILR and citizenship markers. The bar is time already spent from
           your UK residence start.
@@ -148,8 +152,8 @@ export function Dashboard({
         />
       </section>
 
-      <section id="routes" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Route comparison</h2>
+      <section id="routes" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Route comparison</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           The five MVP routes. Switch only if the planner models an in-country move from your current
           visa — it does not check whether you actually qualify.
@@ -157,8 +161,8 @@ export function Dashboard({
         <RouteComparison profile={profile} plan={plan} onSwitch={onProfileChange} />
       </section>
 
-      <section id="checklist" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Document checklist</h2>
+      <section id="checklist" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Document checklist</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Typical evidence for the next application. Confirm the live list on GOV.UK.
         </p>
@@ -174,8 +178,8 @@ export function Dashboard({
         />
       </section>
 
-      <section id="absences" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Absence tracker</h2>
+      <section id="absences" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Absence tracker</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Log trips outside the UK. Totals are calculated per 12-month period against the usual
           180-day ILR limit. This is not a Home Office calculation.
@@ -189,8 +193,8 @@ export function Dashboard({
         </div>
       </section>
 
-      <section id="switch" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Custom switch date</h2>
+      <section id="switch" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Custom switch date</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Compare staying put with switching on a date you choose. Use the cards above to apply a
           modelled in-country switch.
@@ -198,8 +202,8 @@ export function Dashboard({
         <SwitchSimulator profile={profile} plan={plan} />
       </section>
 
-      <section id="fees" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Fee calculator</h2>
+      <section id="fees" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Fee calculator</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           A basic total using Home Office fees from 8 April 2026. IHS years and extras can be
           toggled; live amounts on GOV.UK always win.
@@ -207,13 +211,13 @@ export function Dashboard({
         <FeeCalculator profile={profile} />
       </section>
 
-      <section id="eligibility" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Basic eligibility checks</h2>
+      <section id="eligibility" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Basic eligibility checks</h2>
         <EligibilityPanel items={plan.eligibility} check={plan.eligibilityCheck} />
       </section>
 
-      <section id="reminders" className="mt-14 pb-8">
-        <h2 className="font-serif text-navy text-3xl">All reminders</h2>
+      <section id="reminders" className="mt-14 scroll-mt-24 pb-8">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">All reminders</h2>
         <RemindersPanel
           reminders={plan.reminders}
           prefs={profile.reminderPrefs}

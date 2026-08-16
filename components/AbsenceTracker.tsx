@@ -76,7 +76,60 @@ export function AbsenceTracker({
         />
       </div>
 
-      <div className="overflow-x-auto rounded-2xl border border-navy/10 bg-paper-50">
+      <ul className="space-y-3 md:hidden">
+        {trips.length === 0 ? (
+          <li className="rounded-2xl border border-navy/10 bg-paper-50 px-4 py-4 text-sm text-ink-muted">
+            No trips yet. Add time spent outside the UK. The day of return is not counted.
+          </li>
+        ) : (
+          trips.map((trip, index) => (
+            <li key={trip.id} className="rounded-2xl border border-navy/10 bg-paper-50 p-4">
+              <p className="text-xs uppercase tracking-wide text-ink-faint">Trip {index + 1}</p>
+              <div className="mt-3 grid gap-3">
+                <label className="text-sm font-medium text-navy">
+                  Start date
+                  <input
+                    type="date"
+                    value={trip.departedOn}
+                    onChange={(event) => update(trip.id, { departedOn: event.target.value })}
+                    className="field-input"
+                  />
+                </label>
+                <label className="text-sm font-medium text-navy">
+                  End date
+                  <input
+                    type="date"
+                    value={trip.returnedOn}
+                    onChange={(event) => update(trip.id, { returnedOn: event.target.value })}
+                    className="field-input"
+                  />
+                </label>
+                <p className="text-sm text-navy">
+                  Days away:{" "}
+                  <strong>
+                    {trip.departedOn && trip.returnedOn ? tripDays(trip) : "—"}
+                  </strong>
+                </p>
+                <label className="text-sm font-medium text-navy">
+                  Reason
+                  <input
+                    type="text"
+                    value={trip.place}
+                    placeholder="Holiday, work, family…"
+                    onChange={(event) => update(trip.id, { place: event.target.value })}
+                    className="field-input"
+                  />
+                </label>
+                <button type="button" onClick={() => remove(trip.id)} className="self-start text-sm text-clay">
+                  Remove trip
+                </button>
+              </div>
+            </li>
+          ))
+        )}
+      </ul>
+
+      <div className="hidden overflow-x-auto rounded-2xl border border-navy/10 bg-paper-50 md:block">
         <table className="min-w-full text-left text-sm">
           <thead className="bg-navy/5 text-xs uppercase tracking-wide text-ink-muted">
             <tr>
@@ -105,7 +158,7 @@ export function AbsenceTracker({
                       aria-label="Start date"
                       value={trip.departedOn}
                       onChange={(event) => update(trip.id, { departedOn: event.target.value })}
-                      className="w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
+                      className="min-h-11 w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
                     />
                   </td>
                   <td className="px-4 py-2">
@@ -114,10 +167,10 @@ export function AbsenceTracker({
                       aria-label="End date"
                       value={trip.returnedOn}
                       onChange={(event) => update(trip.id, { returnedOn: event.target.value })}
-                      className="w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
+                      className="min-h-11 w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
                     />
                   </td>
-                  <td className="px-4 py-2 whitespace-nowrap text-navy">
+                  <td className="whitespace-nowrap px-4 py-2 text-navy">
                     {trip.departedOn && trip.returnedOn ? tripDays(trip) : "—"}
                   </td>
                   <td className="px-4 py-2">
@@ -127,11 +180,11 @@ export function AbsenceTracker({
                       value={trip.place}
                       placeholder="Holiday, work, family…"
                       onChange={(event) => update(trip.id, { place: event.target.value })}
-                      className="w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
+                      className="min-h-11 w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
                     />
                   </td>
                   <td className="px-4 py-2 text-right">
-                    <button type="button" onClick={() => remove(trip.id)} className="text-xs text-clay">
+                    <button type="button" onClick={() => remove(trip.id)} className="text-sm text-clay">
                       Remove
                     </button>
                   </td>
@@ -145,7 +198,7 @@ export function AbsenceTracker({
       <button
         type="button"
         onClick={addTrip}
-        className="rounded-full border border-navy/20 px-4 py-2 text-sm"
+        className="min-h-11 rounded-full border border-navy/20 px-4 py-2 text-sm"
       >
         Add a trip
       </button>
