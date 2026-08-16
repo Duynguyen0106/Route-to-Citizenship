@@ -10,13 +10,13 @@ import {
   ShieldAlert,
 } from "lucide-react";
 import { LastReviewed } from "@/components/LastReviewed";
-import { listRoutes } from "@/lib/routes";
+import { listFeaturedRoutes, listRoutes } from "@/lib/routes";
 
 const features = [
   {
     icon: CalendarRange,
-    title: "Five common routes",
-    body: "Skilled Worker, family, Student → Graduate → Skilled Worker, Global Talent, and 10-year long residence.",
+    title: "UK settlement routes",
+    body: "Skilled Worker, family, study-to-work, Global Talent and 10-year long residence, plus Innovator Founder, Scale-up, GBM, Youth Mobility, dependants and child registration.",
   },
   {
     icon: Plane,
@@ -49,13 +49,14 @@ export default function HomePage() {
   return (
     <div>
       <section className="mx-auto max-w-6xl px-4 pb-16 pt-14 sm:px-6 sm:pt-20">
-        <p className="text-xs uppercase tracking-[0.22em] text-clay">UK immigration · MVP</p>
+        <p className="text-xs uppercase tracking-[0.22em] text-clay">UK immigration planner</p>
         <h1 className="mt-4 max-w-3xl font-serif text-4xl leading-tight text-navy sm:text-6xl">
           From the visa you hold to ILR — and, if you want it, British citizenship.
         </h1>
         <p className="mt-6 max-w-2xl text-lg leading-relaxed text-ink-muted">
-          Plan one of five common UK routes. See a timeline, log absences, simulate a switch,
-          estimate fees, and build a document list. Your plan stays in this browser.
+          Plan from the visa you hold — including switches, combined long residence, and household
+          ILR — through to British citizenship. See a timeline, log absences, estimate fees, and
+          build a document list. Your plan stays in this browser.
         </p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <Link
@@ -78,9 +79,9 @@ export default function HomePage() {
       <div className="hairline mx-auto max-w-6xl" />
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
-        <h2 className="font-serif text-3xl text-navy">Routes in this MVP</h2>
+        <h2 className="font-serif text-3xl text-navy">Featured routes</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {listRoutes().map((route) => (
+          {listFeaturedRoutes().map((route) => (
             <article key={route.key} className="rounded-2xl border border-navy/10 bg-paper-50 p-5">
               <LastReviewed date={route.lastReviewedOn} />
               <h3 className="mt-2 font-serif text-xl text-navy">
@@ -101,6 +102,28 @@ export default function HomePage() {
               </p>
             </article>
           ))}
+        </div>
+        <h3 className="mt-12 font-serif text-2xl text-navy">Also modelled</h3>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Further UK categories the engine can sketch, including visas with no ILR clock of their
+          own and child registration.
+        </p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {listRoutes()
+            .filter((route) => !listFeaturedRoutes().some((featured) => featured.key === route.key))
+            .map((route) => (
+              <article key={route.key} className="rounded-xl border border-navy/10 bg-paper-50 p-4">
+                <h4 className="font-medium text-navy">
+                  <Link href={`/routes/${route.key}`} className="hover:underline">
+                    {route.name}
+                  </Link>
+                </h4>
+                <p className="mt-1 text-xs text-ink-muted">
+                  ILR: {route.minYearsToILR ? `${route.minYearsToILR} years` : "none"} ·{" "}
+                  {route.notes.split(".")[0]}.
+                </p>
+              </article>
+            ))}
         </div>
       </section>
 

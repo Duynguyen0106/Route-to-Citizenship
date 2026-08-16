@@ -97,20 +97,21 @@ describe("calculatePlan — spouse of British citizen", () => {
 });
 
 describe("calculatePlan — Graduate visa", () => {
-  it("has no ILR date and suggests qualifying switches", () => {
+  it("has no 5-year ILR clock and suggests qualifying switches", () => {
     const plan = calculatePlan(
       profile({
         currentVisaId: "graduate",
         visaGrantedOn: "2025-09-01",
         visaExpiresOn: "2027-09-01",
         qualifyingResidenceStart: "2025-09-01",
+        ukEntryDate: "2025-09-01",
       }),
       AS_OF,
     );
-    expect(plan.hasIlrPath).toBe(false);
-    expect(plan.ilrEligibleOn).toBeNull();
+    expect(plan.route.leadsToIlr).toBe(false);
     expect(plan.alternatives.length).toBeGreaterThan(0);
     expect(plan.alternatives.some((alt) => alt.routeId === "skilled-worker")).toBe(true);
+    expect(plan.longResidenceIlrOn).toBe("2035-09-01");
   });
 });
 

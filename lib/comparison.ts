@@ -4,7 +4,7 @@ import { inferPathway } from "@/lib/pathways";
 import {
   effectiveMinYearsToILR,
   getRouteForPathway,
-  listRoutes,
+  listFeaturedRoutes,
   visaIdToCurrentVisaType,
   type RouteDefinition,
 } from "@/lib/routes";
@@ -56,6 +56,13 @@ function switchForRoute(route: RouteDefinition, possible: PossibleSwitch[]): Pos
   return possible.find((item) => item.routeKey === route.key);
 }
 
+export function listComparisonRoutes(profile: Profile): RouteDefinition[] {
+  const featured = listFeaturedRoutes();
+  const current = getRouteForPathway(profile.pathwayId);
+  if (featured.some((route) => route.key === current.key)) return featured;
+  return [...featured, current];
+}
+
 export function buildRouteComparison(
   profile: Profile,
   plan: PlanResult,
@@ -64,7 +71,7 @@ export function buildRouteComparison(
   const possible = getPossibleSwitches(profile, asOf);
   const currentType = visaIdToCurrentVisaType(profile.currentVisaId);
 
-  return listRoutes().map((route) => {
+  return listComparisonRoutes(profile).map((route) => {
     const current = getRouteForPathway(profile.pathwayId).key === route.key;
     const option = switchForRoute(route, possible);
     const yearsToILR = current

@@ -1,9 +1,10 @@
-import { addDays, addMonths, addYears, formatISO, parseISO } from "date-fns";
+import { formatISO, parseISO } from "date-fns";
 import {
   canSwitchInCountry,
   getRoute,
   isFamilyCombination,
   isQualifyingWorkCombination,
+  tryGetRoute,
 } from "./visas";
 import type {
   AlternativeRoute,
@@ -14,12 +15,24 @@ import type {
 } from "./types";
 import { analyseAbsences, emptyAbsenceAnalysis, withDerivedAbsenceTotals } from "./absences";
 import { buildChecklist } from "./checklist";
-import { englishMet, lifeInUkMet, assessEligibility, checkEligibility } from "./eligibility";
+import { englishMet, lifeInUkMet, assessEligibility, checkEligibility, alreadyHoldsIlr } from "./eligibility";
+import { planDependants, mainCitizenshipPath } from "./dependants";
+import { longResidenceIlrDate } from "./long-residence";
+import { plannedSwitchList, projectSwitchChain } from "./switch-chain";
 import { defaultIhsYears, estimateFees } from "./fees";
 import { studentPathNeedsSwitch, SWITCH_TARGETS } from "./pathways";
 import { effectiveMinYearsToILR, getRouteForPathway, visaIdToCurrentVisaType } from "./routes";
 import { buildReminders } from "./reminders";
 import { normalizeProfile } from "./storage";
+import {
+  ILR_EARLY_APPLY_DAYS,
+  addCalendarYears,
+  citizenshipEligibleDate,
+  ilrApplyFromDate,
+  ilrEligibleDate,
+} from "./settlement";
+
+export { ILR_EARLY_APPLY_DAYS, addCalendarYears, citizenshipEligibleDate, ilrApplyFromDate, ilrEligibleDate };
 
 export function toIsoDate(date: Date): string {
   return formatISO(date, { representation: "date" });
@@ -32,56 +45,6 @@ export function fromIsoDate(value: string): Date {
 export function daysBetween(a: Date, b: Date): number {
   const ms = b.getTime() - a.getTime();
   return Math.round(ms / (1000 * 60 * 60 * 24));
-}
-
-/** ILR can usually be applied for up to 28 days before the qualifying date. */
-export const ILR_EARLY_APPLY_DAYS = 28;
-
-export function addCalendarYears(start: Date, years: number): Date {
-  if (years === 0) return new Date(start);
-  if (Number.isInteger(years)) return addYears(start, years);
-  return addMonths(start, Math.round(years * 12));
-}
-
-export function ilrEligibleDate(route: VisaRoute, qualifyingStart: Date): Date | null {
-  if (!route.leadsToIlr || route.ilrYears === null) return null;
-  return addCalendarYears(qualifyingStart, route.ilrYears);
-}
-
-export function ilrApplyFromDate(eligibleOn: Date): Date {
-  return addDays(eligibleOn, -ILR_EARLY_APPLY_DAYS);
-}
-
-/**
- * Naturalisation (British citizenship) after ILR:
- * - Standard: ILR held for 12 months, and 5 years' residence.
- * - Married to a British citizen: no 12-month ILR wait; 3 years' residence and ILR.
- */
-export function citizenshipEligibleDate(options: {
-  ilrEligibleOn: Date | null;
-  ilrGrantedOn: Date | null;
-  residenceStart: Date;
-  marriedToBritishCitizen: boolean;
-  alreadyHasIlr: boolean;
-}): Date | null {
-  const { ilrEligibleOn, ilrGrantedOn, residenceStart, marriedToBritishCitizen, alreadyHasIlr } =
-    options;
-
-  const ilrDate = alreadyHasIlr ? ilrGrantedOn : ilrEligibleOn;
-  if (!ilrDate) return null;
-
-  if (marriedToBritishCitizen) {
-    const threeYearResidence = addCalendarYears(residenceStart, 3);
-    return laterDate(ilrDate, threeYearResidence);
-  }
-
-  const twelveMonthsAfterIlr = addCalendarYears(ilrDate, 1);
-  const fiveYearResidence = addCalendarYears(residenceStart, 5);
-  return laterDate(twelveMonthsAfterIlr, fiveYearResidence);
-}
-
-function laterDate(a: Date, b: Date): Date {
-  return a.getTime() >= b.getTime() ? a : b;
 }
 
 export function needsExtension(
@@ -102,14 +65,21 @@ function buildTimeline(
   asOf: Date,
   ilrOn: Date | null,
   citizenshipOn: Date | null,
+  extras: {
+    switchChain: PlanResult["switchChain"];
+    longResidenceIlrOn: string | null;
+    citizenshipPath: PlanResult["citizenshipPath"];
+    citizenshipDetail: string;
+  },
 ): TimelineEvent[] {
   const events: TimelineEvent[] = [];
 
   for (const [index, stage] of (profile.priorStages ?? []).entries()) {
     if (!stage.start) continue;
+    const prior = tryGetRoute(stage.visaId);
     events.push({
       id: `stage-${index}`,
-      label: `${getRoute(stage.visaId).shortName} started`,
+      label: `${prior?.shortName ?? stage.visaId} started`,
       date: stage.start,
       kind: "stage",
     });
@@ -143,10 +113,22 @@ function buildTimeline(
     },
   );
 
-  if (studentPathNeedsSwitch(profile) && profile.plannedSwitchOn) {
+  if (extras.switchChain.length) {
+    extras.switchChain.forEach((hop, index) => {
+      const next = tryGetRoute(hop.toVisaId);
+      events.push({
+        id: index === 0 ? "planned-switch" : `chain-${index}`,
+        label: `Planned switch to ${next?.shortName ?? hop.toVisaId}`,
+        date: hop.on,
+        kind: "stage",
+        note: hop.note,
+      });
+    });
+  } else if (profile.plannedSwitchOn && profile.plannedSwitchTo) {
+    const next = tryGetRoute(profile.plannedSwitchTo);
     events.push({
       id: "planned-switch",
-      label: `Planned switch to ${getRoute(profile.plannedSwitchTo || "skilled-worker").shortName}`,
+      label: `Planned switch to ${next?.shortName ?? profile.plannedSwitchTo}`,
       date: profile.plannedSwitchOn,
       kind: "stage",
     });
@@ -158,7 +140,10 @@ function buildTimeline(
       label: "Estimated ILR eligibility",
       date: toIsoDate(ilrOn),
       kind: "ilr",
-      note: `You can usually apply up to ${ILR_EARLY_APPLY_DAYS} days earlier.`,
+      note:
+        extras.longResidenceIlrOn && extras.longResidenceIlrOn === toIsoDate(ilrOn)
+          ? `Estimated from 10 years of unbroken lawful residence. You can usually apply up to ${ILR_EARLY_APPLY_DAYS} days earlier.`
+          : `You can usually apply up to ${ILR_EARLY_APPLY_DAYS} days earlier.`,
     });
   } else if (route.id === "ilr") {
     events.push({
@@ -167,22 +152,41 @@ function buildTimeline(
       date: profile.visaGrantedOn,
       kind: "ilr",
     });
-  } else if (studentPathNeedsSwitch(profile) && !profile.plannedSwitchOn) {
+  } else if (!route.leadsToIlr && !ilrOn) {
     events.push({
       id: "switch-needed",
       label: "Switch needed to start ILR clock",
       date: profile.visaExpiresOn,
       kind: "warning",
-      note: "Student and Graduate leave do not lead to ILR on their own.",
+      note: `${route.shortName} does not lead to ILR on its own. Time may still count toward 10-year long residence.`,
+    });
+  }
+
+  if (
+    extras.longResidenceIlrOn &&
+    extras.longResidenceIlrOn !== (ilrOn ? toIsoDate(ilrOn) : null)
+  ) {
+    events.push({
+      id: "long-residence",
+      label: "10-year long residence ILR (parallel clock)",
+      date: extras.longResidenceIlrOn,
+      kind: "ilr",
+      note: "Lawful time on most visas can combine toward long residence, even if you switch categories.",
     });
   }
 
   if (citizenshipOn) {
     events.push({
       id: "citizenship",
-      label: "Estimated citizenship eligibility",
+      label:
+        extras.citizenshipPath === "registration_birth" || extras.citizenshipPath === "registration_parent"
+          ? "Estimated citizenship by registration"
+          : extras.citizenshipPath === "naturalisation_spouse"
+            ? "Estimated citizenship (3-year spouse route)"
+            : "Estimated citizenship eligibility",
       date: toIsoDate(citizenshipOn),
       kind: "citizenship",
+      note: extras.citizenshipDetail,
     });
   }
 
@@ -321,14 +325,23 @@ function summarise(
   ilrOn: Date | null,
   citizenshipOn: Date | null,
   needsExt: boolean,
+  extras: { longResidenceIlrOn: string | null; citizenshipDetail: string },
 ): string {
   if (route.id === "ilr") {
     return citizenshipOn
       ? `You already have settlement. A typical next milestone is British citizenship from ${toIsoDate(citizenshipOn)}, if you meet the residence, test, and good character rules.`
       : "You already have settlement. Citizenship depends on residence, tests, and good character.";
   }
+  if (route.id === "child-registration") {
+    return citizenshipOn
+      ? `This is a citizenship-by-registration path, not an ILR clock. Registration is estimated from ${toIsoDate(citizenshipOn)}.`
+      : "This is a citizenship-by-registration path. Add whether the child was born in the UK and whether a parent is British or later becomes settled.";
+  }
+  if (!route.leadsToIlr && ilrOn && extras.longResidenceIlrOn === toIsoDate(ilrOn)) {
+    return `Your current ${route.shortName} visa does not have a 5-year ILR clock. Ten years of combined lawful residence is estimated from ${toIsoDate(ilrOn)}. Look at switching if you want a shorter settlement route.`;
+  }
   if (!route.leadsToIlr) {
-    return `${route.name} does not lead to ILR on its own. Look at switching options to start a qualifying clock.`;
+    return `${route.name} does not lead to ILR on its own. Look at switching options to start a qualifying clock. Lawful time may still count toward 10-year long residence.`;
   }
   if (!ilrOn) {
     return "This planner could not estimate an ILR date from the details provided.";
@@ -337,9 +350,24 @@ function summarise(
     ? " You will likely need to extend or switch before that date so you still have valid leave."
     : "";
   const cit = citizenshipOn
-    ? ` British citizenship is then typically estimated from ${toIsoDate(citizenshipOn)}.`
+    ? ` British citizenship is then typically estimated from ${toIsoDate(citizenshipOn)}. ${extras.citizenshipDetail}`
     : "";
   return `On your current ${route.shortName} route, ILR is estimated from ${toIsoDate(ilrOn)}.${ext}${cit}`;
+}
+
+function earliestDate(a: Date | null, b: Date | null): Date | null {
+  if (a && b) return a.getTime() <= b.getTime() ? a : b;
+  return a ?? b;
+}
+
+function dependantOwnIlr(profile: Profile): Date | null {
+  const grant = fromIsoDate(profile.visaGrantedOn || profile.qualifyingResidenceStart);
+  if (Number.isNaN(grant.getTime())) return null;
+  const partner = addCalendarYears(grant, 5);
+  if (!profile.mainApplicantIlrOn) return partner;
+  const main = fromIsoDate(profile.mainApplicantIlrOn);
+  if (Number.isNaN(main.getTime())) return partner;
+  return partner.getTime() >= main.getTime() ? partner : main;
 }
 
 export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanResult {
@@ -347,18 +375,20 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
   const pathwayId = derived.pathwayId ?? "skilled-worker";
   const rule = getRouteForPathway(pathwayId);
   const route = getRoute(derived.currentVisaId);
-  const alreadyHasIlr = route.id === "ilr";
-  const residenceStart = fromIsoDate(derived.ukEntryDate || derived.qualifyingResidenceStart);
+  const alreadyHasIlr = alreadyHoldsIlr(derived);
   const visaExpiry = fromIsoDate(derived.visaExpiresOn);
   const currentVisaType = visaIdToCurrentVisaType(derived.currentVisaId);
+  const hops = plannedSwitchList(derived);
+  const chain = hops.length ? projectSwitchChain(derived) : null;
+  const switchChain = chain?.hops ?? [];
 
   let qualifyingStart = fromIsoDate(derived.qualifyingResidenceStart);
   let projectedYears = effectiveMinYearsToILR(rule, currentVisaType, {
-    plannedSwitch: Boolean(derived.plannedSwitchOn),
+    plannedSwitch: hops.length > 0 || Boolean(derived.plannedSwitchOn),
     currentVisaId: derived.currentVisaId,
   });
 
-  if (studentPathNeedsSwitch(derived) && derived.plannedSwitchOn) {
+  if (!chain && studentPathNeedsSwitch(derived) && derived.plannedSwitchOn) {
     qualifyingStart = fromIsoDate(derived.plannedSwitchOn);
     projectedYears = effectiveMinYearsToILR(rule, "SKILLED_WORKER", {
       plannedSwitch: true,
@@ -366,21 +396,41 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     });
   }
 
-  const projectedIlr = projectedYears !== null;
+  let routeIlrOn: Date | null = null;
+  if (alreadyHasIlr) {
+    routeIlrOn = asOf;
+  } else if (pathwayId === "child-registration") {
+    routeIlrOn = null;
+  } else if (pathwayId === "dependant") {
+    routeIlrOn = dependantOwnIlr(derived);
+  } else if (chain?.ilrOn) {
+    routeIlrOn = chain.ilrOn;
+  } else if (projectedYears !== null) {
+    routeIlrOn = addCalendarYears(qualifyingStart, projectedYears);
+  }
+
+  const longResidenceOn =
+    pathwayId === "child-registration" ? null : longResidenceIlrDate(derived);
   const ilrOn =
-    alreadyHasIlr
-      ? asOf
-      : projectedYears !== null
-        ? addCalendarYears(qualifyingStart, projectedYears)
-        : null;
+    pathwayId === "long-residence"
+      ? longResidenceOn ?? routeIlrOn
+      : earliestDate(routeIlrOn, longResidenceOn);
+
+  const projectedIlr = Boolean(ilrOn);
   const applyFrom = ilrOn && !alreadyHasIlr ? ilrApplyFromDate(ilrOn) : null;
-  const citizenshipOn = citizenshipEligibleDate({
-    ilrEligibleOn: alreadyHasIlr ? fromIsoDate(derived.visaGrantedOn) : ilrOn,
-    ilrGrantedOn: alreadyHasIlr ? fromIsoDate(derived.visaGrantedOn) : null,
-    residenceStart,
-    marriedToBritishCitizen: derived.marriedToBritishCitizen,
+  const citizenship = mainCitizenshipPath({
+    profile: derived,
+    asOf,
+    ilrOn,
     alreadyHasIlr,
   });
+  const citizenshipOn = citizenship.eligibleOn ? fromIsoDate(citizenship.eligibleOn) : null;
+  const dependantPlans = planDependants(
+    derived,
+    alreadyHasIlr ? derived.visaGrantedOn : ilrOn ? toIsoDate(ilrOn) : null,
+    asOf,
+    alreadyHasIlr,
+  );
 
   const needsExt =
     !alreadyHasIlr &&
@@ -439,16 +489,18 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     applyFromInsideUk: derived.applyFromInsideUk,
     sponsorshipOverThreeYears: derived.sponsorshipOverThreeYears,
     dependantCount: derived.dependantCount,
-    includeNextVisa: derived.currentVisaId !== "ilr",
-    includeIhs: derived.currentVisaId !== "ilr",
+    includeNextVisa: derived.currentVisaId !== "ilr" && derived.currentVisaId !== "child-registration",
+    includeIhs: derived.currentVisaId !== "ilr" && derived.currentVisaId !== "child-registration",
     ihsYears: defaultIhsYears(derived.currentVisaId, derived.sponsorshipOverThreeYears),
-    includeIlr: true,
-    includeCitizenship: true,
-    includeTests: true,
-    needsEnglishTest: !englishMet(derived),
-    needsLifeInUk: !lifeInUkMet(derived),
+    includeIlr: derived.currentVisaId !== "child-registration",
+    includeCitizenship: derived.currentVisaId !== "child-registration" && derived.ageBand !== "under_18",
+    includeTests: derived.currentVisaId !== "child-registration",
+    needsEnglishTest: !englishMet(derived) && derived.currentVisaId !== "child-registration",
+    needsLifeInUk: !lifeInUkMet(derived) && derived.currentVisaId !== "child-registration",
     globalTalentNeedsEndorsement: derived.currentVisaId.startsWith("global-talent"),
   });
+
+  const longResidenceIlrOn = longResidenceOn ? toIsoDate(longResidenceOn) : null;
 
   return {
     asOf: toIsoDate(asOf),
@@ -458,9 +510,18 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     ilrEligibleOn: alreadyHasIlr ? derived.visaGrantedOn : ilrOn ? toIsoDate(ilrOn) : null,
     ilrApplyFrom: applyFrom ? toIsoDate(applyFrom) : null,
     citizenshipEligibleOn: citizenshipOn ? toIsoDate(citizenshipOn) : null,
+    citizenshipPath: citizenship.kind,
+    longResidenceIlrOn,
+    switchChain,
+    dependantPlans,
     needsVisaExtension: Boolean(needsExt),
     extensionNote,
-    timeline: buildTimeline(derived, route, asOf, alreadyHasIlr ? null : ilrOn, citizenshipOn),
+    timeline: buildTimeline(derived, route, asOf, alreadyHasIlr ? null : ilrOn, citizenshipOn, {
+      switchChain,
+      longResidenceIlrOn,
+      citizenshipPath: citizenship.kind,
+      citizenshipDetail: citizenship.detail,
+    }),
     eligibility,
     eligibilityCheck,
     alternatives,
@@ -468,7 +529,10 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     reminders,
     absences,
     fees,
-    summary: summarise(route, alreadyHasIlr ? null : ilrOn, citizenshipOn, Boolean(needsExt)),
+    summary: summarise(route, alreadyHasIlr ? null : ilrOn, citizenshipOn, Boolean(needsExt), {
+      longResidenceIlrOn,
+      citizenshipDetail: citizenship.detail,
+    }),
   };
 }
 

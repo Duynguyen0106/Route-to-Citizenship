@@ -13,18 +13,69 @@ import {
 export const englishLevels = ["none", "A2", "B1", "B2"] as const;
 export const relationshipOptions = ["none", "british_citizen", "settled"] as const;
 
-export const ONBOARDING_VISA_OPTIONS = [
-  { id: "skilled-worker", label: "Skilled Worker visa" },
-  { id: "health-care-worker", label: "Health and Care Worker visa" },
-  { id: "spouse-5", label: "Family visa — partner (5-year route)" },
-  { id: "spouse-10", label: "Family visa — partner (10-year route)" },
-  { id: "student", label: "Student visa" },
-  { id: "graduate", label: "Graduate visa" },
-  { id: "global-talent-talent", label: "Global Talent (exceptional talent / prize)" },
-  { id: "global-talent-promise", label: "Global Talent (exceptional promise)" },
-  { id: "long-residence", label: "Counting 10 years of mixed lawful leave" },
-  { id: "ilr", label: "Already have ILR / settled status" },
-] as const;
+export const ONBOARDING_VISA_GROUPS: { label: string; options: { id: string; label: string }[] }[] = [
+  {
+    label: "Work",
+    options: [
+      { id: "skilled-worker", label: "Skilled Worker visa" },
+      { id: "health-care-worker", label: "Health and Care Worker visa" },
+      { id: "scale-up", label: "Scale-up visa" },
+      { id: "sportsperson", label: "International Sportsperson visa" },
+      { id: "minister-of-religion", label: "Minister of Religion visa" },
+      { id: "gbm", label: "Global Business Mobility (no ILR clock)" },
+    ],
+  },
+  {
+    label: "Talent & business",
+    options: [
+      { id: "global-talent-talent", label: "Global Talent (exceptional talent / prize)" },
+      { id: "global-talent-promise", label: "Global Talent (exceptional promise)" },
+      { id: "innovator-founder", label: "Innovator Founder visa" },
+      { id: "hpi", label: "High Potential Individual (no ILR clock)" },
+    ],
+  },
+  {
+    label: "Family & dependants",
+    options: [
+      { id: "spouse-5", label: "Family visa — partner (5-year route)" },
+      { id: "spouse-10", label: "Family visa — partner (10-year route)" },
+      { id: "dependant", label: "Dependant of a worker / talent / business visa" },
+      { id: "child-registration", label: "Child — citizenship by registration" },
+    ],
+  },
+  {
+    label: "Study & youth",
+    options: [
+      { id: "student", label: "Student visa" },
+      { id: "graduate", label: "Graduate visa" },
+      { id: "youth-mobility", label: "Youth Mobility Scheme (no ILR clock)" },
+    ],
+  },
+  {
+    label: "Other settlement paths",
+    options: [
+      { id: "long-residence", label: "Counting 10 years of mixed lawful leave" },
+      { id: "ancestry", label: "UK Ancestry visa" },
+      { id: "bno", label: "BN(O) visa" },
+      { id: "refugee", label: "Refugee permission" },
+      { id: "humanitarian", label: "Humanitarian protection" },
+      { id: "pre-settled", label: "EU Settlement Scheme — pre-settled status" },
+      { id: "ilr", label: "Already have ILR / settled status" },
+    ],
+  },
+];
+
+export const ONBOARDING_VISA_OPTIONS = ONBOARDING_VISA_GROUPS.flatMap((group) => group.options);
+
+export const SWITCH_VISA_OPTIONS = [
+  { id: "", label: "No further switch planned" },
+  { id: "skilled-worker", label: "Skilled Worker" },
+  { id: "graduate", label: "Graduate" },
+  { id: "global-talent-talent", label: "Global Talent (3-year ILR)" },
+  { id: "innovator-founder", label: "Innovator Founder" },
+  { id: "scale-up", label: "Scale-up" },
+  { id: "spouse-5", label: "Partner visa (5-year)" },
+];
 
 export const NATIONALITY_OPTIONS = [
   ...MAJORITY_ENGLISH_SPEAKING_COUNTRIES,
@@ -37,10 +88,22 @@ export const onboardingSchema = z
     currentVisaId: z.string().min(1, "Select your current visa"),
     visaGrantDate: z.string().min(1, "Enter your visa start date"),
     visaExpiryDate: z.string().min(1, "Enter your visa expiry date"),
-    ukEntryDate: z.string().optional(),
+    ukEntryDate: z.string().optional().default(""),
     relationship: z.enum(relationshipOptions),
     englishLevel: z.enum(englishLevels),
     lifeInUkPassed: z.enum(["yes", "no"]),
+    ageBand: z.enum(["under_18", "18_to_64", "65_plus"]).optional(),
+    dependantCount: z.coerce.number().int().min(0).max(8).optional(),
+    bornInUk: z.boolean().optional(),
+    hasBritishParent: z.boolean().optional(),
+    priorVisaId: z.string().optional(),
+    priorVisaStart: z.string().optional(),
+    priorVisaEnd: z.string().optional(),
+    plannedSwitch1To: z.string().optional(),
+    plannedSwitch1On: z.string().optional(),
+    plannedSwitch2To: z.string().optional(),
+    plannedSwitch2On: z.string().optional(),
+    mainApplicantIlrOn: z.string().optional(),
   })
   .superRefine((value, ctx) => {
     if (value.visaExpiryDate <= value.visaGrantDate) {
@@ -59,7 +122,28 @@ export const onboardingSchema = z
     }
   });
 
-export type OnboardingValues = z.infer<typeof onboardingSchema>;
+export type OnboardingValues = {
+  nationality: string;
+  currentVisaId: string;
+  visaGrantDate: string;
+  visaExpiryDate: string;
+  ukEntryDate: string;
+  relationship: (typeof relationshipOptions)[number];
+  englishLevel: (typeof englishLevels)[number];
+  lifeInUkPassed: "yes" | "no";
+  ageBand: "under_18" | "18_to_64" | "65_plus";
+  dependantCount: number;
+  bornInUk: boolean;
+  hasBritishParent: boolean;
+  priorVisaId: string;
+  priorVisaStart: string;
+  priorVisaEnd: string;
+  plannedSwitch1To: string;
+  plannedSwitch1On: string;
+  plannedSwitch2To: string;
+  plannedSwitch2On: string;
+  mainApplicantIlrOn: string;
+};
 
 export const ONBOARDING_STEPS = [
   { id: "nationality", title: "Nationality", fields: ["nationality"] as const },
@@ -81,6 +165,18 @@ export function emptyOnboardingValues(): OnboardingValues {
     relationship: "none",
     englishLevel: "none",
     lifeInUkPassed: "no",
+    ageBand: "18_to_64",
+    dependantCount: 0,
+    bornInUk: false,
+    hasBritishParent: false,
+    priorVisaId: "",
+    priorVisaStart: "",
+    priorVisaEnd: "",
+    plannedSwitch1To: "",
+    plannedSwitch1On: "",
+    plannedSwitch2To: "",
+    plannedSwitch2On: "",
+    mainApplicantIlrOn: "",
   };
 }
 
@@ -103,6 +199,12 @@ export function relationshipFromProfile(profile: Profile): OnboardingValues["rel
 }
 
 export function profileToOnboarding(profile: Profile): OnboardingValues {
+  const hops = profile.plannedSwitches?.length
+    ? profile.plannedSwitches
+    : profile.plannedSwitchOn && profile.plannedSwitchTo
+      ? [{ toVisaId: profile.plannedSwitchTo, on: profile.plannedSwitchOn }]
+      : [];
+  const prior = profile.priorStages?.[0];
   return {
     nationality: profile.nationality,
     currentVisaId: profile.currentVisaId,
@@ -112,6 +214,18 @@ export function profileToOnboarding(profile: Profile): OnboardingValues {
     relationship: relationshipFromProfile(profile),
     englishLevel: englishStatusToOnboardingLevel(profile.englishStatus),
     lifeInUkPassed: profile.lifeInUkStatus === "passed" ? "yes" : "no",
+    ageBand: profile.ageBand,
+    dependantCount: profile.dependantCount,
+    bornInUk: profile.bornInUk,
+    hasBritishParent: profile.hasBritishParent,
+    priorVisaId: prior?.visaId ?? "",
+    priorVisaStart: prior?.start ?? "",
+    priorVisaEnd: prior?.end ?? "",
+    plannedSwitch1To: hops[0]?.toVisaId ?? "",
+    plannedSwitch1On: hops[0]?.on ?? "",
+    plannedSwitch2To: hops[1]?.toVisaId ?? "",
+    plannedSwitch2On: hops[1]?.on ?? "",
+    mainApplicantIlrOn: profile.mainApplicantIlrOn ?? "",
   };
 }
 
@@ -141,37 +255,78 @@ export function resolvePathwayId(
 }
 
 export function onboardingToProfile(
-  values: OnboardingValues,
+  values: Partial<OnboardingValues> &
+    Pick<
+      OnboardingValues,
+      | "nationality"
+      | "currentVisaId"
+      | "visaGrantDate"
+      | "visaExpiryDate"
+      | "relationship"
+      | "englishLevel"
+      | "lifeInUkPassed"
+    >,
   previous?: Profile | null,
 ): Profile {
-  const pathwayId = resolvePathwayId(values.currentVisaId, previous);
-  const ukEntryDate = values.ukEntryDate?.trim() || "";
+  const full: OnboardingValues = { ...emptyOnboardingValues(), ...values };
+  const pathwayId = resolvePathwayId(full.currentVisaId, previous);
+  const ukEntryDate = full.ukEntryDate?.trim() || "";
   const qualifyingResidenceStart =
-    pathwayId === "long-residence" ? ukEntryDate || values.visaGrantDate : values.visaGrantDate;
+    pathwayId === "long-residence" ? ukEntryDate || full.visaGrantDate : full.visaGrantDate;
   const keepEnglish =
     Boolean(previous) &&
-    values.englishLevel === englishStatusToOnboardingLevel(previous!.englishStatus);
+    full.englishLevel === englishStatusToOnboardingLevel(previous!.englishStatus);
   const keepLifeInUk =
     Boolean(previous) &&
-    ((values.lifeInUkPassed === "yes" && previous!.lifeInUkStatus === "passed") ||
-      (values.lifeInUkPassed === "no" && previous!.lifeInUkStatus !== "passed"));
+    ((full.lifeInUkPassed === "yes" && previous!.lifeInUkStatus === "passed") ||
+      (full.lifeInUkPassed === "no" && previous!.lifeInUkStatus !== "passed"));
+
+  const hops = [
+    full.plannedSwitch1To && full.plannedSwitch1On
+      ? { toVisaId: full.plannedSwitch1To, on: full.plannedSwitch1On }
+      : null,
+    full.plannedSwitch2To && full.plannedSwitch2On
+      ? { toVisaId: full.plannedSwitch2To, on: full.plannedSwitch2On }
+      : null,
+  ].filter((item): item is { toVisaId: string; on: string } => Boolean(item));
+
+  const priorFromForm =
+    full.priorVisaId && full.priorVisaStart
+      ? [
+          {
+            visaId: full.priorVisaId,
+            start: full.priorVisaStart,
+            end: full.priorVisaEnd || full.visaGrantDate,
+          },
+          ...(previous?.priorStages ?? []).slice(1),
+        ]
+      : previous?.priorStages ?? [];
 
   const patch: Partial<Profile> & Pick<Profile, "currentVisaId"> = {
-    nationality: values.nationality.trim(),
-    currentVisaId: values.currentVisaId,
+    nationality: full.nationality.trim(),
+    currentVisaId: full.currentVisaId,
     pathwayId,
-    visaGrantedOn: values.visaGrantDate,
-    visaExpiresOn: values.visaExpiryDate,
+    visaGrantedOn: full.visaGrantDate,
+    visaExpiresOn: full.visaExpiryDate,
     qualifyingResidenceStart,
     ukEntryDate,
     englishStatus: keepEnglish
       ? previous!.englishStatus
-      : englishLevelToStatus(values.englishLevel),
+      : englishLevelToStatus(full.englishLevel),
     lifeInUkStatus: keepLifeInUk
       ? previous!.lifeInUkStatus
-      : ((values.lifeInUkPassed === "yes" ? "passed" : "not_taken") satisfies LifeInUkStatus),
-    marriedToBritishCitizen: values.relationship === "british_citizen",
-    hasSettledPartner: values.relationship === "settled" || values.relationship === "british_citizen",
+      : ((full.lifeInUkPassed === "yes" ? "passed" : "not_taken") satisfies LifeInUkStatus),
+    marriedToBritishCitizen: full.relationship === "british_citizen",
+    hasSettledPartner: full.relationship === "settled" || full.relationship === "british_citizen",
+    ageBand: full.ageBand ?? previous?.ageBand ?? "18_to_64",
+    dependantCount: full.dependantCount ?? previous?.dependantCount ?? 0,
+    bornInUk: full.bornInUk ?? previous?.bornInUk ?? false,
+    hasBritishParent: full.hasBritishParent ?? previous?.hasBritishParent ?? false,
+    mainApplicantIlrOn: full.mainApplicantIlrOn || previous?.mainApplicantIlrOn || "",
+    priorStages: priorFromForm,
+    plannedSwitches: hops.length ? hops : previous?.plannedSwitches ?? [],
+    plannedSwitchOn: hops[0]?.on ?? previous?.plannedSwitchOn ?? "",
+    plannedSwitchTo: hops[0]?.toVisaId ?? previous?.plannedSwitchTo ?? "skilled-worker",
   };
 
   if (previous) {

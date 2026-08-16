@@ -94,6 +94,7 @@ export function Dashboard({
       <nav className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-1 text-sm sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
         {[
           ["timeline", "Timeline"],
+          ["household", "Household"],
           ["routes", "Routes"],
           ["checklist", "Checklist"],
           ["absences", "Absences"],
@@ -137,8 +138,14 @@ export function Dashboard({
         />
         <Stat
           label="Estimated citizenship"
-          value={plan.citizenshipEligibleOn ? formatLongDate(plan.citizenshipEligibleOn) : "—"}
-          hint={profile.marriedToBritishCitizen ? "Spouse of a British citizen pattern" : "Standard 12-month ILR wait"}
+          value={plan.citizenshipEligibleOn ? formatLongDate(plan.citizenshipEligibleOn) : plan.citizenshipPath === "already_british" ? "Already British" : "—"}
+          hint={
+            plan.citizenshipPath === "naturalisation_spouse"
+              ? "3-year spouse route — ILR first"
+              : plan.citizenshipPath === "registration_birth" || plan.citizenshipPath === "registration_parent"
+                ? "Citizenship by registration"
+                : "Standard 12-month ILR wait"
+          }
         />
         <Stat
           label="Path cost (estimate)"
@@ -154,6 +161,14 @@ export function Dashboard({
         </div>
       )}
 
+      {plan.longResidenceIlrOn && plan.longResidenceIlrOn !== plan.ilrEligibleOn ? (
+        <div className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 px-5 py-4 text-sm text-ink-muted">
+          <strong className="font-semibold text-navy">Parallel 10-year clock. </strong>
+          Combining lawful leave (including switches) gives a long-residence ILR estimate of{" "}
+          {formatLongDate(plan.longResidenceIlrOn)}. Visitor leave does not count.
+        </div>
+      ) : null}
+
       <section id="timeline" className="mt-12 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">Timeline</h2>
         <p className="mt-2 text-sm text-ink-muted">
@@ -167,11 +182,60 @@ export function Dashboard({
         />
       </section>
 
+      <section id="household" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Household and switch chain</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Dependant ILR usually follows the main applicant after 5 years. Children born in the UK, or
+          under 18 with a British parent, may register as British instead of naturalising.
+        </p>
+        {plan.switchChain.length > 0 ? (
+          <ol className="mt-6 space-y-3">
+            {plan.switchChain.map((hop, index) => (
+              <li key={`${hop.toVisaId}-${hop.on}`} className="rounded-xl border border-navy/10 bg-paper-50 px-4 py-3 text-sm">
+                <p className="font-medium text-navy">
+                  {index + 1}. Switch to {hop.toVisaId} on {formatLongDate(hop.on)}
+                </p>
+                <p className="mt-1 text-ink-muted">{hop.note}</p>
+                {hop.ilrEligibleOn ? (
+                  <p className="mt-1 text-xs text-ink-faint">ILR from this hop: {formatLongDate(hop.ilrEligibleOn)}</p>
+                ) : null}
+              </li>
+            ))}
+          </ol>
+        ) : (
+          <p className="mt-4 text-sm text-ink-muted">No extra planned switches recorded beyond your current visa.</p>
+        )}
+        {plan.dependantPlans.length > 0 ? (
+          <ul className="mt-6 grid gap-3 md:grid-cols-2">
+            {plan.dependantPlans.map((dependant) => (
+              <li key={dependant.id} className="rounded-xl border border-navy/10 bg-paper-50 p-4">
+                <p className="font-medium text-navy">{dependant.label}</p>
+                <p className="mt-1 text-sm text-ink-muted">{dependant.summary}</p>
+                <p className="mt-2 text-xs text-ink-faint">
+                  ILR: {dependant.ilrEligibleOn ? formatLongDate(dependant.ilrEligibleOn) : "—"}
+                  {" · "}
+                  Citizenship:{" "}
+                  {dependant.citizenshipEligibleOn
+                    ? formatLongDate(dependant.citizenshipEligibleOn)
+                    : dependant.citizenshipPath === "already_british"
+                      ? "Already British"
+                      : "—"}
+                </p>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="mt-4 text-sm text-ink-muted">
+            No dependants on this plan. Add a count in Edit profile if you want household ILR dates.
+          </p>
+        )}
+      </section>
+
       <section id="routes" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">Route comparison</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          The five MVP routes. Switch only if the planner models an in-country move from your current
-          visa — it does not check whether you actually qualify.
+          Featured settlement routes plus your current path. Switch only if the planner models an
+          in-country move from your current visa — it does not check whether you actually qualify.
         </p>
         <RouteComparison profile={profile} plan={plan} onSwitch={onProfileChange} />
       </section>

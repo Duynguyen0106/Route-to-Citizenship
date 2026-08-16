@@ -6,14 +6,30 @@ import {
   getRouteForPathway,
   getRoutesForVisaType,
   isSwitchingAllowed,
+  listFeaturedRoutes,
   listRoutes,
   switchingTargets,
   visaIdToCurrentVisaType,
 } from "../lib/routes";
 
 describe("core route rule engine", () => {
-  it("defines the five MVP routes with the specified fields", () => {
-    expect(listRoutes()).toHaveLength(5);
+  it("defines the five featured routes plus additional UK categories", () => {
+    expect(listFeaturedRoutes()).toHaveLength(5);
+    expect(listRoutes().length).toBeGreaterThan(5);
+    expect(listRoutes().map((route) => route.key)).toEqual(
+      expect.arrayContaining([
+        "skilled-worker",
+        "family",
+        "student-graduate-skilled-worker",
+        "global-talent",
+        "long-residence",
+        "innovator-founder",
+        "global-business-mobility",
+        "youth-mobility",
+        "dependant",
+        "child-registration",
+      ]),
+    );
     expect(ROUTES.skilledWorker).toMatchObject({
       key: "skilled-worker",
       name: "Skilled Worker to ILR to Citizenship",
@@ -86,12 +102,17 @@ describe("core route rule engine", () => {
   it("maps catalogue visa ids onto current-visa types", () => {
     expect(visaIdToCurrentVisaType("skilled-worker")).toBe("SKILLED_WORKER");
     expect(visaIdToCurrentVisaType("spouse-10")).toBe("FAMILY");
-    expect(visaIdToCurrentVisaType("visitor")).toBe("OTHER");
+    expect(visaIdToCurrentVisaType("visitor")).toBe("VISITOR");
+    expect(visaIdToCurrentVisaType("innovator-founder")).toBe("INNOVATOR_FOUNDER");
+    expect(visaIdToCurrentVisaType("gbm")).toBe("GBM");
   });
 
-  it("treats switching as allowed between the five routes", () => {
+  it("treats switching as allowed between settlement-leading routes", () => {
     expect(isSwitchingAllowed(ROUTES.skilledWorker, ROUTES.globalTalent)).toBe(true);
     expect(isSwitchingAllowed(ROUTES.skilledWorker, ROUTES.skilledWorker)).toBe(false);
-    expect(switchingTargets(ROUTES.family).length).toBe(4);
+    expect(switchingTargets(ROUTES.family).length).toBeGreaterThan(4);
+    expect(switchingTargets(ROUTES.family).some((route) => route.key === ROUTES.family.key)).toBe(
+      false,
+    );
   });
 });

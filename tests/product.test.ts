@@ -156,7 +156,8 @@ describe("API error handling and happy paths", () => {
 
   it("lists routes and calculates / checklists every sample profile", async () => {
     const listed = await (await getRoutes()).json();
-    expect(listed.routes).toHaveLength(5);
+    expect(listed.routes.length).toBeGreaterThan(5);
+    expect(listed.routes.some((route: { key: string }) => route.key === "innovator-founder")).toBe(true);
 
     for (const sample of SAMPLE_PROFILES) {
       const calc = await postCalculate(
@@ -165,7 +166,7 @@ describe("API error handling and happy paths", () => {
       expect(calc.status, sample.id).toBe(200);
       const calcJson = await calc.json();
       expect(calcJson.currentRoute.key, sample.id).toBeTruthy();
-      expect(calcJson.alternatives.length, sample.id).toBe(4);
+      expect(calcJson.alternatives.length, sample.id).toBeGreaterThan(4);
 
       const checklist = await postChecklist(jsonRequest("http://localhost/api/checklist", "POST", sample.profile));
       expect(checklist.status, sample.id).toBe(200);

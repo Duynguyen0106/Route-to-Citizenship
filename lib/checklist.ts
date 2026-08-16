@@ -196,6 +196,33 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
     },
   );
 
+  if (route.id === "child-registration" || profile.ageBand === "under_18") {
+    items.push(
+      {
+        id: "birth-certificate",
+        label: "Child’s birth certificate",
+        detail: "Full birth certificate showing parents, plus evidence of the child’s current leave if they hold a visa.",
+        required: true,
+        group: "route",
+      },
+      {
+        id: "parent-status",
+        label: "Parent’s British citizenship or ILR evidence",
+        detail:
+          "For registration, show that a parent is British, or that a parent became settled after a UK birth (section 1(3)). Section 3(1) applications are discretionary.",
+        required: true,
+        group: "route",
+      },
+      {
+        id: "registration-form",
+        label: "Registration application (not naturalisation Form AN)",
+        detail: "Use the registration form that matches the section of the British Nationality Act. Confirm the live form and fee on GOV.UK — this planner does not invent a registration fee.",
+        required: true,
+        group: "application",
+      },
+    );
+  }
+
   if (route.id === "ilr") {
     items.push({
       id: "naturalisation-refs",

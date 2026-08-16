@@ -69,16 +69,19 @@ describe("POST /api/calculate", () => {
     expect(response.status).toBe(200);
     const json = await response.json();
     expect(json.currentRoute.key).toBe("skilled-worker");
-    expect(json.alternatives.length).toBe(4);
+    expect(json.alternatives.length).toBeGreaterThan(4);
   });
 });
 
 describe("GET /api/routes", () => {
-  it("lists the five MVP routes with rule metadata", async () => {
+  it("lists settlement routes with rule metadata, including the original five", async () => {
     const response = await getRoutes();
     const json = await response.json();
-    expect(json.routes).toHaveLength(5);
-    expect(json.routes[0]).toMatchObject({
+    expect(json.routes.length).toBeGreaterThan(5);
+    expect(json.routes.some((route: { key: string }) => route.key === "skilled-worker")).toBe(true);
+    expect(json.routes.some((route: { key: string }) => route.key === "innovator-founder")).toBe(true);
+    const skilled = json.routes.find((route: { key: string }) => route.key === "skilled-worker");
+    expect(skilled).toMatchObject({
       key: "skilled-worker",
       minYearsToILR: 5,
       absenceLimitPerYear: 180,
@@ -86,7 +89,7 @@ describe("GET /api/routes", () => {
       lifeInUKRequired: true,
       lastReviewedOn: "2026-08-01",
     });
-    expect(json.routes[0].officialUrls[0].url).toContain("gov.uk");
+    expect(skilled.officialUrls[0].url).toContain("gov.uk");
   });
 });
 

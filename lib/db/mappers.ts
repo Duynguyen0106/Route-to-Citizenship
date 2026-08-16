@@ -77,6 +77,11 @@ export interface PlannerState {
   qualifyingResidenceStart: string;
   plannedSwitchOn: string;
   plannedSwitchTo: string;
+  plannedSwitches: Profile["plannedSwitches"];
+  dependants: Profile["dependants"];
+  mainApplicantIlrOn: string;
+  bornInUk: boolean;
+  hasBritishParent: boolean;
   ageBand: Profile["ageBand"];
   dependantCount: number;
   applyFromInsideUk: boolean;
@@ -96,6 +101,11 @@ export function plannerStateFromProfile(profile: Profile): PlannerState {
     qualifyingResidenceStart: profile.qualifyingResidenceStart,
     plannedSwitchOn: profile.plannedSwitchOn,
     plannedSwitchTo: profile.plannedSwitchTo,
+    plannedSwitches: profile.plannedSwitches,
+    dependants: profile.dependants,
+    mainApplicantIlrOn: profile.mainApplicantIlrOn,
+    bornInUk: profile.bornInUk,
+    hasBritishParent: profile.hasBritishParent,
     ageBand: profile.ageBand,
     dependantCount: profile.dependantCount,
     applyFromInsideUk: profile.applyFromInsideUk,
@@ -171,6 +181,11 @@ export function dbProfileToPlanner(row: DbProfileShape): Profile {
     })),
     plannedSwitchOn: state.plannedSwitchOn ?? (planned ? isoDate(planned.startDate) : ""),
     plannedSwitchTo: state.plannedSwitchTo ?? planned?.visaType ?? "skilled-worker",
+    plannedSwitches: state.plannedSwitches ?? [],
+    dependants: state.dependants ?? [],
+    mainApplicantIlrOn: state.mainApplicantIlrOn ?? "",
+    bornInUk: state.bornInUk ?? false,
+    hasBritishParent: state.hasBritishParent ?? false,
     absences: row.absenceRecords.map((record) => ({
       id: record.id,
       departedOn: isoDate(record.startDate),
@@ -204,6 +219,34 @@ export function currentVisaTypeToDefaultVisaId(type: string): string {
       return "graduate";
     case "GLOBAL_TALENT":
       return "global-talent-talent";
+    case "INNOVATOR_FOUNDER":
+      return "innovator-founder";
+    case "SCALE_UP":
+      return "scale-up";
+    case "SPORTSPERSON":
+      return "sportsperson";
+    case "MINISTER_OF_RELIGION":
+      return "minister-of-religion";
+    case "GBM":
+      return "gbm";
+    case "YOUTH_MOBILITY":
+      return "youth-mobility";
+    case "ANCESTRY":
+      return "ancestry";
+    case "BNO":
+      return "bno";
+    case "HPI":
+      return "hpi";
+    case "PROTECTION":
+      return "refugee";
+    case "EUSS":
+      return "pre-settled";
+    case "DEPENDANT":
+      return "dependant";
+    case "CHILD_REGISTRATION":
+      return "child-registration";
+    case "VISITOR":
+      return "visitor";
     default:
       return "long-residence";
   }

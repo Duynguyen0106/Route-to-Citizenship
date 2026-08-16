@@ -56,13 +56,13 @@ describe("checkEligibility — Skilled Worker", () => {
     });
   });
 
-  it("still uses 12 months after ILR when married to a British citizen", () => {
+  it("uses ILR first when married to a British citizen (no extra 12-month wait)", () => {
     const result = checkEligibility(
       profile({ marriedToBritishCitizen: true }),
       ROUTES.skilledWorker,
       AS_OF,
     );
-    expect(toIsoDate(result.estimatedCitizenshipDate!)).toBe("2030-03-01");
+    expect(toIsoDate(result.estimatedCitizenshipDate!)).toBe("2029-03-01");
   });
 
   it("rejects a visa type that is not Skilled Worker", () => {

@@ -5,12 +5,13 @@ import { calculatePlan } from "../lib/calculate";
 import { estimateFees, SKILLED_WORKER } from "../lib/fees";
 import { inferPathway } from "../lib/pathways";
 import { simulateSwitch } from "../lib/simulate";
+import { normalizeProfile } from "../lib/storage";
 import { DEFAULT_REMINDER_PREFS, type AbsenceTrip, type Profile } from "../lib/types";
 
 const AS_OF = parseISO("2026-08-16");
 
 function profile(overrides: Partial<Profile> & Pick<Profile, "currentVisaId">): Profile {
-  return {
+  return normalizeProfile({
     id: "test",
     updatedAt: "2026-08-16T00:00:00.000Z",
     pathwayId: inferPathway(overrides.currentVisaId),
@@ -38,7 +39,7 @@ function profile(overrides: Partial<Profile> & Pick<Profile, "currentVisaId">): 
     reminderPrefs: { ...DEFAULT_REMINDER_PREFS },
     checkedDocumentIds: [],
     ...overrides,
-  };
+  });
 }
 
 describe("absence tracker", () => {

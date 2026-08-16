@@ -1,4 +1,4 @@
-import { addYears, differenceInCalendarDays, parseISO } from "date-fns";
+import { differenceInCalendarDays, parseISO } from "date-fns";
 import { analyseAbsences } from "./absences";
 import { toIsoDate } from "./dates";
 import {
@@ -7,6 +7,7 @@ import {
   visaIdToCurrentVisaType,
   type RouteDefinition,
 } from "./routes";
+import { addCalendarYears, citizenshipEligibleDate } from "./settlement";
 import type { EligibilityCheck, EligibilityItem, Profile, VisaRoute } from "./types";
 import { MAJORITY_ENGLISH_SPEAKING_COUNTRIES } from "./types";
 
@@ -136,9 +137,22 @@ function estimatedDates(
   profile: Profile,
   route: RouteDefinition,
 ): { ilr: Date | null; citizenship: Date | null } {
+  const residenceStart = parseISO(
+    profile.ukEntryDate || profile.qualifyingResidenceStart || profile.visaGrantedOn,
+  );
+
   if (alreadyHoldsIlr(profile)) {
     const ilr = parseISO(profile.visaGrantedOn);
-    return { ilr, citizenship: addYears(ilr, 1) };
+    return {
+      ilr,
+      citizenship: citizenshipEligibleDate({
+        ilrEligibleOn: ilr,
+        ilrGrantedOn: ilr,
+        residenceStart,
+        marriedToBritishCitizen: profile.marriedToBritishCitizen,
+        alreadyHasIlr: true,
+      }),
+    };
   }
 
   const clockVisaId = visaIdForClock(profile, route);
@@ -151,9 +165,17 @@ function estimatedDates(
     return { ilr: null, citizenship: null };
   }
 
-  const ilr = addYears(parseISO(startIso), years);
-  // Simplified naturalisation wait: 12 months after ILR, including spouse-of-British cases.
-  return { ilr, citizenship: addYears(ilr, 1) };
+  const ilrOn = addCalendarYears(parseISO(startIso), years);
+  return {
+    ilr: ilrOn,
+    citizenship: citizenshipEligibleDate({
+      ilrEligibleOn: ilrOn,
+      ilrGrantedOn: null,
+      residenceStart,
+      marriedToBritishCitizen: profile.marriedToBritishCitizen,
+      alreadyHasIlr: false,
+    }),
+  };
 }
 
 /**

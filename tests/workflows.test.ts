@@ -15,7 +15,7 @@ import { SAMPLE_PROFILES } from "../lib/samples";
 import { getPossibleSwitches } from "../lib/simulate";
 import { formatLongDate, formatShortDate } from "../lib/format";
 import { keyTimelineEvents } from "../lib/timeline";
-import { listRoutes } from "../lib/routes";
+import { listFeaturedRoutes } from "../lib/routes";
 
 const AS_OF = parseISO("2026-08-16");
 
@@ -68,7 +68,7 @@ describe("five MVP routes end to end", () => {
       expect(keys).toContain("now");
       expect(keys).toContain("visa");
       const cards = buildRouteComparison(sample.profile, plan, AS_OF);
-      expect(cards).toHaveLength(listRoutes().length);
+      expect(cards).toHaveLength(listFeaturedRoutes().length);
       expect(cards.filter((card) => card.current)).toHaveLength(1);
       const switches = getPossibleSwitches(sample.profile, AS_OF);
       for (const option of switches) {

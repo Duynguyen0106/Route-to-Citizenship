@@ -441,6 +441,72 @@ export const ROUTES: VisaRoute[] = [
     officialUrl: "https://www.gov.uk/indefinite-leave-to-remain",
   },
   {
+    id: "gbm",
+    name: "Global Business Mobility visa",
+    shortName: "Global Business Mobility",
+    category: "work",
+    leadsToIlr: false,
+    ilrYears: null,
+    countsTowardWorkIlr: false,
+    countsTowardFamilyIlr: false,
+    absenceRule: "none",
+    typicalGrantYears: 2,
+    inCountrySwitchFrom: "limited",
+    englishRequiredForIlr: true,
+    lifeInUkRequiredForIlr: true,
+    summary:
+      "Intra-company and related assignments (Senior or Specialist Worker, Graduate Trainee, UK Expansion Worker, Service Supplier, Secondment Worker). These routes do not usually lead to ILR.",
+    caveats: [
+      "GBM time does not usually count toward 5-year work settlement. It can still count toward 10-year long residence if leave is continuous and lawful.",
+      "Switching to Skilled Worker or another settlement route is often needed if you want ILR.",
+    ],
+    officialUrl: "https://www.gov.uk/global-business-mobility-routes",
+  },
+  {
+    id: "dependant",
+    name: "Dependant of a worker, talent or business visa holder",
+    shortName: "Dependant",
+    category: "family",
+    leadsToIlr: true,
+    ilrYears: 5,
+    countsTowardWorkIlr: false,
+    countsTowardFamilyIlr: false,
+    absenceRule: "180_in_12",
+    typicalGrantYears: 3,
+    inCountrySwitchFrom: "most",
+    englishRequiredForIlr: true,
+    lifeInUkRequiredForIlr: true,
+    summary:
+      "Partners and children granted leave as dependants of a settlement-leading visa holder. ILR is typically available after 5 years, often when the main applicant applies.",
+    caveats: [
+      "A child may be able to register as British instead of (or as well as) applying for ILR, depending on birth in the UK and the parents' status.",
+      "Dependant ILR still needs absences, English and Life in the UK for most people aged 18–64.",
+    ],
+    officialUrl: "https://www.gov.uk/skilled-worker-visa/family-members",
+  },
+  {
+    id: "child-registration",
+    name: "British citizenship by registration (child)",
+    shortName: "Child registration",
+    category: "settlement",
+    leadsToIlr: false,
+    ilrYears: null,
+    countsTowardWorkIlr: false,
+    countsTowardFamilyIlr: false,
+    absenceRule: "none",
+    typicalGrantYears: null,
+    inCountrySwitchFrom: "limited",
+    englishRequiredForIlr: false,
+    lifeInUkRequiredForIlr: false,
+    summary:
+      "A child born in the UK whose parent later becomes settled, or a child under 18 with a British parent, may be able to register as a British citizen rather than naturalise.",
+    caveats: [
+      "Registration is a nationality application, not an ILR clock. Entitlement versus discretion depends on the section of the British Nationality Act that applies.",
+      "This planner does not decide which section applies to a particular child.",
+    ],
+    officialUrl: "https://www.gov.uk/register-british-citizen",
+  },
+  {
     id: "minister-of-religion",
     name: "Minister of Religion visa",
     shortName: "Minister of Religion",
@@ -549,4 +615,9 @@ export function isQualifyingWorkCombination(from: VisaRoute, to: VisaRoute): boo
 
 export function isFamilyCombination(from: VisaRoute, to: VisaRoute): boolean {
   return from.countsTowardFamilyIlr && to.countsTowardFamilyIlr;
+}
+
+/** Lawful leave that can usually be combined toward 10-year long residence ILR. Visitor leave does not count. */
+export function countsTowardLongResidence(route: VisaRoute): boolean {
+  return route.category !== "visit";
 }

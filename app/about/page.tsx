@@ -11,17 +11,20 @@ export default function AboutPage() {
       <h1 className="mt-3 font-serif text-4xl text-navy">How the estimates are made</h1>
       <div className="mt-8 space-y-5 text-[17px] leading-relaxed text-ink">
         <p>
-          You pick one of five paths: Skilled Worker; family (spouse/partner); Student → Graduate →
-          Skilled Worker; Global Talent; or 10-year long residence. The planner adds the usual
-          qualifying period (5, 3 or 10 years) to the start date you provide. On the study path,
-          ILR is projected from a planned Skilled Worker switch — Student and Graduate time is not
-          treated as qualifying.
+          You pick a current UK visa. The planner covers the original five paths (Skilled Worker;
+          family; Student → Graduate → Skilled Worker; Global Talent; 10-year long residence) and
+          also Innovator Founder, Scale-up, International Sportsperson, Minister of Religion, Global
+          Business Mobility, Youth Mobility, Ancestry, BN(O), HPI, protection, EUSS, dependants, and
+          child registration. It can chain planned switches, combine lawful time toward 10-year long
+          residence, and sketch ILR or registration for a household.
         </p>
         <p>
           ILR applications can often be submitted up to 28 days before the qualifying date. British
-          citizenship is estimated as 12 months after ILR (or immediately after ILR if you say you
-          are married to a British citizen and already meet a 3-year residence period). These are
-          common patterns — not a full reading of the Nationality Act or the Immigration Rules.
+          citizenship is estimated as 12 months after ILR, or — if you are married to a British
+          citizen — the later of ILR and 3 years’ residence (ILR must still come first). Children
+          born in the UK whose parent later settles, or children under 18 with a British parent, may
+          register rather than naturalise. These are common patterns — not a full reading of the
+          Nationality Act or the Immigration Rules.
         </p>
         <p>
           The absence tracker counts whole days from departure up to (not including) the return

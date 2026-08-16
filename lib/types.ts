@@ -37,7 +37,46 @@ export type PathwayId =
   | "family"
   | "student-to-skilled"
   | "global-talent"
-  | "long-residence";
+  | "long-residence"
+  | "innovator-founder"
+  | "scale-up"
+  | "sportsperson"
+  | "minister-of-religion"
+  | "global-business-mobility"
+  | "youth-mobility"
+  | "ancestry"
+  | "bno"
+  | "hpi"
+  | "protection"
+  | "euss"
+  | "dependant"
+  | "child-registration";
+
+export type DependantKind = "partner" | "child";
+
+export type CitizenshipPath =
+  | "naturalisation"
+  | "naturalisation_spouse"
+  | "registration_birth"
+  | "registration_parent"
+  | "already_british"
+  | "none";
+
+export interface PlannedSwitch {
+  toVisaId: string;
+  on: string;
+}
+
+export interface Dependant {
+  id: string;
+  kind: DependantKind;
+  ageBand: AgeBand;
+  bornInUk: boolean;
+  britishParent: boolean;
+  visaGrantedOn: string;
+  visaExpiresOn: string;
+  ukEntryDate: string;
+}
 
 export interface PathwayStage {
   id: string;
@@ -110,6 +149,13 @@ export interface Profile {
   /** Planned switch onto a qualifying visa (used on the student path). */
   plannedSwitchOn: string;
   plannedSwitchTo: string;
+  /** Extra planned hops after the first switch, e.g. Skilled Worker → Global Talent. */
+  plannedSwitches: PlannedSwitch[];
+  dependants: Dependant[];
+  /** Parent ILR date when this profile is a dependant or a child registering. */
+  mainApplicantIlrOn: string;
+  bornInUk: boolean;
+  hasBritishParent: boolean;
   absences: AbsenceTrip[];
   daysAbsentLast12Months: number;
   exceeded180DaysInAny12Months: boolean;
@@ -241,6 +287,24 @@ export interface Reminder {
   urgency: "overdue" | "soon" | "upcoming";
 }
 
+export interface DependantPlan {
+  id: string;
+  kind: DependantKind;
+  label: string;
+  ilrEligibleOn: string | null;
+  citizenshipEligibleOn: string | null;
+  citizenshipPath: CitizenshipPath;
+  summary: string;
+}
+
+export interface SwitchChainHop {
+  toVisaId: string;
+  on: string;
+  qualifyingStart: string;
+  ilrEligibleOn: string | null;
+  note: string;
+}
+
 export interface PlanResult {
   asOf: string;
   pathwayId: PathwayId;
@@ -249,6 +313,10 @@ export interface PlanResult {
   ilrEligibleOn: string | null;
   ilrApplyFrom: string | null;
   citizenshipEligibleOn: string | null;
+  citizenshipPath: CitizenshipPath;
+  longResidenceIlrOn: string | null;
+  switchChain: SwitchChainHop[];
+  dependantPlans: DependantPlan[];
   needsVisaExtension: boolean;
   extensionNote: string | null;
   timeline: TimelineEvent[];

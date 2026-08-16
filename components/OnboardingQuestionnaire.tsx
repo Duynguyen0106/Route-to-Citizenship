@@ -3,10 +3,12 @@
 import { useState, type ReactNode } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
+import type { Resolver } from "react-hook-form";
 import {
   NATIONALITY_OPTIONS,
   ONBOARDING_STEPS,
-  ONBOARDING_VISA_OPTIONS,
+  ONBOARDING_VISA_GROUPS,
+  SWITCH_VISA_OPTIONS,
   emptyOnboardingValues,
   firstInvalidOnboardingStep,
   onboardingSchema,
@@ -15,7 +17,7 @@ import {
   profileToOnboarding,
   type OnboardingValues,
 } from "@/lib/onboarding";
-import { SAMPLE_PROFILES } from "@/lib/samples";
+import { EXTRA_SCENARIO_PROFILES, SAMPLE_PROFILES } from "@/lib/samples";
 import type { Profile } from "@/lib/types";
 
 type Props = {
@@ -30,7 +32,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
   const [maxReached, setMaxReached] = useState(initial ? ONBOARDING_STEPS.length - 1 : 0);
   const [formError, setFormError] = useState<string | null>(null);
   const form = useForm<OnboardingValues>({
-    resolver: zodResolver(onboardingSchema),
+    resolver: zodResolver(onboardingSchema) as Resolver<OnboardingValues>,
     defaultValues: initial ? profileToOnboarding(initial) : emptyOnboardingValues(),
     mode: "onTouched",
   });
@@ -75,13 +77,14 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
         {initial ? "Edit your immigration profile" : "Seven questions to sketch your route"}
       </h1>
       <p className="mt-3 text-sm text-ink-muted sm:text-base">
-        We map your answers onto one of five MVP paths. We never ask for passport numbers. This is
-        not immigration advice.
+        We map your answers onto the UK settlement routes we model — the original five plus
+        Innovator Founder, Scale-up, dependants, child registration and others. We never ask for
+        passport numbers. This is not immigration advice.
       </p>
 
       {!initial && (
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {SAMPLE_PROFILES.map((sample) => (
+          {SAMPLE_PROFILES.concat(EXTRA_SCENARIO_PROFILES).map((sample) => (
             <button
               key={sample.id}
               type="button"
@@ -157,84 +160,179 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
           {step === 1 ? (
             <Field label="Current visa type" error={form.formState.errors.currentVisaId?.message}>
               <select className="field-input" {...form.register("currentVisaId")}>
-                {ONBOARDING_VISA_OPTIONS.map((visa) => (
-                  <option key={visa.id} value={visa.id}>
-                    {visa.label}
-                  </option>
+                {ONBOARDING_VISA_GROUPS.map((group) => (
+                  <optgroup key={group.label} label={group.label}>
+                    {group.options.map((visa) => (
+                      <option key={visa.id} value={visa.id}>
+                        {visa.label}
+                      </option>
+                    ))}
+                  </optgroup>
                 ))}
               </select>
               <p className="mt-2 text-xs font-normal text-ink-muted">
-                Maps to MVP pathway: {pathwayHint(visaId, initial)}
+                Maps to pathway: {pathwayHint(visaId, initial)}
               </p>
-              {visaId === "student" || visaId === "graduate" ? (
+              {visaId === "student" || visaId === "graduate" || visaId === "gbm" || visaId === "hpi" || visaId === "youth-mobility" ? (
                 <p className="mt-2 text-xs font-normal text-clay-600">
-                  Student and Graduate leave do not count toward ILR until you switch to Skilled
-                  Worker or another qualifying route.
+                  This leave does not lead to ILR on its own. Add a planned switch, or count time toward
+                  10-year long residence.
                 </p>
               ) : null}
             </Field>
           ) : null}
 
           {step === 2 ? (
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Visa start date" error={form.formState.errors.visaGrantDate?.message}>
-                <input className="field-input" type="date" {...form.register("visaGrantDate")} />
-              </Field>
-              <Field label="Visa expiry date" error={form.formState.errors.visaExpiryDate?.message}>
-                <input className="field-input" type="date" {...form.register("visaExpiryDate")} />
-              </Field>
+            <div className="space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Visa start date" error={form.formState.errors.visaGrantDate?.message}>
+                  <input className="field-input" type="date" {...form.register("visaGrantDate")} />
+                </Field>
+                <Field label="Visa expiry date" error={form.formState.errors.visaExpiryDate?.message}>
+                  <input className="field-input" type="date" {...form.register("visaExpiryDate")} />
+                </Field>
+              </div>
+              <p className="text-xs text-ink-muted">
+                Optional: earlier leave and planned switches (Student → Graduate → Skilled Worker →
+                Global Talent).
+              </p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <Field label="Earlier visa (optional)">
+                  <select className="field-input" {...form.register("priorVisaId")}>
+                    <option value="">None / skip</option>
+                    {SWITCH_VISA_OPTIONS.filter((item) => item.id).map((item) => (
+                      <option key={item.id} value={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                    <option value="student">Student</option>
+                  </select>
+                </Field>
+                <Field label="Earlier visa start">
+                  <input className="field-input" type="date" {...form.register("priorVisaStart")} />
+                </Field>
+                <Field label="Earlier visa end">
+                  <input className="field-input" type="date" {...form.register("priorVisaEnd")} />
+                </Field>
+              </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Next planned switch">
+                  <select className="field-input" {...form.register("plannedSwitch1To")}>
+                    {SWITCH_VISA_OPTIONS.map((item) => (
+                      <option key={item.id || "none"} value={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Switch date">
+                  <input className="field-input" type="date" {...form.register("plannedSwitch1On")} />
+                </Field>
+                <Field label="Later planned switch">
+                  <select className="field-input" {...form.register("plannedSwitch2To")}>
+                    {SWITCH_VISA_OPTIONS.map((item) => (
+                      <option key={`2-${item.id || "none"}`} value={item.id}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="Later switch date">
+                  <input className="field-input" type="date" {...form.register("plannedSwitch2On")} />
+                </Field>
+              </div>
             </div>
           ) : null}
 
           {step === 3 ? (
-            <Field
-              label="Date first entered the UK (optional)"
-              error={form.formState.errors.ukEntryDate?.message}
-            >
-              <input className="field-input" type="date" {...form.register("ukEntryDate")} />
-              <p className="mt-2 text-xs font-normal text-ink-muted">
-                Used for the 10-year long residence route and citizenship residence. Leave blank if
-                you are not counting from first arrival.
+            <div className="space-y-4">
+              <Field
+                label="Date first entered the UK (optional)"
+                error={form.formState.errors.ukEntryDate?.message}
+              >
+                <input className="field-input" type="date" {...form.register("ukEntryDate")} />
+                <p className="mt-2 text-xs font-normal text-ink-muted">
+                  Used for 10-year long residence (combining different visas) and citizenship residence.
+                </p>
+              </Field>
+              <Field label="Age band">
+                <select className="field-input" {...form.register("ageBand")}>
+                  <option value="18_to_64">18 to 64</option>
+                  <option value="under_18">Under 18</option>
+                  <option value="65_plus">65 or over</option>
+                </select>
+              </Field>
+              <label className="flex items-center gap-2 text-sm text-navy">
+                <input type="checkbox" {...form.register("bornInUk")} />
+                This applicant was born in the UK
+              </label>
+              <label className="flex items-center gap-2 text-sm text-navy">
+                <input type="checkbox" {...form.register("hasBritishParent")} />
+                At least one parent is a British citizen
+              </label>
+              <p className="text-xs text-ink-muted">
+                Used for citizenship by registration (children born in the UK, or under 18 with a
+                British parent).
               </p>
-            </Field>
+            </div>
           ) : null}
 
           {step === 4 ? (
-            <Controller
-              control={form.control}
-              name="relationship"
-              render={({ field }) => (
-                <fieldset>
-                  <legend className="text-sm font-medium text-navy">
-                    Relationship to a British citizen or settled person
-                  </legend>
-                  <div className="mt-3 grid gap-2">
-                    {(
-                      [
-                        ["none", "None / not relying on a partner"],
-                        ["british_citizen", "Partner or spouse is a British citizen"],
-                        ["settled", "Partner or spouse is settled (ILR / settled status)"],
-                      ] as const
-                    ).map(([value, label]) => (
-                      <label
-                        key={value}
-                        className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 text-sm ${
-                          field.value === value ? "border-moss bg-moss/10" : "border-navy/10"
-                        }`}
-                      >
-                        <input
-                          type="radio"
-                          value={value}
-                          checked={field.value === value}
-                          onChange={() => field.onChange(value)}
-                        />
-                        {label}
-                      </label>
-                    ))}
-                  </div>
-                </fieldset>
+            <div className="space-y-4">
+              <Controller
+                control={form.control}
+                name="relationship"
+                render={({ field }) => (
+                  <fieldset>
+                    <legend className="text-sm font-medium text-navy">
+                      Relationship to a British citizen or settled person
+                    </legend>
+                    <div className="mt-3 grid gap-2">
+                      {(
+                        [
+                          ["none", "None / not relying on a partner"],
+                          ["british_citizen", "Partner or spouse is a British citizen"],
+                          ["settled", "Partner or spouse is settled (ILR / settled status)"],
+                        ] as const
+                      ).map(([value, label]) => (
+                        <label
+                          key={value}
+                          className={`flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 text-sm ${
+                            field.value === value ? "border-moss bg-moss/10" : "border-navy/10"
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            value={value}
+                            checked={field.value === value}
+                            onChange={() => field.onChange(value)}
+                          />
+                          {label}
+                        </label>
+                      ))}
+                    </div>
+                    <p className="mt-2 text-xs text-ink-muted">
+                      Married to a British citizen: naturalisation is usually 3 years’ residence after
+                      ILR is held — not 12 months after ILR.
+                    </p>
+                  </fieldset>
+                )}
+              />
+              <Field label="How many dependants should we sketch ILR for?">
+                <input
+                  className="field-input"
+                  type="number"
+                  min={0}
+                  max={8}
+                  {...form.register("dependantCount", { valueAsNumber: true })}
+                />
+              </Field>
+              {(visaId === "dependant" || visaId === "child-registration") && (
+                <Field label="Main applicant’s ILR date (if known)">
+                  <input className="field-input" type="date" {...form.register("mainApplicantIlrOn")} />
+                </Field>
               )}
-            />
+            </div>
           ) : null}
 
           {step === 5 ? (

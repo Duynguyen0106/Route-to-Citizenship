@@ -1,5 +1,6 @@
 import { inferPathway } from "./pathways";
 import { DEFAULT_REMINDER_PREFS, type Profile } from "./types";
+import { syncLegacyPlannedSwitch } from "./switch-chain";
 
 export const STORAGE_KEY = "rtc-profile-v1";
 
@@ -14,6 +15,11 @@ export function emptyProfile(): Omit<Profile, "id" | "updatedAt"> {
     priorStages: [],
     plannedSwitchOn: "",
     plannedSwitchTo: "skilled-worker",
+    plannedSwitches: [],
+    dependants: [],
+    mainApplicantIlrOn: "",
+    bornInUk: false,
+    hasBritishParent: false,
     absences: [],
     daysAbsentLast12Months: 0,
     exceeded180DaysInAny12Months: false,
@@ -35,7 +41,7 @@ export function emptyProfile(): Omit<Profile, "id" | "updatedAt"> {
 
 export function normalizeProfile(profile: Partial<Profile> & Pick<Profile, "currentVisaId">): Profile {
   const base = emptyProfile();
-  return {
+  const merged = {
     ...base,
     ...profile,
     id: profile.id ?? "profile",
@@ -44,12 +50,21 @@ export function normalizeProfile(profile: Partial<Profile> & Pick<Profile, "curr
     priorStages: profile.priorStages ?? [],
     plannedSwitchOn: profile.plannedSwitchOn ?? "",
     plannedSwitchTo: profile.plannedSwitchTo || "skilled-worker",
+    plannedSwitches: profile.plannedSwitches ?? [],
+    dependants: profile.dependants ?? [],
+    mainApplicantIlrOn: profile.mainApplicantIlrOn ?? "",
+    bornInUk: profile.bornInUk ?? false,
+    hasBritishParent: profile.hasBritishParent ?? false,
     absences: profile.absences ?? [],
     reminderPrefs: { ...DEFAULT_REMINDER_PREFS, ...profile.reminderPrefs },
     checkedDocumentIds: profile.checkedDocumentIds ?? [],
     dependantCount: profile.dependantCount ?? 0,
     applyFromInsideUk: profile.applyFromInsideUk ?? true,
     sponsorshipOverThreeYears: profile.sponsorshipOverThreeYears ?? true,
+  };
+  return {
+    ...merged,
+    ...syncLegacyPlannedSwitch(merged),
   };
 }
 
