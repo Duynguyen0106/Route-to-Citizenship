@@ -28,6 +28,15 @@ async function pngWide(svgFile, dest, width) {
   console.log(path.relative(root, dest));
 }
 
+async function pngCover(svgFile, dest) {
+  fs.mkdirSync(path.dirname(dest), { recursive: true });
+  await sharp(path.join(brand, svgFile), { density: 300 })
+    .resize(1640, 624, { fit: "fill" })
+    .png()
+    .toFile(dest);
+  console.log(path.relative(root, dest));
+}
+
 async function solid(dest, size, colour) {
   await sharp({
     create: {
@@ -62,6 +71,8 @@ async function main() {
   await png("logo-mark.svg", path.join(marketing, "logo-mark.png"), 1024);
   await pngWide("logo-lockup.svg", path.join(marketing, "logo-lockup-paper.png"), 2080);
   await pngWide("logo-lockup-on-navy.svg", path.join(marketing, "logo-lockup-navy.png"), 2080);
+  await pngCover("facebook-cover.svg", path.join(marketing, "facebook-profile-banner.png"));
+  await pngCover("facebook-cover-paper.svg", path.join(marketing, "facebook-profile-banner-paper.png"));
 }
 
 main().catch((err) => {

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1640 624" width="1640" height="624" role="img" aria-labelledby="fbcover-paper">
+  <title id="fbcover-paper">Route to Citizenship</title>
+  <rect width="1640" height="624" fill="#F6F1E8"/>
+  <rect x="48" y="48" width="1544" height="528" rx="8" fill="none" stroke="#C4A35A" stroke-width="1.25" opacity="0.7"/>
+
+  <g transform="translate(318 256) scale(1.75)">
+    <rect width="64" height="64" rx="16" fill="#1B2A4A"/>
+    <rect x="5" y="5" width="54" height="54" rx="12" fill="none" stroke="#C4A35A" stroke-width="1.5"/>
+    <path d="M15 47 L32 32 L49 17" fill="none" stroke="#C4A35A" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="15" cy="47" r="3.75" fill="#F6F1E8"/>
+    <circle cx="32" cy="32" r="4.25" fill="#C4A35A"/>
+    <circle cx="49" cy="17" r="5" fill="#2F5D45"/>
+    <circle cx="49" cy="17" r="1.8" fill="#F6F1E8"/>
+  </g>
+
+  <text x="454" y="308" fill="#1B2A4A" font-family="Georgia, 'Times New Roman', serif" font-size="52">Route to Citizenship</text>
+  <text x="454" y="348" fill="#2F5D45" font-family="system-ui, -apple-system, sans-serif" font-size="16" letter-spacing="4.2">UK IMMIGRATION PLANNER</text>
+
+  <g font-family="system-ui, -apple-system, sans-serif" font-size="13" letter-spacing="1.4">
+    <circle cx="462" cy="390" r="5" fill="#1B2A4A"/>
+    <text x="474" y="394" fill="#1B2A4A">Visa</text>
+    <path d="M518 390 H548" stroke="#C4A35A" stroke-width="1.25"/>
+    <circle cx="564" cy="390" r="5" fill="#C4A35A"/>
+    <text x="576" y="394" fill="#8A7040">ILR</text>
+    <path d="M610 390 H640" stroke="#C4A35A" stroke-width="1.25"/>
+    <circle cx="656" cy="390" r="5" fill="#2F5D45"/>
+    <circle cx="656" cy="390" r="1.8" fill="#F6F1E8"/>
+    <text x="668" y="394" fill="#2F5D45">Citizenship</text>
+  </g>
+</svg>
