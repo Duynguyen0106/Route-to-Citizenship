@@ -62,24 +62,44 @@ export function PlannerApp() {
         body: JSON.stringify({ profile: next }),
       })
         .then(async (response) => {
-          if (!response.ok) {
-            const body = (await response.json()) as { error?: string };
+          let body: { error?: string; profile?: Profile } = {};
+          try {
+            body = (await response.json()) as { error?: string; profile?: Profile };
+          } catch {
+            body = {};
+          }
+          if (!response.ok || !body.profile) {
             throw new Error(body.error || "Could not save to your account.");
           }
-          return response.json() as Promise<{ profile: Profile }>;
+          return body.profile;
         })
-        .then((body) => setProfile(body.profile))
+        .then((saved) => setProfile(saved))
         .catch((error: Error) => setSaveError(error.message));
     }, 400);
   }
 
   async function reset() {
+    setSaveError(null);
+    if (signedIn) {
+      try {
+        const response = await fetch("/api/plan", { method: "DELETE" });
+        let body: { error?: string } = {};
+        try {
+          body = (await response.json()) as { error?: string };
+        } catch {
+          body = {};
+        }
+        if (!response.ok) {
+          throw new Error(body.error || "Could not delete the saved plan.");
+        }
+      } catch (error) {
+        setSaveError(error instanceof Error ? error.message : "Could not delete the saved plan.");
+        return;
+      }
+    }
     clearProfile();
     setProfile(null);
     setEditing(false);
-    if (signedIn) {
-      await fetch("/api/plan", { method: "DELETE" });
-    }
   }
 
   if (!ready) {
@@ -89,6 +109,9 @@ export function PlannerApp() {
   if (!profile || editing) {
     return (
       <>
+        {saveError && (
+          <p className="mx-auto max-w-3xl px-4 pt-8 text-sm text-clay sm:px-6">{saveError}</p>
+        )}
         {signedIn && (
           <p className="mx-auto max-w-3xl px-4 pt-8 text-sm text-moss sm:px-6">
             Signed in — this plan is saved to your account.

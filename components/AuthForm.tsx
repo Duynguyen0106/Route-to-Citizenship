@@ -16,19 +16,29 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const response = await fetch(mode === "login" ? "/api/auth/login" : "/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password, name }),
-    });
-    const body = (await response.json()) as { error?: string };
-    setPending(false);
-    if (!response.ok) {
-      setError(body.error || "Something went wrong.");
-      return;
+    try {
+      const response = await fetch(mode === "login" ? "/api/auth/login" : "/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password, name }),
+      });
+      let body: { error?: string } = {};
+      try {
+        body = (await response.json()) as { error?: string };
+      } catch {
+        body = {};
+      }
+      if (!response.ok) {
+        setError(body.error || "Something went wrong.");
+        return;
+      }
+      router.push("/plan");
+      router.refresh();
+    } catch {
+      setError("Could not reach the server. Try again.");
+    } finally {
+      setPending(false);
     }
-    router.push("/plan");
-    router.refresh();
   }
 
   return (

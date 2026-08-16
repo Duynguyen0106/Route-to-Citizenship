@@ -84,6 +84,7 @@ describe("five MVP routes end to end", () => {
     expect(resolvePathwayId("skilled-worker", SAMPLE_PROFILES[4].profile)).toBe("long-residence");
     expect(resolvePathwayId("long-residence")).toBe("long-residence");
     expect(resolvePathwayId("spouse-5")).toBe("family");
+    expect(resolvePathwayId("spouse-5", SAMPLE_PROFILES[4].profile)).toBe("family");
   });
 
   it("models in-country switches from the long-residence visa option", () => {

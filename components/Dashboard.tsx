@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { AbsenceTracker } from "@/components/AbsenceTracker";
 import { ChecklistPanel } from "@/components/ChecklistPanel";
@@ -31,6 +32,7 @@ export function Dashboard({
   onReset: () => void;
   onProfileChange: (profile: Profile) => void;
 }) {
+  const [confirmReset, setConfirmReset] = useState(false);
   const pathway = getPathway(plan.pathwayId);
   const rule = getRouteForPathway(plan.pathwayId);
 
@@ -50,8 +52,21 @@ export function Dashboard({
             Edit profile
           </button>
           <ReportInaccuracyButton routeKey={rule.key} />
-          <button type="button" onClick={onReset} className="min-h-11 rounded-full px-4 py-2 text-ink-muted">
-            Start over
+          <button
+            type="button"
+            onClick={() => {
+              if (!confirmReset) {
+                setConfirmReset(true);
+                return;
+              }
+              onReset();
+              setConfirmReset(false);
+            }}
+            className={`min-h-11 rounded-full px-4 py-2 ${
+              confirmReset ? "bg-clay text-white" : "text-ink-muted"
+            }`}
+          >
+            {confirmReset ? "Confirm start over" : "Start over"}
           </button>
         </div>
       </div>

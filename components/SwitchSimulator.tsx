@@ -21,17 +21,17 @@ export function SwitchSimulator({ profile, plan }: { profile: Profile; plan: Pla
     ? toVisaId
     : (targets[0]?.visaId ?? "skilled-worker");
 
-  const simulation = useMemo(
-    () =>
-      simulateSwitch(
-        profile,
-        selected,
-        fromIsoDate(switchOn),
-        plan.ilrEligibleOn && plan.route.id !== "ilr" ? fromIsoDate(plan.ilrEligibleOn) : null,
-        plan.citizenshipEligibleOn ? fromIsoDate(plan.citizenshipEligibleOn) : null,
-      ),
-    [profile, selected, switchOn, plan],
-  );
+  const simulation = useMemo(() => {
+    const requested = fromIsoDate(switchOn);
+    const switchDate = Number.isNaN(requested.getTime()) ? fromIsoDate(plan.asOf) : requested;
+    return simulateSwitch(
+      profile,
+      selected,
+      switchDate,
+      plan.ilrEligibleOn && plan.route.id !== "ilr" ? fromIsoDate(plan.ilrEligibleOn) : null,
+      plan.citizenshipEligibleOn ? fromIsoDate(plan.citizenshipEligibleOn) : null,
+    );
+  }, [profile, selected, switchOn, plan]);
 
   return (
     <div className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 p-4 sm:p-5">

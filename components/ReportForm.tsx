@@ -19,22 +19,32 @@ export function ReportForm() {
     event.preventDefault();
     setPending(true);
     setError(null);
-    const response = await fetch("/api/report", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        routeKey: routeKey || null,
-        message,
-        contactEmail: contactEmail || null,
-      }),
-    });
-    const body = (await response.json()) as { error?: string };
-    setPending(false);
-    if (!response.ok) {
-      setError(body.error || "Could not send the report.");
-      return;
+    try {
+      const response = await fetch("/api/report", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          routeKey: routeKey || null,
+          message,
+          contactEmail: contactEmail || null,
+        }),
+      });
+      let body: { error?: string } = {};
+      try {
+        body = (await response.json()) as { error?: string };
+      } catch {
+        body = {};
+      }
+      if (!response.ok) {
+        setError(body.error || "Could not send the report.");
+        return;
+      }
+      setDone(true);
+    } catch {
+      setError("Could not reach the server. Try again.");
+    } finally {
+      setPending(false);
     }
-    setDone(true);
   }
 
   if (done) {

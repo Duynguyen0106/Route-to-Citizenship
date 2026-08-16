@@ -1,10 +1,13 @@
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
+import { readJsonBody } from "@/lib/api/session";
 import { setSessionCookie } from "@/lib/auth";
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { email?: string; password?: string };
+  const parsed = await readJsonBody(request);
+  if (parsed.error) return parsed.error;
+  const body = parsed.body as { email?: string; password?: string };
   const email = body.email?.trim().toLowerCase();
   const password = body.password ?? "";
 

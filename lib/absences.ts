@@ -11,7 +11,17 @@ export interface TwelveMonthPeriod {
 
 /** Whole days outside the UK: departure date up to (not including) the return date. */
 export function tripDays(trip: AbsenceTrip): number {
-  return Math.max(0, differenceInCalendarDays(parseISO(trip.returnedOn), parseISO(trip.departedOn)));
+  const dates = parseTripDates(trip);
+  if (!dates) return 0;
+  return Math.max(0, differenceInCalendarDays(dates.end, dates.start));
+}
+
+function parseTripDates(trip: AbsenceTrip): { start: Date; end: Date } | null {
+  if (!trip.departedOn || !trip.returnedOn) return null;
+  const start = parseISO(trip.departedOn);
+  const end = parseISO(trip.returnedOn);
+  if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return null;
+  return { start, end };
 }
 
 export function daysAbsentInRange(
@@ -21,10 +31,10 @@ export function daysAbsentInRange(
 ): number {
   let total = 0;
   for (const trip of trips) {
-    const start = parseISO(trip.departedOn);
-    const end = parseISO(trip.returnedOn);
-    const overlapStart = start > rangeStart ? start : rangeStart;
-    const overlapEnd = end < rangeEnd ? end : rangeEnd;
+    const dates = parseTripDates(trip);
+    if (!dates) continue;
+    const overlapStart = dates.start > rangeStart ? dates.start : rangeStart;
+    const overlapEnd = dates.end < rangeEnd ? dates.end : rangeEnd;
     if (overlapEnd > overlapStart) {
       total += differenceInCalendarDays(overlapEnd, overlapStart);
     }
@@ -39,7 +49,9 @@ export function maxRolling12MonthAbsence(
 ): AbsenceWindow {
   const anchors: Date[] = [to];
   for (const trip of trips) {
-    anchors.push(parseISO(trip.departedOn), parseISO(trip.returnedOn));
+    const dates = parseTripDates(trip);
+    if (!dates) continue;
+    anchors.push(dates.start, dates.end);
   }
 
   let max = 0;
@@ -109,8 +121,9 @@ export function daysAwayByYear(start: Date, end: Date): Record<string, number> {
 export function totalsByYear(trips: AbsenceTrip[]): Record<string, number> {
   const totals: Record<string, number> = {};
   for (const trip of trips) {
-    if (!trip.departedOn || !trip.returnedOn) continue;
-    const chunk = daysAwayByYear(parseISO(trip.departedOn), parseISO(trip.returnedOn));
+    const dates = parseTripDates(trip);
+    if (!dates) continue;
+    const chunk = daysAwayByYear(dates.start, dates.end);
     for (const [year, days] of Object.entries(chunk)) {
       totals[year] = (totals[year] ?? 0) + days;
     }

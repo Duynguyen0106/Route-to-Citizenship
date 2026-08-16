@@ -129,12 +129,15 @@ export function resolvePathwayId(
   visaId: string,
   previous?: Profile | null,
 ): Profile["pathwayId"] {
-  const inferred = inferPathway(visaId);
   if (visaId === "long-residence") return "long-residence";
-  if (previous?.pathwayId === "long-residence" && visaId !== "ilr") {
+  if (
+    previous?.pathwayId === "long-residence" &&
+    visaId === previous.currentVisaId &&
+    visaId !== "ilr"
+  ) {
     return "long-residence";
   }
-  return inferred;
+  return inferPathway(visaId);
 }
 
 export function onboardingToProfile(

@@ -15,6 +15,16 @@ export function badRequest(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 400 });
 }
 
+export async function readJsonBody(
+  request: Request,
+): Promise<{ body: unknown; error?: undefined } | { body?: undefined; error: NextResponse }> {
+  try {
+    return { body: await request.json() };
+  } catch {
+    return { error: badRequest("Request body must be JSON.") };
+  }
+}
+
 export function notFound(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 404 });
 }

@@ -101,9 +101,11 @@ export function buildRouteComparison(
 }
 
 export function expiryAfterSwitch(toVisaId: string, asOf: string, currentExpiry: string): string {
-  if (currentExpiry && currentExpiry > asOf) return currentExpiry;
+  if (currentExpiry && asOf && currentExpiry > asOf) return currentExpiry;
   const years = getRoute(toVisaId).typicalGrantYears ?? 3;
-  return toIsoDate(addYears(parseISO(asOf), years));
+  const start = parseISO(asOf);
+  if (Number.isNaN(start.getTime())) return currentExpiry || "";
+  return toIsoDate(addYears(start, years));
 }
 
 export function applyRouteSwitch(profile: Profile, plan: PlanResult, toVisaId: string): Profile {
