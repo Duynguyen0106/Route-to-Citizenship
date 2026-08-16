@@ -13,7 +13,8 @@
     "test:watch": "vitest",
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "brand:raster": "node scripts/raster-brand.cjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.9.0",

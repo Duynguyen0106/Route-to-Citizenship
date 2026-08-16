@@ -1,5 +1,5 @@
 import { Redirect, router } from "expo-router";
-import { Pressable, Text, View } from "react-native";
+import { Image, Pressable, Text, View } from "react-native";
 import { LEGAL_NOTICE } from "@/lib/legal";
 import { SAMPLE_PROFILES } from "@/lib/samples";
 import { RULES_REVIEWED_ON } from "@/lib/types";
@@ -28,6 +28,11 @@ export default function WelcomeScreen() {
 
   return (
     <ScrollScreen>
+      <Image
+        source={require("../assets/icon.png")}
+        accessibilityLabel={t("brand")}
+        style={{ width: 56, height: 56, borderRadius: 14, marginBottom: 16 }}
+      />
       <Kicker>{t("brand.tag")}</Kicker>
       <Title>{t("brand")}</Title>
       <Subtitle>{t("mobile.welcomeLead")}</Subtitle>

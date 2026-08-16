@@ -25,6 +25,16 @@ export const metadata: Metadata = {
   },
   description:
     "A UK immigration route planner that maps your current visa to Indefinite Leave to Remain and British citizenship. Not immigration advice.",
+  icons: {
+    icon: [{ url: "/brand/logo-mark.svg", type: "image/svg+xml" }],
+    apple: "/apple-icon.png",
+  },
+  openGraph: {
+    title: "Route to Citizenship",
+    description:
+      "Plan from the visa you hold to ILR and British citizenship. Not immigration advice.",
+    images: [{ url: "/brand/logo-mark-1024.png", width: 1024, height: 1024, alt: "Route to Citizenship" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

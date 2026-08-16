@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 160" role="img" aria-labelledby="rtclockup">
+  <title id="rtclockup">Route to Citizenship</title>
+  <desc>Wordmark lockup: navy route badge plus the product name.</desc>
+  <rect width="640" height="160" fill="#F6F1E8"/>
+  <rect x="40" y="48" width="64" height="64" rx="16" fill="#1B2A4A"/>
+  <rect x="45" y="53" width="54" height="54" rx="12" fill="none" stroke="#C4A35A" stroke-width="1.5"/>
+  <path d="M55 95 L72 80 L89 65" fill="none" stroke="#C4A35A" stroke-width="2.75" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="55" cy="95" r="3.75" fill="#F6F1E8"/>
+  <circle cx="72" cy="80" r="4.25" fill="#C4A35A"/>
+  <circle cx="89" cy="65" r="5" fill="#2F5D45"/>
+  <circle cx="89" cy="65" r="1.8" fill="#F6F1E8"/>
+  <text x="124" y="88" fill="#1B2A4A" font-family="Georgia, 'Times New Roman', serif" font-size="32">Route to Citizenship</text>
+  <text x="124" y="112" fill="#2F5D45" font-family="system-ui, -apple-system, sans-serif" font-size="12" letter-spacing="3">UK IMMIGRATION PLANNER</text>
+</svg>

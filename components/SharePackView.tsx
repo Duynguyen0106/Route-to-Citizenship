@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/BrandMark";
 import { formatGbp, formatLongDate } from "@/lib/format";
 import { PRINT_COLOURS as C } from "@/lib/print-theme";
 import type { SharePack } from "@/lib/share-pack";
@@ -9,12 +10,15 @@ export function SharePackView({ pack }: { pack: SharePack }) {
         className="share-pack-masthead rounded-2xl px-6 py-5"
         style={{ backgroundColor: C.navy, color: C.navyInk }}
       >
-        <p
-          className="text-xs font-semibold uppercase tracking-[0.22em]"
-          style={{ color: C.gold }}
-        >
-          Route to Citizenship
-        </p>
+        <div className="flex items-center gap-3">
+          <BrandMark size={32} variant="ghost" decorative />
+          <p
+            className="text-xs font-semibold uppercase tracking-[0.22em]"
+            style={{ color: C.gold }}
+          >
+            Route to Citizenship
+          </p>
+        </div>
         <h1 className="mt-2 font-serif text-3xl" style={{ color: C.navyInk }}>
           Immigration sketch
         </h1>

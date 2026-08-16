@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { useState } from "react";
 import { AuthNav } from "@/components/AuthNav";
+import { BrandMark } from "@/components/BrandMark";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLocale } from "@/components/LocaleProvider";
 
@@ -33,12 +34,15 @@ export function SiteHeader() {
         {t("skip")}
       </a>
       <div className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3 sm:px-6">
-        <Link href="/" className="min-w-0 shrink" onClick={() => setOpen(false)}>
-          <span className="block truncate font-serif text-lg tracking-tight text-navy sm:text-xl">
-            {t("brand")}
-          </span>
-          <span className="hidden text-[11px] uppercase tracking-[0.18em] text-ink-muted sm:block">
-            {t("brand.tag")}
+        <Link href="/" className="flex min-w-0 shrink items-center gap-2.5" onClick={() => setOpen(false)}>
+          <BrandMark size={36} decorative className="shrink-0" />
+          <span className="min-w-0">
+            <span className="block truncate font-serif text-lg tracking-tight text-navy sm:text-xl">
+              {t("brand")}
+            </span>
+            <span className="hidden text-[11px] uppercase tracking-[0.18em] text-ink-muted sm:block">
+              {t("brand.tag")}
+            </span>
           </span>
         </Link>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { BrandMark } from "@/components/BrandMark";
 import { GOVUK, LEGAL_NOTICE } from "@/lib/legal";
 import { RULES_REVIEWED_ON } from "@/lib/types";
 import { formatLongDate } from "@/lib/format";
@@ -14,6 +15,10 @@ export function SiteFooter() {
   return (
     <footer className="border-t border-navy/10 bg-navy text-paper-100">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
+        <div className="mb-5 flex items-center gap-3">
+          <BrandMark size={32} variant="ghost" decorative />
+          <p className="font-serif text-lg text-paper-50">{t("brand")}</p>
+        </div>
         <p className="max-w-4xl text-sm leading-relaxed text-paper-50">
           This app provides general information only and does not constitute legal advice. Always
           check the{" "}
