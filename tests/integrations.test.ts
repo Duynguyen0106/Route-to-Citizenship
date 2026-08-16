@@ -13,11 +13,10 @@ import { buildReminders } from "@/lib/reminders";
 import { getRoute } from "@/lib/visas";
 import {
   buildSharePack,
-  hashShareToken,
-  newShareToken,
   packContainsIdentityNumbers,
   sharePackJson,
 } from "@/lib/share-pack";
+import { hashShareToken, newShareToken } from "@/lib/share-token";
 import { normalizeProfile } from "@/lib/storage";
 import { DEFAULT_REMINDER_PREFS, type Profile } from "@/lib/types";
 

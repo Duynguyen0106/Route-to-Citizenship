@@ -1,14 +1,14 @@
 import { addDays } from "date-fns";
 import { NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { asJsonObject, badRequest, readJsonBody, requireUser } from "@/lib/api/session";
 import {
-  hashShareToken,
   isSharePack,
-  newShareToken,
   packContainsIdentityNumbers,
   sharePackJson,
 } from "@/lib/share-pack";
+import { hashShareToken, newShareToken } from "@/lib/share-token";
 
 const MAX_BYTES = 80_000;
 const LABELS = new Set(["adviser", "family", "employer"]);
@@ -35,7 +35,7 @@ export async function POST(request: Request) {
       data: {
         tokenHash,
         label,
-        payload: body.pack,
+        payload: JSON.parse(json) as Prisma.InputJsonValue,
         expiresAt: addDays(new Date(), days),
       },
     });

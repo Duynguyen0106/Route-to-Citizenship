@@ -1,4 +1,3 @@
-import { createHash, randomBytes } from "node:crypto";
 import { LEGAL_NOTICE } from "./legal";
 import { RULES_REVIEWED_ON } from "./types";
 import type { ChecklistItem, PlanResult, Profile } from "./types";
@@ -112,15 +111,6 @@ export function buildSharePack(
 
 export function sharePackJson(pack: SharePack): string {
   return `${JSON.stringify(pack, null, 2)}\n`;
-}
-
-export function newShareToken(): { token: string; tokenHash: string } {
-  const token = randomBytes(24).toString("base64url");
-  return { token, tokenHash: hashShareToken(token) };
-}
-
-export function hashShareToken(token: string): string {
-  return createHash("sha256").update(token).digest("hex");
 }
 
 export function isSharePack(value: unknown): value is SharePack {

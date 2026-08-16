@@ -1,5 +1,6 @@
 import { notFound } from "next/navigation";
-import { hashShareToken, isSharePack } from "@/lib/share-pack";
+import { isSharePack } from "@/lib/share-pack";
+import { hashShareToken } from "@/lib/share-token";
 import { prisma } from "@/lib/prisma";
 import { SharePackView } from "@/components/SharePackView";
 import { LEGAL_NOTICE } from "@/lib/legal";
