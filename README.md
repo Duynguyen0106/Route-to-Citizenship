@@ -37,4 +37,43 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000). Create an account to persist visa history, absences, route selections and reminders.
 
+## Deploy
+
+Guest plans stay in the browser and work on any host. Signed-in accounts use SQLite on disk, so the production target is a **Node.js server or Docker container with a volume** — not a serverless filesystem.
+
+### Docker (recommended)
+
+```bash
+export SESSION_SECRET="$(openssl rand -hex 32)"
+docker compose up --build -d
+```
+
+Then open [http://localhost:3000](http://localhost:3000). The database and session secret persist in the `rtc-data` volume.
+
+A production image is published to GitHub Container Registry on pushes to `main`:
+
+`ghcr.io/duynguyen0106/route-to-citizenship:latest`
+
+```bash
+docker run --rm -p 3000:3000 \
+  -e SESSION_SECRET="$(openssl rand -hex 32)" \
+  -v rtc-data:/data \
+  ghcr.io/duynguyen0106/route-to-citizenship:latest
+```
+
+The same image can be run on Fly.io, Render, Railway, or a VPS. Keep `/data` on a persistent volume.
+
+### Node.js host
+
+```bash
+cp .env.example .env
+# Set SESSION_SECRET to a long random value. Keep DATABASE_URL on a writable disk.
+npm ci
+npx prisma migrate deploy
+npm run build
+npm run start:prod
+```
+
+Do not deploy this SQLite build to Vercel serverless functions: the disk is ephemeral, so signed-in plans would not last. Guest planning would still work.
+
 Rules encoded in the MVP were last reviewed on **1 August 2026**. Fees follow the Home Office table from **8 April 2026**.

@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 import { SECURITY_HEADERS } from "./lib/security-headers";
 
 const nextConfig: NextConfig = {
+  output: "standalone",
   reactStrictMode: true,
   serverExternalPackages: ["@prisma/client", "bcryptjs"],
   async headers() {

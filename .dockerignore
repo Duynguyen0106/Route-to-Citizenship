@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.github
+*.md
+.env
+.env.*
+!.env.example
+prisma/*.db
+prisma/*.db-journal
+coverage
+.cursor
+.vscode
+*.log
+tsconfig.tsbuildinfo

@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it } from "vitest";
+import nextConfig from "../next.config";
 import { GET as getPlatform } from "../app/api/platform/route";
 import { GET as getAccount } from "../app/api/account/route";
 import { buildGdprExport, GDPR_EXPORT_SCHEMA } from "../lib/account-export";
@@ -129,5 +130,9 @@ describe("security headers and platform API", () => {
 
   it("GET /api/account still requires a session", async () => {
     expect((await getAccount()).status).toBe(401);
+  });
+
+  it("builds a Node/Docker standalone server, not a static export", () => {
+    expect(nextConfig.output).toBe("standalone");
   });
 });
