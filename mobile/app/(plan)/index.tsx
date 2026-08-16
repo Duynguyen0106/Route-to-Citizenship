@@ -12,6 +12,7 @@ import {
   Title,
 } from "../../src/components/ui";
 import { openOfficial } from "../../src/open-official";
+import { useLocale } from "../../src/locale-context";
 import { usePlan } from "../../src/plan-context";
 import { colors } from "../../src/theme";
 
@@ -31,15 +32,15 @@ const HORIZON_COLOR: Record<ActionHorizon, string> = {
 
 export default function Next90DaysScreen() {
   const { profile, plan, next } = usePlan();
+  const { t } = useLocale();
   if (!profile || !plan || !next) return <LoadingScreen />;
 
   return (
     <ScrollScreen>
-      <Kicker>Next 90 days</Kicker>
+      <Kicker>{t("nav.next")}</Kicker>
       <Title>{plan.route.name}</Title>
       <Subtitle>
-        Dated next steps from your sketch and encoded GOV.UK facts. Confirm every date in your UKVI
-        account.
+        {t("section.next")} Confirm every date in your UKVI account.
       </Subtitle>
       <DisclaimerBanner />
 

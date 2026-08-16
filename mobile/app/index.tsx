@@ -14,25 +14,29 @@ import {
   Subtitle,
   Title,
 } from "../src/components/ui";
+import { LanguagePicker } from "../src/language-picker";
+import { useLocale } from "../src/locale-context";
 import { usePlan } from "../src/plan-context";
 import { colors } from "../src/theme";
 
 export default function WelcomeScreen() {
   const { ready, profile, save } = usePlan();
+  const { t } = useLocale();
 
   if (!ready) return <LoadingScreen />;
   if (profile) return <Redirect href="/(plan)" />;
 
   return (
     <ScrollScreen>
-      <Kicker>UK immigration planner</Kicker>
-      <Title>Route to Citizenship</Title>
+      <Kicker>{t("brand.tag")}</Kicker>
+      <Title>{t("brand")}</Title>
       <Subtitle>
         Sketch visa → ILR → British citizenship on your phone. The same encoded rules as the website.
         Never enter a passport number.
       </Subtitle>
       <DisclaimerBanner />
-      <PrimaryButton label="Start the seven questions" onPress={() => router.push("/onboarding")} />
+      <LanguagePicker />
+      <PrimaryButton label={t("nav.start")} onPress={() => router.push("/onboarding")} />
       <Text
         style={{
           marginTop: 28,
@@ -66,7 +70,7 @@ export default function WelcomeScreen() {
         </Pressable>
       ))}
       <SecondaryButton
-        label="I already have a plan — edit answers"
+        label={t("dash.edit")}
         onPress={() => router.push("/onboarding")}
       />
       <View style={{ marginTop: 28 }}>

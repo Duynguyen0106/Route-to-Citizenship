@@ -63,7 +63,8 @@ export function Dashboard({
   const printPack = useMemo(() => buildSharePack(profile, plan, listVaultMeta()), [profile, plan]);
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
+    <>
+    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10 print:hidden">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-xs uppercase tracking-[0.22em] text-moss">{pathway.title}</p>
@@ -465,11 +466,12 @@ export function Dashboard({
           onPrefsChange={(reminderPrefs) => onProfileChange({ ...profile, reminderPrefs })}
         />
       </section>
-
-      <div className="hidden print:block">
-        <SharePackView pack={printPack} />
-      </div>
     </div>
+
+    <div className="hidden print:block print-sheet px-8 py-6">
+      <SharePackView pack={printPack} />
+    </div>
+    </>
   );
 }
 

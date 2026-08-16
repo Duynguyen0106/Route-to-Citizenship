@@ -31,6 +31,7 @@ import {
   Title,
 } from "../src/components/ui";
 import { usePlan } from "../src/plan-context";
+import { useLocale } from "../src/locale-context";
 import { colors } from "../src/theme";
 
 const RELATIONSHIP = [
@@ -48,6 +49,7 @@ const ENGLISH = [
 
 export default function OnboardingScreen() {
   const { profile, save } = usePlan();
+  const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [values, setValues] = useState<OnboardingValues>(() =>
@@ -94,10 +96,10 @@ export default function OnboardingScreen() {
   return (
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
       <ScrollScreen>
-        <Kicker>Onboarding</Kicker>
-        <Title>{profile ? "Edit your immigration profile" : "Seven questions to sketch your route"}</Title>
+        <Kicker>{t("onboard.kicker")}</Kicker>
+        <Title>{profile ? t("dash.edit") : t("onboard.title")}</Title>
         <Subtitle>
-          Step {step + 1} of {ONBOARDING_STEPS.length}: {current.title}. This is not an application.
+          {t("onboard.kicker")} {step + 1}/{ONBOARDING_STEPS.length}: {current.title}. This is not an application.
         </Subtitle>
         <View
           style={{
@@ -229,11 +231,14 @@ export default function OnboardingScreen() {
         ) : null}
 
         <ErrorText>{error}</ErrorText>
-        <PrimaryButton label={step === ONBOARDING_STEPS.length - 1 ? "Build my plan" : "Continue"} onPress={next} />
+        <PrimaryButton
+          label={step === ONBOARDING_STEPS.length - 1 ? t("onboard.build") : t("onboard.continue")}
+          onPress={next}
+        />
         {step > 0 ? (
-          <SecondaryButton label="Back" onPress={() => setStep((value) => value - 1)} />
+          <SecondaryButton label={t("onboard.back")} onPress={() => setStep((value) => value - 1)} />
         ) : (
-          <SecondaryButton label="Cancel" onPress={() => router.back()} />
+          <SecondaryButton label={t("onboard.cancel")} onPress={() => router.back()} />
         )}
         <Pressable onPress={() => router.replace("/")} style={{ marginTop: 18, alignItems: "center" }}>
           <Text style={{ color: colors.inkMuted, fontSize: 14 }}>Leave without saving</Text>

@@ -2,6 +2,7 @@ import { Text, View } from "react-native";
 import { formatLongDate } from "@/lib/format";
 import type { TimelineEvent } from "@/lib/types";
 import { Card, Kicker, LoadingScreen, ScrollScreen, Subtitle, Title } from "../../src/components/ui";
+import { useLocale } from "../../src/locale-context";
 import { usePlan } from "../../src/plan-context";
 import { colors } from "../../src/theme";
 
@@ -19,12 +20,13 @@ const KIND_COLOR: Record<TimelineEvent["kind"], string> = {
 
 export default function TimelineScreen() {
   const { plan } = usePlan();
+  const { t } = useLocale();
   if (!plan) return <LoadingScreen />;
 
   return (
     <ScrollScreen>
-      <Kicker>Timeline</Kicker>
-      <Title>Visa, ILR and citizenship sketch</Title>
+      <Kicker>{t("nav.timeline")}</Kicker>
+      <Title>{t("section.timeline")}</Title>
       <Subtitle>
         {plan.summary} This is not a Home Office calculation and not an approval chance.
       </Subtitle>

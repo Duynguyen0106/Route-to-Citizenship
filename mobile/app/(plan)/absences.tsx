@@ -13,12 +13,14 @@ import {
   Title,
 } from "../../src/components/ui";
 import { openOfficial } from "../../src/open-official";
+import { useLocale } from "../../src/locale-context";
 import { usePlan } from "../../src/plan-context";
 import { newLocalId } from "../../src/storage";
 import { colors } from "../../src/theme";
 
 export default function AbsencesScreen() {
   const { profile, plan, patch } = usePlan();
+  const { t } = useLocale();
   const [departedOn, setDepartedOn] = useState("");
   const [returnedOn, setReturnedOn] = useState("");
   const [place, setPlace] = useState("");
@@ -51,8 +53,8 @@ export default function AbsencesScreen() {
 
   return (
     <ScrollScreen>
-      <Kicker>Absences</Kicker>
-      <Title>Time outside the UK</Title>
+      <Kicker>{t("nav.absences")}</Kicker>
+      <Title>{t("section.absences")}</Title>
       <Subtitle>
         ILR usually looks at 180 days in any 12 months. Citizenship uses different windows. This is a
         sketch, not a Home Office calculation.

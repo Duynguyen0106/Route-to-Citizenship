@@ -1,10 +1,12 @@
 import { Pressable, Text, View } from "react-native";
 import { Card, Kicker, LoadingScreen, ScrollScreen, Subtitle, Title } from "../../src/components/ui";
+import { useLocale } from "../../src/locale-context";
 import { usePlan } from "../../src/plan-context";
 import { colors } from "../../src/theme";
 
 export default function ChecklistScreen() {
   const { profile, plan, patch } = usePlan();
+  const { t } = useLocale();
   if (!profile || !plan) return <LoadingScreen />;
 
   async function toggle(id: string) {
@@ -29,8 +31,8 @@ export default function ChecklistScreen() {
 
   return (
     <ScrollScreen>
-      <Kicker>Checklist</Kicker>
-      <Title>Evidence to gather</Title>
+      <Kicker>{t("nav.checklist")}</Kicker>
+      <Title>{t("section.checklist")}</Title>
       <Subtitle>
         Tick items as you collect them. This planner never asks for passport numbers or Home Office
         references. Confirm the live list on GOV.UK.

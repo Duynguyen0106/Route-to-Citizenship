@@ -1,6 +1,7 @@
 import { Redirect, Tabs } from "expo-router";
 import { Text, type ColorValue } from "react-native";
 import { LoadingScreen } from "../../src/components/ui";
+import { useLocale } from "../../src/locale-context";
 import { usePlan } from "../../src/plan-context";
 import { colors } from "../../src/theme";
 
@@ -12,6 +13,7 @@ function Glyph({ label, color }: { label: string; color: ColorValue }) {
 
 export default function PlanTabsLayout() {
   const { ready, profile } = usePlan();
+  const { t } = useLocale();
   if (!ready) return <LoadingScreen />;
   if (!profile) return <Redirect href="/" />;
 
@@ -28,35 +30,35 @@ export default function PlanTabsLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Next 90",
+          title: t("nav.next"),
           tabBarIcon: ({ color }) => <Glyph label="90" color={color} />,
         }}
       />
       <Tabs.Screen
         name="timeline"
         options={{
-          title: "Timeline",
+          title: t("nav.timeline"),
           tabBarIcon: ({ color }) => <Glyph label="TL" color={color} />,
         }}
       />
       <Tabs.Screen
         name="checklist"
         options={{
-          title: "Checklist",
+          title: t("nav.checklist"),
           tabBarIcon: ({ color }) => <Glyph label="CK" color={color} />,
         }}
       />
       <Tabs.Screen
         name="absences"
         options={{
-          title: "Absences",
+          title: t("nav.absences"),
           tabBarIcon: ({ color }) => <Glyph label="AB" color={color} />,
         }}
       />
       <Tabs.Screen
         name="more"
         options={{
-          title: "More",
+          title: t("nav.more"),
           tabBarIcon: ({ color }) => <Glyph label="··" color={color} />,
         }}
       />

@@ -14,7 +14,9 @@ import {
   Subtitle,
   Title,
 } from "../../src/components/ui";
+import { LanguagePicker } from "../../src/language-picker";
 import { openOfficial } from "../../src/open-official";
+import { useLocale } from "../../src/locale-context";
 import { usePlan } from "../../src/plan-context";
 import { colors } from "../../src/theme";
 
@@ -30,6 +32,7 @@ const OFFICIAL = [
 
 export default function MoreScreen() {
   const { profile, plan, save, clear } = usePlan();
+  const { t } = useLocale();
   if (!profile || !plan) return <LoadingScreen />;
 
   function confirmClear() {
@@ -48,12 +51,13 @@ export default function MoreScreen() {
 
   return (
     <ScrollScreen>
-      <Kicker>More</Kicker>
-      <Title>Fees, GOV.UK and this device</Title>
+      <Kicker>{t("nav.more")}</Kicker>
+      <Title>{t("mobile.moreTitle")}</Title>
       <Subtitle>
         Official pages open in your phone browser. This app does not wrap GOV.UK, fill UKVI forms, or
         take card payments.
       </Subtitle>
+      <LanguagePicker />
 
       <Card>
         <Text style={{ fontWeight: "700", color: colors.navy, fontSize: 16 }}>Sketch fees</Text>
@@ -103,7 +107,7 @@ export default function MoreScreen() {
         </Pressable>
       ))}
 
-      <SecondaryButton label="Edit the seven questions" onPress={() => router.push("/onboarding")} />
+      <SecondaryButton label={t("dash.edit")} onPress={() => router.push("/onboarding")} />
 
       <Text
         style={{
@@ -131,7 +135,7 @@ export default function MoreScreen() {
         </Pressable>
       ))}
 
-      <SecondaryButton label="Clear plan from this phone" onPress={confirmClear} />
+      <SecondaryButton label={t("dash.reset")} onPress={confirmClear} />
 
       <View style={{ marginTop: 28 }}>
         <Text style={{ color: colors.inkFaint, fontSize: 12, lineHeight: 18 }}>{LEGAL_NOTICE}</Text>

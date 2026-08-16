@@ -7,13 +7,13 @@ import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
 const fraunces = Fraunces({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext", "vietnamese"],
   variable: "--font-fraunces",
   display: "swap",
 });
 
 const publicSans = Public_Sans({
-  subsets: ["latin"],
+  subsets: ["latin", "latin-ext", "vietnamese"],
   variable: "--font-public-sans",
   display: "swap",
 });

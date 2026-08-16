@@ -21,25 +21,46 @@ html {
 }
 
 @media print {
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
   header,
   footer,
   nav {
     display: none !important;
   }
 
+  html,
   body {
-    background: #fff;
-    color: #111;
+    background: #f6f1e8 !important;
+    color: #1c1917 !important;
   }
 
   .paper-grid {
-    background: none;
+    background: #f6f1e8 !important;
+  }
+
+  .share-pack-masthead {
+    background: #1b2a4a !important;
+    color: #f6f1e8 !important;
+    border-bottom: 4px solid #c4a35a !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .share-pack-card {
+    background: #fbf8f3 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 }
 
 body {
-  font-family: var(--font-public-sans), "Segoe UI", "Noto Sans", "Noto Sans Arabic",
-    "Noto Nastaliq Urdu", "Noto Sans Gurmukhi", system-ui, sans-serif;
+  font-family: var(--font-public-sans), "Segoe UI", "Noto Sans", "Noto Sans Vietnamese",
+    "Noto Sans Arabic", "Noto Nastaliq Urdu", "Noto Sans Gurmukhi", system-ui, sans-serif;
   background:
     radial-gradient(1200px 500px at 10% -10%, rgba(196, 163, 90, 0.16), transparent 60%),
     radial-gradient(900px 420px at 100% 0%, rgba(47, 93, 69, 0.1), transparent 55%),

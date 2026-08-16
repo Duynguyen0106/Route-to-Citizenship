@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { calculatePlan } from "../lib/calculate";
 import { assessDocumentCompleteness } from "../lib/document-completeness";
 import { extractDocumentFields, redactIdentityNumbers } from "../lib/document-extract";
-import { LOCALE_META, translate } from "../lib/i18n";
+import { LOCALES, LOCALE_META, translate } from "../lib/i18n";
 import { typicalProcessingWeeks } from "../lib/processing";
 import { buildResidenceCalendar } from "../lib/residence-calendar";
 import { SAMPLE_PROFILES } from "../lib/samples";
@@ -92,6 +92,19 @@ describe("document extraction and completeness", () => {
 describe("i18n", () => {
   it("translates the planner nav label into Polish", () => {
     expect(translate("pl", "nav.planner")).toBe("Planer");
+  });
+
+  it("adds Vietnamese as a left-to-right UI language", () => {
+    expect(LOCALES).toContain("vi");
+    expect(LOCALE_META.vi.dir).toBe("ltr");
+    expect(LOCALE_META.vi.native).toBe("Tiếng Việt");
+    expect(translate("vi", "nav.planner")).toBe("Lộ trình");
+    expect(translate("vi", "nav.next")).toBe("90 ngày tới");
+    expect(translate("vi", "lang.label")).toBe("Ngôn ngữ");
+  });
+
+  it("keeps legal copy in English when the UI is Vietnamese", () => {
+    expect(translate("vi", "brand")).toBe("Route to Citizenship");
   });
 
   it("marks Arabic and Urdu as right-to-left", () => {
