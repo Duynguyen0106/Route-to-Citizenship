@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthNav } from "@/components/AuthNav";
 
 const links = [
   { href: "/plan", label: "Planner" },
@@ -24,6 +25,7 @@ export function SiteHeader() {
               {link.label}
             </Link>
           ))}
+          <AuthNav />
           <Link
             href="/plan"
             className="rounded-full bg-navy px-4 py-2 text-sm text-paper-50 hover:bg-navy-700"

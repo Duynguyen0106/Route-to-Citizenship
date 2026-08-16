@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dashboard } from "@/components/Dashboard";
 import { ProfileWizard } from "@/components/ProfileWizard";
 import { calculatePlan } from "@/lib/calculate";
@@ -8,46 +8,116 @@ import { clearProfile, loadProfile, saveProfile } from "@/lib/storage";
 import type { Profile } from "@/lib/types";
 
 export function PlannerApp() {
-  const [profile, setProfile] = useState<Profile | null>(() => loadProfile());
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [editing, setEditing] = useState(false);
+  const [signedIn, setSignedIn] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const plan = useMemo(
-    () => (profile ? calculatePlan(profile) : null),
-    [profile],
-  );
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const me = await fetch("/api/auth/me").then((response) => response.json());
+        if (cancelled) return;
+        if (me.user) {
+          setSignedIn(true);
+          const payload = await fetch("/api/plan").then((response) => response.json());
+          if (cancelled) return;
+          setProfile(payload.profile ?? null);
+        } else {
+          setSignedIn(false);
+          setProfile(loadProfile());
+        }
+      } catch {
+        setSignedIn(false);
+        setProfile(loadProfile());
+      } finally {
+        if (!cancelled) setReady(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-  function persist(next: Profile) {
+  const plan = useMemo(() => (profile ? calculatePlan(profile) : null), [profile]);
+
+  function persistLocal(next: Profile) {
     saveProfile(next);
     setProfile(next);
     setEditing(false);
   }
 
-  function reset() {
+  function persist(next: Profile) {
+    setSaveError(null);
+    persistLocal(next);
+    if (!signedIn) return;
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    saveTimer.current = setTimeout(() => {
+      fetch("/api/plan", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profile: next }),
+      })
+        .then(async (response) => {
+          if (!response.ok) {
+            const body = (await response.json()) as { error?: string };
+            throw new Error(body.error || "Could not save to your account.");
+          }
+          return response.json() as Promise<{ profile: Profile }>;
+        })
+        .then((body) => setProfile(body.profile))
+        .catch((error: Error) => setSaveError(error.message));
+    }, 400);
+  }
+
+  async function reset() {
     clearProfile();
     setProfile(null);
     setEditing(false);
+    if (signedIn) {
+      await fetch("/api/plan", { method: "DELETE" });
+    }
+  }
+
+  if (!ready) {
+    return <div className="mx-auto max-w-6xl px-4 py-20 text-ink-muted sm:px-6">Loading your planner…</div>;
   }
 
   if (!profile || editing) {
     return (
-      <ProfileWizard
-        initial={profile}
-        onSave={persist}
-        onCancel={profile ? () => setEditing(false) : undefined}
-        onLoadSample={(sample) => persist(sample)}
-      />
+      <>
+        {signedIn && (
+          <p className="mx-auto max-w-3xl px-4 pt-8 text-sm text-moss sm:px-6">
+            Signed in — this plan is saved to your account.
+          </p>
+        )}
+        <ProfileWizard
+          initial={profile}
+          onSave={persist}
+          onCancel={profile ? () => setEditing(false) : undefined}
+          onLoadSample={(sample) => persist(sample)}
+        />
+      </>
     );
   }
 
   if (!plan) return null;
 
   return (
-    <Dashboard
-      profile={profile}
-      plan={plan}
-      onEdit={() => setEditing(true)}
-      onReset={reset}
-      onProfileChange={persist}
-    />
+    <>
+      {saveError && (
+        <p className="mx-auto max-w-6xl px-4 pt-6 text-sm text-clay sm:px-6">{saveError}</p>
+      )}
+      <Dashboard
+        profile={profile}
+        plan={plan}
+        onEdit={() => setEditing(true)}
+        onReset={reset}
+        onProfileChange={persist}
+      />
+    </>
   );
 }

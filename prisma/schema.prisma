@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  profiles     Profile[]
+  visaHistory  VisaEvent[]
+  reminders    Reminder[]
+}
+
+model Profile {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nationality           String
+  /// SKILLED_WORKER, FAMILY, STUDENT, GRADUATE, GLOBAL_TALENT, OTHER
+  currentVisaType       String
+  visaStartDate         DateTime
+  visaExpiryDate        DateTime
+  firstEntryUK          DateTime?
+  /// spouse, partner, none
+  relationshipToSettled String?
+  /// A1, B1, B2, degree, exempt
+  englishLevel          String?
+  lifeInUKPassed        Boolean  @default(false)
+  /// Planner extras (detailed visa id, pathway, checklist, reminder prefs).
+  plannerState          Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  visaEvents            VisaEvent[]
+  absenceRecords        AbsenceRecord[]
+  routeSelections       RouteSelection[]
+
+  @@index([userId])
+}
+
+model VisaEvent {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  visaType  String
+  startDate DateTime
+  endDate   DateTime?
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  @@index([profileId])
+  @@index([userId])
+}
+
+model AbsenceRecord {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
+  daysAway  Int
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([profileId])
+}
+
+model RouteSelection {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  /// e.g. "skilled-worker-ilr-citizenship"
+  routeKey   String
+  isCurrent  Boolean  @default(false)
+  selectedAt DateTime @default(now())
+
+  @@index([profileId])
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId   String?
+  title       String
+  dueDate     DateTime
+  /// VISA_EXPIRY, ILR_ELIGIBILITY, CITIZENSHIP_ELIGIBILITY, LIFE_IN_UK_TEST
+  type        String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([profileId])
+}

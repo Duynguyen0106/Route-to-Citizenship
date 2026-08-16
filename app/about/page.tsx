@@ -43,10 +43,14 @@ export default function AboutPage() {
           , and each visa page linked from your plan.
         </p>
         <p>
+          Signed-in accounts store the plan in a local database (User, Profile, visa history,
+          absences, route selection, reminders). Guest plans stay in this browser only.
+        </p>
+        <p>
           <Link href="/plan" className="text-navy underline">
             Open the planner
           </Link>
-          . Profiles never leave this device.
+          .
         </p>
       </div>
     </article>

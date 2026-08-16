@@ -15,7 +15,7 @@ Also included:
 - **Fee calculator** — Home Office fees from 8 April 2026, plus IHS, ILR, tests and citizenship
 - **Document checklist** and reminders
 
-Profiles are stored in **browser local storage** only.
+Profiles can be stored in **browser local storage** (guest) or against a **signed-in account** (Prisma / SQLite: User, Profile, VisaEvent, AbsenceRecord, RouteSelection, Reminder).
 
 ## This is not immigration advice
 
@@ -24,11 +24,13 @@ The app is a planning aid. It is **not** immigration advice, legal advice, or a 
 ## Develop
 
 ```bash
+cp .env.example .env
 npm install
+npx prisma migrate dev
 npm test
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). Create an account to persist visa history, absences, route selections and reminders.
 
 Rules encoded in the MVP were last reviewed on **1 August 2026**. Fees follow the Home Office table from **8 April 2026**.
