@@ -452,7 +452,7 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     asOf: toIsoDate(asOf),
     pathwayId,
     route,
-    hasIlrPath: projectedIlr,
+    hasIlrPath: alreadyHasIlr || projectedIlr,
     ilrEligibleOn: alreadyHasIlr ? derived.visaGrantedOn : ilrOn ? toIsoDate(ilrOn) : null,
     ilrApplyFrom: applyFrom ? toIsoDate(applyFrom) : null,
     citizenshipEligibleOn: citizenshipOn ? toIsoDate(citizenshipOn) : null,
