@@ -14,7 +14,7 @@ import type {
 } from "./types";
 import { analyseAbsences, emptyAbsenceAnalysis, withDerivedAbsenceTotals } from "./absences";
 import { buildChecklist } from "./checklist";
-import { englishMet, lifeInUkMet, assessEligibility } from "./eligibility";
+import { englishMet, lifeInUkMet, assessEligibility, checkEligibility } from "./eligibility";
 import { defaultIhsYears, estimateFees } from "./fees";
 import { studentPathNeedsSwitch, SWITCH_TARGETS } from "./pathways";
 import { effectiveMinYearsToILR, getRouteForPathway, visaIdToCurrentVisaType } from "./routes";
@@ -399,6 +399,7 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     citizenshipOn,
     alreadyHasIlr,
   });
+  const eligibilityCheck = checkEligibility(derived, rule, asOf);
 
   const alternatives = suggestAlternatives(derived, route, ilrOn, asOf);
   const checklist = buildChecklist(derived, route);
@@ -460,6 +461,7 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     extensionNote,
     timeline: buildTimeline(derived, route, asOf, alreadyHasIlr ? null : ilrOn, citizenshipOn),
     eligibility,
+    eligibilityCheck,
     alternatives,
     checklist,
     reminders,

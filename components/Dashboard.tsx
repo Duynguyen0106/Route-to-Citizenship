@@ -180,7 +180,7 @@ export function Dashboard({
 
       <section id="eligibility" className="mt-14">
         <h2 className="font-serif text-3xl text-navy">Basic eligibility checks</h2>
-        <EligibilityPanel items={plan.eligibility} />
+        <EligibilityPanel items={plan.eligibility} check={plan.eligibilityCheck} />
       </section>
 
       <section id="reminders" className="mt-14 pb-8">

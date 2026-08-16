@@ -143,6 +143,22 @@ export interface EligibilityItem {
   detail: string;
 }
 
+export interface EligibilityRequirementsMet {
+  continuousResidence: boolean;
+  absenceLimit: boolean;
+  english: boolean;
+  lifeInUK: boolean;
+  feesKnown: boolean;
+}
+
+export interface EligibilityCheck {
+  eligible: boolean;
+  reasons: string[];
+  estimatedILRDate: Date | null;
+  estimatedCitizenshipDate: Date | null;
+  requirementsMet: EligibilityRequirementsMet;
+}
+
 export interface TimelineEvent {
   id: string;
   label: string;
@@ -225,6 +241,7 @@ export interface PlanResult {
   extensionNote: string | null;
   timeline: TimelineEvent[];
   eligibility: EligibilityItem[];
+  eligibilityCheck: EligibilityCheck;
   alternatives: AlternativeRoute[];
   checklist: ChecklistItem[];
   reminders: Reminder[];
