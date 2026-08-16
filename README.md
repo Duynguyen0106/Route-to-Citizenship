@@ -76,4 +76,16 @@ npm run start:prod
 
 Do not deploy this SQLite build to Vercel serverless functions: the disk is ephemeral, so signed-in plans would not last. Guest planning would still work.
 
+## Phone app (iOS and Android)
+
+A native Expo app lives in [`mobile/`](./mobile). It reuses the same TypeScript route engine as the website — seven-step onboarding, next 90 days, timeline, checklist, absences and GOV.UK links. Guest plans stay on the phone. Official pages open in the system browser, not an in-app WebView.
+
+```bash
+cd mobile
+npm install
+npx expo start
+```
+
+Store binaries are built with EAS (`eas build --platform android|ios`). A Linux host cannot compile a signed iOS IPA locally. See [`mobile/README.md`](./mobile/README.md).
+
 Rules encoded in the MVP were last reviewed on **1 August 2026**. Fees follow the Home Office table from **8 April 2026**.
