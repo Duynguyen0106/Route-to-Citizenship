@@ -9,7 +9,8 @@ export default function RegisterPage() {
       <p className="text-xs uppercase tracking-[0.22em] text-moss">Account</p>
       <h1 className="mt-3 font-serif text-4xl text-navy">Create an account</h1>
       <p className="mt-3 text-ink-muted">
-        Save your immigration plan across devices. Guest plans stay in this browser only.
+        Save your immigration plan across devices. We store email, optional name, visa dates and
+        reminders — not passport numbers. Guest plans stay in this browser only.
       </p>
       <AuthForm mode="register" />
     </article>

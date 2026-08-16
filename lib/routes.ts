@@ -1,4 +1,6 @@
 import type { PathwayId } from "./types";
+import { RULES_REVIEWED_ON } from "./types";
+import { GOVUK, SETTLEMENT_LINKS, type OfficialLink } from "./legal";
 
 export const CURRENT_VISA_TYPES = [
   "SKILLED_WORKER",
@@ -26,15 +28,19 @@ export interface RouteDefinition {
   lifeInUKRequired: boolean;
   switchingAllowed: boolean;
   notes: string;
+  lastReviewedOn: string;
+  officialUrls: OfficialLink[];
 }
 
 function defineRoute(
-  route: Omit<RouteDefinition, "visaTypesInvolved" | "absenceLimitPerYear">,
+  route: Omit<RouteDefinition, "visaTypesInvolved" | "absenceLimitPerYear" | "lastReviewedOn"> &
+    Partial<Pick<RouteDefinition, "lastReviewedOn">>,
 ): RouteDefinition {
   return {
     ...route,
     visaTypesInvolved: route.visaTypes,
     absenceLimitPerYear: route.absenceLimit,
+    lastReviewedOn: route.lastReviewedOn ?? RULES_REVIEWED_ON,
   };
 }
 
@@ -51,6 +57,10 @@ export const ROUTES = {
     switchingAllowed: true,
     notes:
       "Time usually counts toward 5-year work settlement if you keep meeting salary and sponsorship rules. Absences of more than 180 days in any 12-month period can break continuous residence.",
+    officialUrls: [
+      { label: "Skilled Worker visa", url: GOVUK.skilledWorker },
+      ...SETTLEMENT_LINKS,
+    ],
   }),
   family: defineRoute({
     key: "family",
@@ -64,6 +74,10 @@ export const ROUTES = {
     switchingAllowed: true,
     notes:
       "Standard partner route is 5 years (two 2.5-year grants). A 10-year route applies if the 5-year financial or other requirements are not met. Family time does not usually combine with a work ILR clock.",
+    officialUrls: [
+      { label: "Family visa (partner)", url: GOVUK.familyPartner },
+      ...SETTLEMENT_LINKS,
+    ],
   }),
   studentToGraduateToSkilled: defineRoute({
     key: "student-graduate-skilled-worker",
@@ -77,6 +91,12 @@ export const ROUTES = {
     switchingAllowed: true,
     notes:
       "Student and Graduate leave do not lead to ILR. The 5-year ILR clock usually starts only after a switch to Skilled Worker (or another qualifying route). Switching is typically allowed in-country from Student or Graduate.",
+    officialUrls: [
+      { label: "Student visa", url: GOVUK.student },
+      { label: "Graduate visa", url: GOVUK.graduate },
+      { label: "Skilled Worker visa", url: GOVUK.skilledWorker },
+      ...SETTLEMENT_LINKS,
+    ],
   }),
   globalTalent: defineRoute({
     key: "global-talent",
@@ -90,6 +110,10 @@ export const ROUTES = {
     switchingAllowed: true,
     notes:
       "ILR after 3 years if endorsed as exceptional talent or holding an eligible prize; 5 years if endorsed as exceptional promise. The 3-year clock usually requires time spent on Global Talent.",
+    officialUrls: [
+      { label: "Global Talent visa", url: GOVUK.globalTalent },
+      ...SETTLEMENT_LINKS,
+    ],
   }),
   longResidence: defineRoute({
     key: "long-residence",
@@ -103,6 +127,7 @@ export const ROUTES = {
     switchingAllowed: true,
     notes:
       "Settlement based on 10 years of continuous lawful residence, which can combine different visas. The 180-day absence rule is applied strictly. Not all leave counts.",
+    officialUrls: SETTLEMENT_LINKS,
   }),
 } as const satisfies Record<string, RouteDefinition>;
 

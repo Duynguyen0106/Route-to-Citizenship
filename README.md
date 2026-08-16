@@ -21,6 +21,10 @@ Profiles can be stored in **browser local storage** (guest) or against a **signe
 
 The app is a planning aid. It is **not** immigration advice, legal advice, or a Home Office service. Rules and fees change. Confirm everything on [GOV.UK](https://www.gov.uk/browse/visas-immigration) or with an OISC-regulated adviser or solicitor before you apply.
 
+The site-wide footer repeats: *This app provides general information only and does not constitute legal advice. Always check the official GOV.UK website or consult a regulated immigration adviser.*
+
+Each route page shows a **last reviewed** date and links to the official GOV.UK visa, ILR and citizenship pages. Use **Report inaccurate information** if something looks wrong. The planner never asks for passport numbers.
+
 ## Develop
 
 ```bash

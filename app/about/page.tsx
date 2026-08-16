@@ -40,11 +40,16 @@ export default function AboutPage() {
           <a className="underline" href="https://www.gov.uk/british-citizenship">
             British citizenship
           </a>
-          , and each visa page linked from your plan.
+          , and each visa page linked from your plan. If something looks wrong,{" "}
+          <Link href="/report" className="text-navy underline">
+            report inaccurate information
+          </Link>
+          .
         </p>
         <p>
-          Signed-in accounts store the plan in a local database (User, Profile, visa history,
-          absences, route selection, reminders). Guest plans stay in this browser only.
+          Signed-in accounts store the plan in a local database (email, visa type, dates, absences,
+          route selection, reminders). Passport numbers are not collected. Guest plans stay in this
+          browser only.
         </p>
         <p>
           <Link href="/plan" className="text-navy underline">

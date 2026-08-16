@@ -10,8 +10,11 @@ import { PathwayStrip } from "@/components/PathwayStrip";
 import { RemindersPanel } from "@/components/RemindersPanel";
 import { SwitchSimulator } from "@/components/SwitchSimulator";
 import { Timeline } from "@/components/Timeline";
+import { LastReviewed } from "@/components/LastReviewed";
+import { ReportInaccuracyButton } from "@/components/ReportInaccuracyButton";
 import { formatDaysUntil, formatGbp, formatLongDate } from "@/lib/format";
 import { getPathway } from "@/lib/pathways";
+import { getRouteForPathway } from "@/lib/routes";
 import type { PlanResult, Profile } from "@/lib/types";
 
 export function Dashboard({
@@ -28,6 +31,7 @@ export function Dashboard({
   onProfileChange: (profile: Profile) => void;
 }) {
   const pathway = getPathway(plan.pathwayId);
+  const rule = getRouteForPathway(plan.pathwayId);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
@@ -35,12 +39,16 @@ export function Dashboard({
         <div>
           <p className="text-xs uppercase tracking-[0.22em] text-moss">{pathway.title}</p>
           <h1 className="mt-2 font-serif text-4xl text-navy">{plan.route.name}</h1>
+          <p className="mt-2">
+            <LastReviewed date={rule.lastReviewedOn} />
+          </p>
           <p className="mt-3 max-w-2xl text-ink-muted">{plan.summary}</p>
         </div>
-        <div className="flex gap-3 text-sm">
+        <div className="flex flex-wrap gap-3 text-sm">
           <button type="button" onClick={onEdit} className="rounded-full border border-navy/20 px-4 py-2">
             Edit profile
           </button>
+          <ReportInaccuracyButton routeKey={rule.key} />
           <button type="button" onClick={onReset} className="rounded-full px-4 py-2 text-ink-muted">
             Start over
           </button>
@@ -54,10 +62,15 @@ export function Dashboard({
         <Link href="/disclaimer" className="underline">
           Read the full disclaimer
         </Link>
-        . Confirm everything on{" "}
+        .         Confirm everything on{" "}
         <a href={plan.route.officialUrl} className="underline" target="_blank" rel="noreferrer">
           the GOV.UK page for this visa
         </a>
+        {" "}
+        or the{" "}
+        <Link href={`/routes/${rule.key}`} className="underline">
+          route notes
+        </Link>
         .
       </div>
 

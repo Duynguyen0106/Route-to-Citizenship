@@ -26,7 +26,15 @@ describe("core route rule engine", () => {
       englishRequirement: "B1",
       lifeInUKRequired: true,
       switchingAllowed: true,
+      lastReviewedOn: "2026-08-01",
     });
+    expect(ROUTES.skilledWorker.officialUrls.map((link) => link.url)).toEqual(
+      expect.arrayContaining([
+        "https://www.gov.uk/skilled-worker-visa",
+        "https://www.gov.uk/indefinite-leave-to-remain",
+        "https://www.gov.uk/british-citizenship",
+      ]),
+    );
     expect(ROUTES.family.minYearsToILR).toBe(5);
     expect(ROUTES.studentToGraduateToSkilled.visaTypes).toEqual([
       "STUDENT",

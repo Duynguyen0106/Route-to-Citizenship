@@ -9,6 +9,7 @@ import {
   Plane,
   ShieldAlert,
 } from "lucide-react";
+import { LastReviewed } from "@/components/LastReviewed";
 import { listRoutes } from "@/lib/routes";
 
 const features = [
@@ -81,12 +82,22 @@ export default function HomePage() {
         <div className="mt-8 grid gap-4 md:grid-cols-2">
           {listRoutes().map((route) => (
             <article key={route.key} className="rounded-2xl border border-navy/10 bg-paper-50 p-5">
-              <h3 className="font-serif text-xl text-navy">{route.name}</h3>
+              <LastReviewed date={route.lastReviewedOn} />
+              <h3 className="mt-2 font-serif text-xl text-navy">
+                <Link href={`/routes/${route.key}`} className="hover:underline">
+                  {route.name}
+                </Link>
+              </h3>
               <p className="mt-2 text-sm text-ink-muted">{route.notes}</p>
               <p className="mt-3 text-xs uppercase tracking-[0.14em] text-ink-faint">
                 ILR: {route.minYearsToILR ? `${route.minYearsToILR} years` : "n/a"} · Absences:{" "}
                 {route.absenceLimit ?? "n/a"} days · English: {route.englishRequirement ?? "none"} ·
                 Life in the UK: {route.lifeInUKRequired ? "required" : "not required"}
+              </p>
+              <p className="mt-3 text-sm">
+                <Link href={`/routes/${route.key}`} className="text-navy underline underline-offset-2">
+                  GOV.UK links and last reviewed date
+                </Link>
               </p>
             </article>
           ))}

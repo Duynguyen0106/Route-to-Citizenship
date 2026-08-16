@@ -86,7 +86,8 @@ export function ProfileWizard({
         {initial ? "Edit your immigration profile" : "Choose your route"}
       </h1>
       <p className="mt-3 text-ink-muted">
-        This MVP covers five common paths. Answers stay in this browser.
+        This MVP covers five common paths. We only ask for visa dates, nationality and test
+        status — never passport numbers.
       </p>
 
       {!initial && (
@@ -279,6 +280,10 @@ export function ProfileWizard({
         {step === 4 && (
           <fieldset className="space-y-4">
             <legend className="font-serif text-2xl text-navy">About you</legend>
+            <p className="text-sm text-ink-muted">
+              Nationality is used only as a coarse English-language exemption. Do not enter passport
+              numbers or Home Office references.
+            </p>
             <Select
               label="Nationality"
               value={draft.nationality}

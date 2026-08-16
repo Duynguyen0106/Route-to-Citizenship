@@ -101,3 +101,12 @@ model Reminder {
   @@index([userId])
   @@index([profileId])
 }
+
+/// Accuracy reports. Do not store passport numbers or other identity documents.
+model InaccuracyReport {
+  id           String   @id @default(cuid())
+  routeKey     String?
+  message      String
+  contactEmail String?
+  createdAt    DateTime @default(now())
+}

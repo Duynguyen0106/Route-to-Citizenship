@@ -5,7 +5,8 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
     {
       id: "passport",
       label: "Current passport",
-      detail: "Valid passport for each applicant. Check it will still be valid when you apply.",
+      detail:
+        "Have a valid passport ready when you apply on GOV.UK. This planner never asks for or stores passport numbers.",
       required: true,
       group: "identity",
     },

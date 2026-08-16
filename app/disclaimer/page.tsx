@@ -36,8 +36,19 @@ export default function DisclaimerPage() {
           the Immigration and Asylum Act 1999 (typically an OISC-regulated adviser or a solicitor).
         </p>
         <p>
-          Your profile is stored only in this browser&apos;s local storage. Clearing site data
-          deletes it. Do not enter information you would not want stored on a shared computer.
+          Guest profiles stay in this browser&apos;s local storage. Signed-in accounts store visa
+          type, dates, nationality, absences and reminders against an email address — not passport
+          numbers or Home Office identity documents. Clearing site data deletes a guest plan.
+          Do not enter information you would not want stored on a shared computer.
+        </p>
+        <p>
+          <a className="underline" href="/privacy">
+            Privacy and data minimisation
+          </a>{" "}
+          ·{" "}
+          <a className="underline" href="/report">
+            Report inaccurate information
+          </a>
         </p>
       </div>
     </article>
