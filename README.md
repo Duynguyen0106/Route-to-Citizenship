@@ -86,6 +86,6 @@ npm install
 npx expo start
 ```
 
-Store binaries are built with EAS (`eas build --platform android|ios`). A Linux host cannot compile a signed iOS IPA locally. See [`mobile/README.md`](./mobile/README.md).
+Store binaries are built with EAS (`eas build --platform android|ios`). A Linux host cannot compile a signed iOS IPA locally. A sideloadable Android APK can be built with `mobile/scripts/build-android-apk.sh` (debug keystore — not for Play Store). See [`mobile/README.md`](./mobile/README.md).
 
 Rules encoded in the MVP were last reviewed on **1 August 2026**. Fees follow the Home Office table from **8 April 2026**.
