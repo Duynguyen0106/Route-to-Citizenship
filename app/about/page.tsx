@@ -11,10 +11,11 @@ export default function AboutPage() {
       <h1 className="mt-3 font-serif text-4xl text-navy">How the estimates are made</h1>
       <div className="mt-8 space-y-5 text-[17px] leading-relaxed text-ink">
         <p>
-          You choose a current visa and enter dates. The planner adds the usual qualifying period
-          for that route (for example 5 years on Skilled Worker, 3 years on Global Talent
-          exceptional talent, 5 years on the partner route) to the qualifying-residence start date
-          you provide.
+          You pick one of five paths: Skilled Worker; family (spouse/partner); Student → Graduate →
+          Skilled Worker; Global Talent; or 10-year long residence. The planner adds the usual
+          qualifying period (5, 3 or 10 years) to the start date you provide. On the study path,
+          ILR is projected from a planned Skilled Worker switch — Student and Graduate time is not
+          treated as qualifying.
         </p>
         <p>
           ILR applications can often be submitted up to 28 days before the qualifying date. British
@@ -23,10 +24,11 @@ export default function AboutPage() {
           common patterns — not a full reading of the Nationality Act or the Immigration Rules.
         </p>
         <p>
-          Alternative routes assume a switch on today&apos;s date. Time on some work visas is treated
-          as combining toward a 5-year work ILR clock; Global Talent (3-year) and Innovator Founder
-          clocks are treated as starting on switch. Visitor leave is treated as not switchable
-          in-country.
+          The absence tracker counts whole days from departure up to (not including) the return
+          date, then checks a rolling 12-month window against 180 days and citizenship limits of
+          90 / 270 / 450 days. The switching simulator is a what-if: it does not check salary,
+          endorsement or relationship rules. The fee calculator uses Home Office amounts from 8
+          April 2026 plus a typical English-test estimate.
         </p>
         <p>
           Encoded rules were last reviewed on <strong>{RULES_REVIEWED_ON}</strong>. Official

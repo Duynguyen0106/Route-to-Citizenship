@@ -4,13 +4,14 @@ import { calculatePlan, ILR_EARLY_APPLY_DAYS } from "../lib/calculate";
 import { englishMet, lifeInUkMet } from "../lib/eligibility";
 import { getRoute } from "../lib/routes";
 import { SAMPLE_PROFILES } from "../lib/samples";
+import { normalizeProfile } from "../lib/storage";
 import { DEFAULT_REMINDER_PREFS, type Profile } from "../lib/types";
 import { remindersToIcs } from "../lib/reminders";
 
 const AS_OF = parseISO("2026-08-16");
 
-function profile(overrides: Partial<Profile>): Profile {
-  return {
+function profile(overrides: Partial<Profile> = {}): Profile {
+  return normalizeProfile({
     id: "test",
     updatedAt: "2026-08-16T00:00:00.000Z",
     currentVisaId: "skilled-worker",
@@ -31,7 +32,7 @@ function profile(overrides: Partial<Profile>): Profile {
     reminderPrefs: { ...DEFAULT_REMINDER_PREFS },
     checkedDocumentIds: [],
     ...overrides,
-  };
+  });
 }
 
 describe("calculatePlan — Skilled Worker", () => {

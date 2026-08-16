@@ -8,6 +8,7 @@ const KIND_COLOUR: Record<TimelineEvent["kind"], string> = {
   ilr: "bg-moss",
   citizenship: "bg-navy",
   warning: "bg-clay",
+  stage: "bg-navy-700",
 };
 
 export function Timeline({ events }: { events: TimelineEvent[] }) {

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { ROUTES, ROUTES_BY_CATEGORY } from "@/lib/routes";
+import { AbsenceTracker } from "@/components/AbsenceTracker";
+import { PATHWAYS } from "@/lib/pathways";
 import { SAMPLE_PROFILES } from "@/lib/samples";
 import { createProfile, emptyProfile } from "@/lib/storage";
 import {
@@ -10,17 +11,11 @@ import {
   type AgeBand,
   type EnglishStatus,
   type LifeInUkStatus,
+  type PathwayId,
   type Profile,
 } from "@/lib/types";
 
-const STEPS = [
-  "Visa",
-  "Dates",
-  "Absences",
-  "Tests",
-  "You",
-  "Review",
-] as const;
+const STEPS = ["Route", "Dates", "Absences", "Tests", "You", "Review"] as const;
 
 type Draft = ReturnType<typeof emptyProfile>;
 
@@ -40,9 +35,21 @@ export function ProfileWizard({
     initial ? { ...emptyProfile(), ...initial } : emptyProfile(),
   );
   const [error, setError] = useState<string | null>(null);
+  const pathway = PATHWAYS.find((item) => item.id === draft.pathwayId) ?? PATHWAYS[0];
 
   function update<K extends keyof Draft>(key: K, value: Draft[K]) {
     setDraft((current) => ({ ...current, [key]: value }));
+  }
+
+  function choosePathway(id: PathwayId) {
+    const next = PATHWAYS.find((item) => item.id === id) ?? PATHWAYS[0];
+    const currentStillValid = next.currentVisaChoices.some((choice) => choice.visaId === draft.currentVisaId);
+    setDraft((current) => ({
+      ...current,
+      pathwayId: id,
+      currentVisaId: currentStillValid ? current.currentVisaId : next.currentVisaChoices[0].visaId,
+      plannedSwitchTo: id === "student-to-skilled" ? "skilled-worker" : current.plannedSwitchTo,
+    }));
   }
 
   function next() {
@@ -59,7 +66,7 @@ export function ProfileWizard({
     const message = validateStep(1, draft) ?? validateStep(0, draft);
     if (message) {
       setError(message);
-      setStep(message.includes("visa") ? 0 : 1);
+      setStep(message.includes("visa") || message.includes("route") ? 0 : 1);
       return;
     }
     const profile = initial
@@ -68,18 +75,22 @@ export function ProfileWizard({
     onSave(profile);
   }
 
+  const showPlannedSwitch =
+    draft.pathwayId === "student-to-skilled" &&
+    (draft.currentVisaId === "student" || draft.currentVisaId === "graduate");
+
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 sm:px-6">
       <p className="text-xs uppercase tracking-[0.22em] text-moss">Your profile</p>
       <h1 className="mt-2 font-serif text-4xl text-navy">
-        {initial ? "Edit your immigration profile" : "Tell us where you are now"}
+        {initial ? "Edit your immigration profile" : "Choose your route"}
       </h1>
       <p className="mt-3 text-ink-muted">
-        Answers stay in this browser. Use a sample plan if you only want to explore the MVP.
+        This MVP covers five common paths. Answers stay in this browser.
       </p>
 
       {!initial && (
-        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {SAMPLE_PROFILES.map((sample) => (
             <button
               key={sample.id}
@@ -113,48 +124,49 @@ export function ProfileWizard({
       <div className="mt-8 rounded-2xl border border-navy/10 bg-paper-50 p-6 shadow-card">
         {step === 0 && (
           <fieldset>
-            <legend className="font-serif text-2xl text-navy">Current visa or status</legend>
-            <p className="mt-1 text-sm text-ink-muted">
-              Choose the leave you hold today, not the visa you hope to get.
-            </p>
-            <div className="mt-5 space-y-4">
-              {ROUTES_BY_CATEGORY.map((group) => {
-                const routes = ROUTES.filter((route) => route.category === group.category);
-                if (routes.length === 0) return null;
-                return (
-                  <div key={group.category}>
-                    <p className="text-xs uppercase tracking-[0.16em] text-ink-faint">
-                      {group.label}
-                    </p>
-                    <div className="mt-2 grid gap-2 sm:grid-cols-2">
-                      {routes.map((route) => (
-                        <label
-                          key={route.id}
-                          className={`cursor-pointer rounded-xl border px-3 py-2 text-sm ${
-                            draft.currentVisaId === route.id
-                              ? "border-moss bg-moss/10"
-                              : "border-navy/10"
-                          }`}
-                        >
-                          <input
-                            type="radio"
-                            className="sr-only"
-                            name="visa"
-                            checked={draft.currentVisaId === route.id}
-                            onChange={() => update("currentVisaId", route.id)}
-                          />
-                          <span className="font-medium text-navy">{route.shortName}</span>
-                          <span className="mt-0.5 block text-xs text-ink-muted">
-                            {route.leadsToIlr
-                              ? `Typically ${route.ilrYears}-year ILR`
-                              : "No ILR path unless you switch"}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                );
-              })}
+            <legend className="font-serif text-2xl text-navy">Which path are you on?</legend>
+            <div className="mt-5 space-y-3">
+              {PATHWAYS.map((item) => (
+                <label
+                  key={item.id}
+                  className={`block cursor-pointer rounded-xl border px-4 py-3 ${
+                    draft.pathwayId === item.id ? "border-moss bg-moss/10" : "border-navy/10"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    className="sr-only"
+                    name="pathway"
+                    checked={draft.pathwayId === item.id}
+                    onChange={() => choosePathway(item.id)}
+                  />
+                  <span className="font-medium text-navy">{item.title}</span>
+                  <span className="mt-1 block text-sm text-ink-muted">{item.blurb}</span>
+                  <span className="mt-2 block text-xs text-ink-faint">
+                    {item.stages.map((stage) => stage.label).join(" → ")}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="mt-6 text-sm font-medium text-navy">Where are you on that path today?</p>
+            <div className="mt-3 grid gap-2 sm:grid-cols-2">
+              {pathway.currentVisaChoices.map((choice) => (
+                <label
+                  key={choice.visaId}
+                  className={`cursor-pointer rounded-xl border px-3 py-2 text-sm ${
+                    draft.currentVisaId === choice.visaId ? "border-moss bg-moss/10" : "border-navy/10"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    className="sr-only"
+                    name="stage"
+                    checked={draft.currentVisaId === choice.visaId}
+                    onChange={() => update("currentVisaId", choice.visaId)}
+                  />
+                  {choice.label}
+                </label>
+              ))}
             </div>
           </fieldset>
         )}
@@ -175,58 +187,62 @@ export function ProfileWizard({
               onChange={(value) => update("visaExpiresOn", value)}
             />
             <Field
-              label="Qualifying residence start"
-              hint="Usually the date this qualifying visa began, or the date you entered the UK on it."
+              label={
+                draft.pathwayId === "long-residence"
+                  ? "Continuous lawful residence start"
+                  : "Qualifying residence start"
+              }
+              hint={
+                draft.pathwayId === "long-residence"
+                  ? "Usually when your first period of continuous lawful leave began."
+                  : "Usually the date this qualifying visa began, or the date you entered the UK on it."
+              }
               type="date"
               value={draft.qualifyingResidenceStart}
               onChange={(value) => update("qualifyingResidenceStart", value)}
             />
             <Field
-              label="First UK entry (optional, for citizenship residence)"
+              label="First UK entry (for citizenship residence)"
               type="date"
               value={draft.ukEntryDate}
               onChange={(value) => update("ukEntryDate", value)}
             />
+            {showPlannedSwitch && (
+              <Field
+                label="Planned Skilled Worker switch date"
+                hint="Used to project ILR five years after you leave the study path."
+                type="date"
+                value={draft.plannedSwitchOn}
+                onChange={(value) => update("plannedSwitchOn", value)}
+              />
+            )}
+            {draft.pathwayId === "student-to-skilled" && draft.currentVisaId !== "student" && (
+              <Field
+                label="Student visa start (optional history)"
+                type="date"
+                value={draft.priorStages[0]?.start ?? ""}
+                onChange={(value) =>
+                  update("priorStages", [{ visaId: "student", start: value, end: draft.visaGrantedOn }])
+                }
+              />
+            )}
           </fieldset>
         )}
 
         {step === 2 && (
-          <fieldset className="space-y-4">
-            <legend className="font-serif text-2xl text-navy">Residence and absences</legend>
-            <Field
-              label="Days outside the UK in the last 12 months"
-              type="number"
-              value={String(draft.daysAbsentLast12Months)}
-              onChange={(value) => update("daysAbsentLast12Months", Number(value) || 0)}
-            />
-            <label className="flex items-start gap-2 text-sm">
-              <input
-                type="checkbox"
-                className="mt-1"
-                checked={draft.exceeded180DaysInAny12Months}
-                onChange={(event) => update("exceeded180DaysInAny12Months", event.target.checked)}
+          <div>
+            <h2 className="font-serif text-2xl text-navy">Absence tracker</h2>
+            <p className="mt-1 text-sm text-ink-muted">
+              Add trips outside the UK. You can refine this later on the plan.
+            </p>
+            <div className="mt-5">
+              <AbsenceTracker
+                trips={draft.absences}
+                qualifyingStart={draft.qualifyingResidenceStart || draft.ukEntryDate}
+                onChange={(absences) => update("absences", absences)}
               />
-              <span>
-                I have been outside the UK for more than 180 days in any 12-month period during
-                my qualifying residence.
-              </span>
-            </label>
-            <Field
-              label="Days outside the UK in the last 5 years (citizenship)"
-              type="number"
-              value={String(draft.daysAbsentLast5Years)}
-              onChange={(value) => update("daysAbsentLast5Years", Number(value) || 0)}
-            />
-            <Field
-              label="Days outside the UK in the last 12 months (citizenship figure)"
-              hint="Naturalisation usually looks at a 90-day limit in the last 12 months."
-              type="number"
-              value={String(draft.daysAbsentLast12MonthsCitizenship)}
-              onChange={(value) =>
-                update("daysAbsentLast12MonthsCitizenship", Number(value) || 0)
-              }
-            />
-          </fieldset>
+            </div>
+          </div>
         )}
 
         {step === 3 && (
@@ -281,6 +297,32 @@ export function ProfileWizard({
                 { value: "65_plus", label: "65 or over" },
               ]}
             />
+            <Field
+              label="Dependants applying with you"
+              type="number"
+              value={String(draft.dependantCount)}
+              onChange={(value) => update("dependantCount", Math.max(0, Number(value) || 0))}
+            />
+            <label className="flex items-start gap-2 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1"
+                checked={draft.applyFromInsideUk}
+                onChange={(event) => update("applyFromInsideUk", event.target.checked)}
+              />
+              <span>I usually apply from inside the UK.</span>
+            </label>
+            {draft.currentVisaId === "skilled-worker" && (
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="mt-1"
+                  checked={draft.sponsorshipOverThreeYears}
+                  onChange={(event) => update("sponsorshipOverThreeYears", event.target.checked)}
+                />
+                <span>My Skilled Worker grants are typically for more than 3 years (affects fees).</span>
+              </label>
+            )}
             <label className="flex items-start gap-2 text-sm">
               <input
                 type="checkbox"
@@ -306,9 +348,9 @@ export function ProfileWizard({
           <div>
             <h2 className="font-serif text-2xl text-navy">Review</h2>
             <p className="mt-2 text-sm text-ink-muted">
-              Check the dates. The planner will treat qualifying residence as starting on{" "}
-              <strong>{draft.qualifyingResidenceStart || "—"}</strong> and current leave as
-              expiring on <strong>{draft.visaExpiresOn || "—"}</strong>.
+              Path: <strong>{pathway.title}</strong>. Qualifying residence from{" "}
+              <strong>{draft.qualifyingResidenceStart || "—"}</strong>. Current leave expires{" "}
+              <strong>{draft.visaExpiresOn || "—"}</strong>.
             </p>
             <div className="mt-4 rounded-xl bg-clay/10 px-4 py-3 text-sm text-clay-600">
               This is not immigration advice. Estimates can be wrong if your history is mixed,
@@ -362,7 +404,7 @@ export function ProfileWizard({
 }
 
 function validateStep(step: number, draft: Draft): string | null {
-  if (step === 0 && !draft.currentVisaId) return "Choose a visa.";
+  if (step === 0 && !draft.currentVisaId) return "Choose a route.";
   if (step === 1) {
     if (!draft.visaGrantedOn || !draft.visaExpiresOn || !draft.qualifyingResidenceStart) {
       return "Please complete the grant, expiry, and qualifying start dates.";

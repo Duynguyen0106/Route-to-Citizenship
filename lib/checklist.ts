@@ -125,11 +125,31 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
     });
   }
 
-  if (route.id === "bno") {
+  if (route.id === "student") {
     items.push({
-      id: "bno-status",
-      label: "BN(O) status evidence",
-      detail: "BN(O) passport or confirmation of status for the main applicant.",
+      id: "cas",
+      label: "CAS / student status",
+      detail: "Confirmation of Acceptance for Studies and proof you are still studying, if extending.",
+      required: true,
+      group: "route",
+    });
+  }
+
+  if (route.id === "graduate") {
+    items.push({
+      id: "award",
+      label: "Degree award confirmation",
+      detail: "Evidence your UK sponsor notified the Home Office that you successfully completed the course.",
+      required: true,
+      group: "route",
+    });
+  }
+
+  if (route.id === "long-residence" || profile.pathwayId === "long-residence") {
+    items.push({
+      id: "lawful-leave",
+      label: "Record of 10 years' lawful leave",
+      detail: "Grants, vignettes, eVisa history and any gaps. Long residence is unforgiving of overstaying.",
       required: true,
       group: "route",
     });

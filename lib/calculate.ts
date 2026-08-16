@@ -4,7 +4,6 @@ import {
   getRoute,
   isFamilyCombination,
   isQualifyingWorkCombination,
-  ROUTES,
 } from "./routes";
 import type {
   AlternativeRoute,
@@ -13,9 +12,13 @@ import type {
   TimelineEvent,
   VisaRoute,
 } from "./types";
+import { analyseAbsences, emptyAbsenceAnalysis, withDerivedAbsenceTotals } from "./absences";
 import { buildChecklist } from "./checklist";
-import { assessEligibility } from "./eligibility";
+import { englishMet, lifeInUkMet, assessEligibility } from "./eligibility";
+import { defaultIhsYears, estimateFees } from "./fees";
+import { studentPathNeedsSwitch, SWITCH_TARGETS } from "./pathways";
 import { buildReminders } from "./reminders";
+import { normalizeProfile } from "./storage";
 
 export function toIsoDate(date: Date): string {
   return formatISO(date, { representation: "date" });
@@ -98,10 +101,25 @@ function buildTimeline(
   ilrOn: Date | null,
   citizenshipOn: Date | null,
 ): TimelineEvent[] {
-  const events: TimelineEvent[] = [
+  const events: TimelineEvent[] = [];
+
+  for (const [index, stage] of (profile.priorStages ?? []).entries()) {
+    if (!stage.start) continue;
+    events.push({
+      id: `stage-${index}`,
+      label: `${getRoute(stage.visaId).shortName} started`,
+      date: stage.start,
+      kind: "stage",
+    });
+  }
+
+  events.push(
     {
       id: "qualifying-start",
-      label: "Qualifying residence started",
+      label:
+        profile.pathwayId === "long-residence"
+          ? "Lawful residence started"
+          : "Qualifying residence started",
       date: profile.qualifyingResidenceStart,
       kind: "past",
     },
@@ -121,7 +139,16 @@ function buildTimeline(
           ? "This date is in the past. Check you still have valid leave."
           : undefined,
     },
-  ];
+  );
+
+  if (studentPathNeedsSwitch(profile) && profile.plannedSwitchOn) {
+    events.push({
+      id: "planned-switch",
+      label: `Planned switch to ${getRoute(profile.plannedSwitchTo || "skilled-worker").shortName}`,
+      date: profile.plannedSwitchOn,
+      kind: "stage",
+    });
+  }
 
   if (ilrOn && route.id !== "ilr") {
     events.push({
@@ -138,6 +165,14 @@ function buildTimeline(
       date: profile.visaGrantedOn,
       kind: "ilr",
     });
+  } else if (studentPathNeedsSwitch(profile) && !profile.plannedSwitchOn) {
+    events.push({
+      id: "switch-needed",
+      label: "Switch needed to start ILR clock",
+      date: profile.visaExpiresOn,
+      kind: "warning",
+      note: "Student and Graduate leave do not lead to ILR on their own.",
+    });
   }
 
   if (citizenshipOn) {
@@ -149,7 +184,15 @@ function buildTimeline(
     });
   }
 
-  return events.sort((a, b) => a.date.localeCompare(b.date));
+  const seen = new Set<string>();
+  return events
+    .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id))
+    .filter((event) => {
+      const key = `${event.date}:${event.label}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
 }
 
 function switchQualifyingStart(
@@ -182,20 +225,13 @@ export function suggestAlternatives(
   asOf: Date,
 ): AlternativeRoute[] {
   const results: AlternativeRoute[] = [];
+  const candidates = SWITCH_TARGETS.map((target) => getRoute(target.visaId));
 
-  for (const candidate of ROUTES) {
+  for (const candidate of candidates) {
     if (candidate.id === current.id) continue;
-    if (candidate.category === "visit") continue;
-    if (candidate.id === "ilr") continue;
-    if (!candidate.leadsToIlr && current.leadsToIlr) continue;
-    if (current.category === "settlement") continue;
+    if (profile.pathwayId === "long-residence" && candidate.id === "long-residence") continue;
 
     const inCountry = canSwitchInCountry(current.id, candidate.id);
-    if (!inCountry && current.inCountrySwitchFrom !== "none") {
-      if (!candidate.leadsToIlr) continue;
-    }
-    if (current.inCountrySwitchFrom === "none" && !candidate.leadsToIlr) continue;
-
     const start = switchQualifyingStart(profile, current, candidate, asOf);
     const ilrOn = ilrEligibleDate(candidate, start);
     const citizenshipOn = citizenshipEligibleDate({
@@ -211,21 +247,12 @@ export function suggestAlternatives(
       daysSaved = daysBetween(ilrOn, currentIlrOn);
     } else if (ilrOn && !currentIlrOn) {
       daysSaved = null;
-    } else {
+    } else if (candidate.id !== "graduate") {
       continue;
     }
 
     const reason = alternativeReason(current, candidate, daysSaved, inCountry);
     if (!reason) continue;
-
-    const worthShowing =
-      !current.leadsToIlr ||
-      (daysSaved !== null && daysSaved > 30) ||
-      candidate.ilrYears === 3 ||
-      (current.id === "spouse-10" && candidate.id === "spouse-5") ||
-      candidate.id === "long-residence";
-
-    if (!worthShowing) continue;
 
     results.push({
       routeId: candidate.id,
@@ -237,21 +264,17 @@ export function suggestAlternatives(
       daysSavedVsCurrent: daysSaved,
       caveats: [
         ...candidate.caveats,
-        ...(inCountry
-          ? []
-          : ["You would usually need to apply from outside the UK."]),
+        ...(inCountry ? [] : ["You would usually need to apply from outside the UK."]),
       ],
       officialUrl: candidate.officialUrl,
     });
   }
 
-  return results
-    .sort((a, b) => {
-      const aDate = a.ilrEligibleOn ?? "9999";
-      const bDate = b.ilrEligibleOn ?? "9999";
-      return aDate.localeCompare(bDate);
-    })
-    .slice(0, 6);
+  return results.sort((a, b) => {
+    const aDate = a.ilrEligibleOn ?? "9999";
+    const bDate = b.ilrEligibleOn ?? "9999";
+    return aDate.localeCompare(bDate);
+  });
 }
 
 function alternativeReason(
@@ -272,8 +295,14 @@ function alternativeReason(
   if (candidate.id === "innovator-founder") {
     return "Innovator Founder can lead to ILR after 3 years if the business receives a settlement endorsement.";
   }
-  if (candidate.id === "long-residence" && !current.leadsToIlr) {
+  if (candidate.id === "long-residence") {
     return "Lawful time in the UK can sometimes count toward 10-year long residence, even when the current visa has no 5-year ILR path.";
+  }
+  if (candidate.id === "graduate" && current.id === "student") {
+    return "A Graduate visa can give you time to find a Skilled Worker sponsor. It does not itself lead to ILR.";
+  }
+  if (candidate.id === "skilled-worker" && (current.id === "student" || current.id === "graduate")) {
+    return "Switching to Skilled Worker is the usual way this study path starts a 5-year ILR clock.";
   }
   if (daysSaved !== null && daysSaved > 30) {
     const years = candidate.ilrYears;
@@ -312,33 +341,49 @@ function summarise(
 }
 
 export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanResult {
-  const route = getRoute(profile.currentVisaId);
-  const qualifyingStart = fromIsoDate(profile.qualifyingResidenceStart);
-  const residenceStart = fromIsoDate(profile.ukEntryDate || profile.qualifyingResidenceStart);
-  const visaExpiry = fromIsoDate(profile.visaExpiresOn);
+  const derived = withDerivedAbsenceTotals(normalizeProfile(profile), asOf);
+  const pathwayId = derived.pathwayId ?? "skilled-worker";
+  const route = getRoute(derived.currentVisaId);
   const alreadyHasIlr = route.id === "ilr";
+  const residenceStart = fromIsoDate(derived.ukEntryDate || derived.qualifyingResidenceStart);
+  const visaExpiry = fromIsoDate(derived.visaExpiresOn);
 
-  const ilrOn = alreadyHasIlr ? asOf : ilrEligibleDate(route, qualifyingStart);
+  let qualifyingStart = fromIsoDate(derived.qualifyingResidenceStart);
+  let ilrRoute = route;
+  let projectedIlr = route.leadsToIlr;
+
+  if (pathwayId === "long-residence" && !alreadyHasIlr) {
+    ilrRoute = getRoute("long-residence");
+    projectedIlr = true;
+  }
+
+  if (studentPathNeedsSwitch(derived) && derived.plannedSwitchOn) {
+    qualifyingStart = fromIsoDate(derived.plannedSwitchOn);
+    ilrRoute = getRoute(derived.plannedSwitchTo || "skilled-worker");
+    projectedIlr = true;
+  }
+
+  const ilrOn = alreadyHasIlr ? asOf : projectedIlr ? ilrEligibleDate(ilrRoute, qualifyingStart) : null;
   const applyFrom = ilrOn && !alreadyHasIlr ? ilrApplyFromDate(ilrOn) : null;
   const citizenshipOn = citizenshipEligibleDate({
-    ilrEligibleOn: alreadyHasIlr ? fromIsoDate(profile.visaGrantedOn) : ilrOn,
-    ilrGrantedOn: alreadyHasIlr ? fromIsoDate(profile.visaGrantedOn) : null,
+    ilrEligibleOn: alreadyHasIlr ? fromIsoDate(derived.visaGrantedOn) : ilrOn,
+    ilrGrantedOn: alreadyHasIlr ? fromIsoDate(derived.visaGrantedOn) : null,
     residenceStart,
-    marriedToBritishCitizen: profile.marriedToBritishCitizen,
+    marriedToBritishCitizen: derived.marriedToBritishCitizen,
     alreadyHasIlr,
   });
 
   const needsExt =
     !alreadyHasIlr &&
-    route.leadsToIlr &&
+    projectedIlr &&
     needsExtension(visaExpiry, ilrOn);
 
   const extensionNote = needsExt
-    ? `Your visa expires on ${profile.visaExpiresOn}, which is before you can usually apply for ILR. Plan an extension or a switch so you do not have a gap in leave.`
+    ? `Your visa expires on ${derived.visaExpiresOn}, which is before you can usually apply for ILR. Plan an extension or a switch so you do not have a gap in leave.`
     : null;
 
   const eligibility = assessEligibility({
-    profile,
+    profile: derived,
     route,
     asOf,
     ilrOn,
@@ -346,10 +391,10 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     alreadyHasIlr,
   });
 
-  const alternatives = suggestAlternatives(profile, route, ilrOn, asOf);
-  const checklist = buildChecklist(profile, route);
+  const alternatives = suggestAlternatives(derived, route, ilrOn, asOf);
+  const checklist = buildChecklist(derived, route);
   const reminders = buildReminders({
-    profile,
+    profile: derived,
     route,
     asOf,
     ilrApplyFrom: applyFrom,
@@ -358,20 +403,59 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     visaExpiry,
   });
 
+  const absences =
+    derived.absences?.length > 0
+      ? analyseAbsences(
+          derived.absences,
+          asOf,
+          fromIsoDate(derived.qualifyingResidenceStart || derived.ukEntryDate),
+        )
+      : emptyAbsenceAnalysis(asOf);
+
+  if (!derived.absences?.length) {
+    absences.last12Months = derived.daysAbsentLast12Months;
+    absences.last5Years = derived.daysAbsentLast5Years;
+    absences.breached180 =
+      derived.exceeded180DaysInAny12Months || derived.daysAbsentLast12Months > 180;
+    absences.remainingLast12 = Math.max(0, 180 - derived.daysAbsentLast12Months);
+    absences.remainingCitizenship12 = Math.max(0, 90 - derived.daysAbsentLast12MonthsCitizenship);
+    absences.remainingCitizenship5y = Math.max(0, 450 - derived.daysAbsentLast5Years);
+  }
+
+  const fees = estimateFees({
+    currentVisaId: derived.currentVisaId,
+    pathwayId,
+    applyFromInsideUk: derived.applyFromInsideUk,
+    sponsorshipOverThreeYears: derived.sponsorshipOverThreeYears,
+    dependantCount: derived.dependantCount,
+    includeNextVisa: derived.currentVisaId !== "ilr",
+    includeIhs: derived.currentVisaId !== "ilr",
+    ihsYears: defaultIhsYears(derived.currentVisaId, derived.sponsorshipOverThreeYears),
+    includeIlr: true,
+    includeCitizenship: true,
+    includeTests: true,
+    needsEnglishTest: !englishMet(derived),
+    needsLifeInUk: !lifeInUkMet(derived),
+    globalTalentNeedsEndorsement: derived.currentVisaId.startsWith("global-talent"),
+  });
+
   return {
     asOf: toIsoDate(asOf),
+    pathwayId,
     route,
-    hasIlrPath: route.leadsToIlr,
-    ilrEligibleOn: alreadyHasIlr ? profile.visaGrantedOn : ilrOn ? toIsoDate(ilrOn) : null,
-    ilrApplyFrom: applyFrom ? toIsoDate(applyFrom) : alreadyHasIlr ? null : null,
+    hasIlrPath: projectedIlr,
+    ilrEligibleOn: alreadyHasIlr ? derived.visaGrantedOn : ilrOn ? toIsoDate(ilrOn) : null,
+    ilrApplyFrom: applyFrom ? toIsoDate(applyFrom) : null,
     citizenshipEligibleOn: citizenshipOn ? toIsoDate(citizenshipOn) : null,
     needsVisaExtension: Boolean(needsExt),
     extensionNote,
-    timeline: buildTimeline(profile, route, asOf, alreadyHasIlr ? null : ilrOn, citizenshipOn),
+    timeline: buildTimeline(derived, route, asOf, alreadyHasIlr ? null : ilrOn, citizenshipOn),
     eligibility,
     alternatives,
     checklist,
     reminders,
+    absences,
+    fees,
     summary: summarise(route, alreadyHasIlr ? null : ilrOn, citizenshipOn, Boolean(needsExt)),
   };
 }

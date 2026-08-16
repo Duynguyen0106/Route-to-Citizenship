@@ -32,6 +32,40 @@ export type LifeInUkStatus =
 
 export type AgeBand = "under_18" | "18_to_64" | "65_plus";
 
+export type PathwayId =
+  | "skilled-worker"
+  | "family"
+  | "student-to-skilled"
+  | "global-talent"
+  | "long-residence";
+
+export interface PathwayStage {
+  id: string;
+  visaId: string;
+  label: string;
+}
+
+export interface Pathway {
+  id: PathwayId;
+  title: string;
+  blurb: string;
+  stages: PathwayStage[];
+  currentVisaChoices: { visaId: string; label: string }[];
+}
+
+export interface AbsenceTrip {
+  id: string;
+  departedOn: string;
+  returnedOn: string;
+  place: string;
+}
+
+export interface VisaStageRecord {
+  visaId: string;
+  start: string;
+  end: string;
+}
+
 export interface VisaRoute {
   id: string;
   name: string;
@@ -58,6 +92,7 @@ export interface VisaRoute {
 export interface Profile {
   id: string;
   updatedAt: string;
+  pathwayId: PathwayId;
   currentVisaId: string;
   /** Date current leave was granted. */
   visaGrantedOn: string;
@@ -70,6 +105,12 @@ export interface Profile {
   qualifyingResidenceStart: string;
   /** Optional UK entry date for citizenship residence calculations. */
   ukEntryDate: string;
+  /** Earlier visas on a multi-stage path (e.g. Student then Graduate). */
+  priorStages: VisaStageRecord[];
+  /** Planned switch onto a qualifying visa (used on the student path). */
+  plannedSwitchOn: string;
+  plannedSwitchTo: string;
+  absences: AbsenceTrip[];
   daysAbsentLast12Months: number;
   exceeded180DaysInAny12Months: boolean;
   daysAbsentLast5Years: number;
@@ -80,6 +121,9 @@ export interface Profile {
   ageBand: AgeBand;
   marriedToBritishCitizen: boolean;
   hasSettledPartner: boolean;
+  dependantCount: number;
+  applyFromInsideUk: boolean;
+  sponsorshipOverThreeYears: boolean;
   reminderPrefs: ReminderPrefs;
   checkedDocumentIds: string[];
 }
@@ -103,8 +147,41 @@ export interface TimelineEvent {
   id: string;
   label: string;
   date: string;
-  kind: "past" | "now" | "visa" | "ilr" | "citizenship" | "warning";
+  kind: "past" | "now" | "visa" | "ilr" | "citizenship" | "warning" | "stage";
   note?: string;
+}
+
+export interface AbsenceWindow {
+  days: number;
+  windowStart: string;
+  windowEnd: string;
+}
+
+export interface AbsenceAnalysis {
+  tripCount: number;
+  last12Months: number;
+  last3Years: number;
+  last5Years: number;
+  maxRolling12Months: AbsenceWindow;
+  breached180: boolean;
+  remainingLast12: number;
+  remainingCitizenship12: number;
+  remainingCitizenship5y: number;
+  remainingCitizenship3y: number;
+}
+
+export interface FeeLine {
+  id: string;
+  label: string;
+  amountGbp: number;
+  note?: string;
+}
+
+export interface FeeBreakdown {
+  people: number;
+  lines: FeeLine[];
+  totalGbp: number;
+  disclaimer: string;
 }
 
 export interface AlternativeRoute {
@@ -138,6 +215,7 @@ export interface Reminder {
 
 export interface PlanResult {
   asOf: string;
+  pathwayId: PathwayId;
   route: VisaRoute;
   hasIlrPath: boolean;
   ilrEligibleOn: string | null;
@@ -150,6 +228,8 @@ export interface PlanResult {
   alternatives: AlternativeRoute[];
   checklist: ChecklistItem[];
   reminders: Reminder[];
+  absences: AbsenceAnalysis;
+  fees: FeeBreakdown;
   summary: string;
 }
 
