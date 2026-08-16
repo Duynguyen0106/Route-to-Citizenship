@@ -18,6 +18,12 @@ import { Timeline } from "@/components/Timeline";
 import { WhatIfAbsence } from "@/components/WhatIfAbsence";
 import { LastReviewed } from "@/components/LastReviewed";
 import { ReportInaccuracyButton } from "@/components/ReportInaccuracyButton";
+import { RuleUpdates } from "@/components/RuleUpdates";
+import { RiskPanel } from "@/components/RiskPanel";
+import { RecommendationsPanel } from "@/components/RecommendationsPanel";
+import { BenchmarkPanel } from "@/components/BenchmarkPanel";
+import { GoalInterpreter } from "@/components/GoalInterpreter";
+import { GuidanceChat } from "@/components/GuidanceChat";
 import { useLocale } from "@/components/LocaleProvider";
 import { formatDaysUntil, formatGbp, formatLongDate } from "@/lib/format";
 import { getPathway } from "@/lib/pathways";
@@ -113,6 +119,12 @@ export function Dashboard({
           ["switch", t("nav.switch")],
           ["fees", t("nav.fees")],
           ["eligibility", t("nav.eligibility")],
+          ["rules", t("nav.rules")],
+          ["recommend", t("nav.recommend")],
+          ["risk", t("nav.risk")],
+          ["benchmarks", t("nav.benchmarks")],
+          ["goals", t("nav.goals")],
+          ["chat", t("nav.chat")],
           ["reminders", t("nav.reminders")],
         ].map(([id, label]) => (
           <a
@@ -330,6 +342,36 @@ export function Dashboard({
       <section id="eligibility" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.eligibility")}</h2>
         <EligibilityPanel items={plan.eligibility} check={plan.eligibilityCheck} />
+      </section>
+
+      <section id="rules" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.rules")}</h2>
+        <RuleUpdates profile={profile} />
+      </section>
+
+      <section id="recommend" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.recommend")}</h2>
+        <RecommendationsPanel profile={profile} plan={plan} />
+      </section>
+
+      <section id="risk" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.risk")}</h2>
+        <RiskPanel profile={profile} plan={plan} />
+      </section>
+
+      <section id="benchmarks" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.benchmarks")}</h2>
+        <BenchmarkPanel profile={profile} plan={plan} />
+      </section>
+
+      <section id="goals" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.goals")}</h2>
+        <GoalInterpreter />
+      </section>
+
+      <section id="chat" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.chat")}</h2>
+        <GuidanceChat />
       </section>
 
       <section id="reminders" className="mt-14 scroll-mt-24 pb-8">

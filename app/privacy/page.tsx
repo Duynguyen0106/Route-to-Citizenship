@@ -26,7 +26,16 @@ export default function PrivacyPage() {
             keeps optional document copies (passport scans, BRPs, payslips) only in this browser,
             encrypted with a key that never leaves the device. Detected identity numbers are reduced
             to the last four characters. Files are not uploaded to our server, and this is not a
-            cloud OCR service.
+            cloud OCR service;
+          </li>
+          <li>
+            polls GOV.UK’s public Content API for page titles, descriptions and update timestamps
+            (not full HTML, and not your plan);
+          </li>
+          <li>
+            may store an opt-in anonymous sketch (visa category, coarse nationality region,
+            sketched years to ILR) so averages can be shown once at least five similar sketches
+            exist. Name and email are not included.
           </li>
         </ul>
         <p>

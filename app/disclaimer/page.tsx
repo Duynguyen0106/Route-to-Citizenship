@@ -24,7 +24,9 @@ export default function DisclaimerPage() {
           <li>apply the full continuous-residence or good-character rules to your facts;</li>
           <li>consider criminality, NHS debt, litigation, or deception issues;</li>
           <li>guarantee that a switch between visas is available in your circumstances;</li>
-          <li>file, submit, or track any application.</li>
+          <li>file, submit, or track any application;</li>
+          <li>estimate a percentage chance that the Home Office will approve your case;</li>
+          <li>replace a regulated adviser — the on-site assistant is a FAQ, not OISC advice.</li>
         </ul>
         <p>
           Immigration rules, fees, and forms change — sometimes with little notice. Before you

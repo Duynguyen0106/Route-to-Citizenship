@@ -41,8 +41,11 @@ export default function AboutPage() {
           are estimates, not a Home Office calculation.
         </p>
         <p>
-          Encoded rules were last reviewed on <strong>{RULES_REVIEWED_ON}</strong>. Official
-          explanations live on GOV.UK, including{" "}
+          Encoded rules were last reviewed on <strong>{RULES_REVIEWED_ON}</strong>. The planner can
+          poll the official GOV.UK Content API for page update timestamps (not HTML scraping) and
+          keeps a versioned list of facts it actually encodes — for example the 8 April 2026 fee
+          table versus earlier tables whose amounts are not invented here. Official explanations
+          live on GOV.UK, including{" "}
           <a className="underline" href="https://www.gov.uk/indefinite-leave-to-remain">
             Indefinite leave to remain
           </a>
@@ -55,6 +58,12 @@ export default function AboutPage() {
             report inaccurate information
           </Link>
           .
+        </p>
+        <p>
+          Readiness scores, route rankings and anonymous timeline comparisons are sketches from
+          your answers. They are not a model trained on Home Office files and they are not an
+          approval probability. The guidance assistant answers from a short FAQ with a legal
+          disclaimer on every reply.
         </p>
         <p>
           Signed-in accounts store the plan in a local database (email, visa type, dates, absences,
