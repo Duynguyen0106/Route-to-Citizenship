@@ -84,6 +84,32 @@ export function analyseAbsences(
   };
 }
 
+/** Split a trip's counted days (excluding the return date) across calendar years. */
+export function daysAwayByYear(start: Date, end: Date): Record<string, number> {
+  const totals: Record<string, number> = {};
+  let cursor = start;
+  while (cursor < end) {
+    const year = Number(toIsoDate(cursor).slice(0, 4));
+    const yearEnd = parseISO(`${year + 1}-01-01`);
+    const chunkEnd = yearEnd < end ? yearEnd : end;
+    const days = differenceInCalendarDays(chunkEnd, cursor);
+    if (days > 0) totals[String(year)] = (totals[String(year)] ?? 0) + days;
+    cursor = chunkEnd;
+  }
+  return totals;
+}
+
+export function totalsByYear(trips: AbsenceTrip[]): Record<string, number> {
+  const totals: Record<string, number> = {};
+  for (const trip of trips) {
+    const chunk = daysAwayByYear(parseISO(trip.departedOn), parseISO(trip.returnedOn));
+    for (const [year, days] of Object.entries(chunk)) {
+      totals[year] = (totals[year] ?? 0) + days;
+    }
+  }
+  return totals;
+}
+
 export function emptyAbsenceAnalysis(asOf: Date): AbsenceAnalysis {
   const iso = toIsoDate(asOf);
   return {

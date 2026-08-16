@@ -5,6 +5,7 @@ import { calculatePlan } from "@/lib/calculate";
 import {
   daysAway,
   englishStatusToLevel,
+  isoDate,
   pathwayToRouteKey,
   plannerStateFromProfile,
   reminderKindToType,
@@ -155,4 +156,61 @@ export async function savePlannerProfile(userId: string, profile: Profile): Prom
 export async function deletePlannerProfile(userId: string): Promise<void> {
   await prisma.profile.deleteMany({ where: { userId } });
   await prisma.reminder.deleteMany({ where: { userId } });
+}
+
+export async function getProfileRecordForUser(userId: string) {
+  return prisma.profile.findFirst({
+    where: { userId },
+    orderBy: { updatedAt: "desc" },
+    include: profileInclude,
+  });
+}
+
+export async function addAbsenceRecord(
+  userId: string,
+  input: { startDate: Date; endDate: Date; reason?: string | null },
+) {
+  const profile = await getProfileRecordForUser(userId);
+  if (!profile) return null;
+  return prisma.absenceRecord.create({
+    data: {
+      profileId: profile.id,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      daysAway: daysAway(isoDate(input.startDate), isoDate(input.endDate)),
+      reason: input.reason ?? null,
+    },
+  });
+}
+
+export async function listAbsenceRecords(userId: string) {
+  const profile = await getProfileRecordForUser(userId);
+  if (!profile) return null;
+  return profile.absenceRecords;
+}
+
+export async function createReminderRecord(
+  userId: string,
+  input: { title: string; dueDate: Date; type: string },
+) {
+  const profile = await getProfileRecordForUser(userId);
+  return prisma.reminder.create({
+    data: {
+      userId,
+      profileId: profile?.id ?? null,
+      title: input.title,
+      dueDate: input.dueDate,
+      type: input.type,
+      isCompleted: false,
+    },
+  });
+}
+
+export async function listUpcomingReminders(userId: string, asOf: Date = new Date()) {
+  const start = new Date(asOf);
+  start.setHours(0, 0, 0, 0);
+  return prisma.reminder.findMany({
+    where: { userId, isCompleted: false, dueDate: { gte: start } },
+    orderBy: { dueDate: "asc" },
+  });
 }
