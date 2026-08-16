@@ -1,5 +1,6 @@
 import type { EligibilityItem, Profile, VisaRoute } from "./types";
 import { MAJORITY_ENGLISH_SPEAKING_COUNTRIES } from "./types";
+import type { RouteDefinition } from "./routes";
 
 const ENGLISH_SPEAKING_CODES = new Set<string>(
   MAJORITY_ENGLISH_SPEAKING_COUNTRIES.map((c) => c.code),
@@ -30,20 +31,23 @@ export function lifeInUkMet(profile: Profile): boolean {
 export function assessEligibility(options: {
   profile: Profile;
   route: VisaRoute;
+  rule: RouteDefinition;
   asOf: Date;
   ilrOn: Date | null;
   citizenshipOn: Date | null;
   alreadyHasIlr: boolean;
 }): EligibilityItem[] {
-  const { profile, route, asOf, ilrOn, alreadyHasIlr } = options;
+  const { profile, route, rule, asOf, ilrOn, alreadyHasIlr } = options;
   const items: EligibilityItem[] = [];
+  const absenceLimit = rule.absenceLimitPerYear;
+  const hasIlrPath = rule.minYearsToILR !== null && (route.leadsToIlr || Boolean(ilrOn));
 
-  if (!route.leadsToIlr && !alreadyHasIlr) {
+  if (!hasIlrPath && !alreadyHasIlr) {
     items.push({
       id: "route",
       label: "Qualifying visa route",
       status: "not_met",
-      detail: `${route.name} does not lead to ILR. You would need to switch to a qualifying route.`,
+      detail: `${rule.name} does not start an ILR clock on your current visa. ${rule.notes}`,
     });
   } else {
     items.push({
@@ -52,11 +56,11 @@ export function assessEligibility(options: {
       status: "met",
       detail: alreadyHasIlr
         ? "You already hold ILR or settled status."
-        : `${route.name} is treated as a qualifying route in this planner (${route.ilrYears}-year clock).`,
+        : `${rule.name} is treated as a qualifying route in this planner (${rule.minYearsToILR}-year clock).`,
     });
   }
 
-  if (route.leadsToIlr && ilrOn && !alreadyHasIlr) {
+  if (ilrOn && !alreadyHasIlr) {
     const remaining = ilrOn.getTime() - asOf.getTime();
     items.push({
       id: "residence",
@@ -65,14 +69,7 @@ export function assessEligibility(options: {
       detail:
         remaining <= 0
           ? "On the dates you entered, the qualifying residence period appears complete. Confirm the Home Office calculation before applying."
-          : `Estimated ILR date is ${ilrOn.toISOString().slice(0, 10)}. Residence is counted from ${profile.qualifyingResidenceStart}.`,
-    });
-  } else if (!route.leadsToIlr) {
-    items.push({
-      id: "residence",
-      label: "Continuous residence period",
-      status: "not_applicable",
-      detail: "There is no ILR residence clock on your current visa.",
+          : `Estimated ILR date is ${ilrOn.toISOString().slice(0, 10)}. Residence is counted from ${profile.qualifyingResidenceStart}. ${rule.ilrRequiresContinuousResidence ? "This route requires continuous residence." : ""}`,
     });
   } else if (alreadyHasIlr) {
     items.push({
@@ -81,36 +78,40 @@ export function assessEligibility(options: {
       status: "met",
       detail: "Settlement is already held. Citizenship has a separate residence and absence test.",
     });
+  } else {
+    items.push({
+      id: "residence",
+      label: "Continuous residence period",
+      status: "not_applicable",
+      detail: "There is no ILR residence clock on your current visa.",
+    });
   }
 
-  if (route.absenceRule === "180_in_12") {
-    const over180 = profile.exceeded180DaysInAny12Months || profile.daysAbsentLast12Months > 180;
+  if (rule.ilrRequiresContinuousResidence && absenceLimit !== null) {
+    const overLimit =
+      profile.exceeded180DaysInAny12Months || profile.daysAbsentLast12Months > absenceLimit;
     items.push({
       id: "absences",
       label: "Absences from the UK (ILR)",
-      status: over180 ? "not_met" : profile.daysAbsentLast12Months > 150 ? "attention" : "met",
-      detail: over180
-        ? "More than 180 days outside the UK in a 12-month period can break continuous residence for most ILR routes."
-        : `You recorded ${profile.daysAbsentLast12Months} days outside the UK in the last 12 months (limit is usually 180).`,
-    });
-  } else if (route.absenceRule === "eu_settled") {
-    items.push({
-      id: "absences",
-      label: "Absences from the UK (EUSS)",
-      status: profile.daysAbsentLast12Months > 180 ? "attention" : "met",
-      detail:
-        "EU Settlement Scheme continuous residence is different from the ILR 180-day rule. Long single absences (often over 6 months) can break the clock.",
+      status: overLimit
+        ? "not_met"
+        : profile.daysAbsentLast12Months > absenceLimit * 0.85
+          ? "attention"
+          : "met",
+      detail: overLimit
+        ? `More than ${absenceLimit} days outside the UK in a 12-month period can break continuous residence on this route.`
+        : `You recorded ${profile.daysAbsentLast12Months} days outside the UK in the last 12 months (limit is ${absenceLimit}).`,
     });
   } else {
     items.push({
       id: "absences",
       label: "Absences from the UK (ILR)",
       status: "not_applicable",
-      detail: "The standard 180-day ILR absence rule is not applied to this visa in the planner.",
+      detail: "This route does not apply the standard ILR absence limit in the planner.",
     });
   }
 
-  const englishNeeded = route.englishRequiredForIlr && !alreadyHasIlr;
+  const englishNeeded = Boolean(rule.englishRequirement) && !alreadyHasIlr;
   if (englishNeeded) {
     items.push({
       id: "english",
@@ -118,7 +119,7 @@ export function assessEligibility(options: {
       status: englishMet(profile) ? "met" : "not_met",
       detail: englishMet(profile)
         ? "Your profile indicates an English requirement is already met or exempt."
-        : "ILR usually needs English at CEFR B1 (or an exemption: age, medical, majority English-speaking nationality, or a degree taught in English).",
+        : `This route requires English at ${rule.englishRequirement} (or an exemption: age, medical, majority English-speaking nationality, or a degree taught in English).`,
     });
   } else {
     items.push({
@@ -129,11 +130,11 @@ export function assessEligibility(options: {
         ? englishMet(profile)
           ? "English appears in place for a future citizenship application."
           : "Naturalisation usually still needs English at B1 unless you are exempt."
-        : "English is not required for this status in the planner (for example EUSS).",
+        : "English is not required for ILR on this route in the planner.",
     });
   }
 
-  const lifeNeeded = route.lifeInUkRequiredForIlr && !alreadyHasIlr;
+  const lifeNeeded = rule.lifeInUKRequired && !alreadyHasIlr;
   if (lifeNeeded) {
     items.push({
       id: "life-in-uk",
@@ -141,7 +142,7 @@ export function assessEligibility(options: {
       status: lifeInUkMet(profile) ? "met" : "not_met",
       detail: lifeInUkMet(profile)
         ? "Your profile indicates the Life in the UK test is passed or exempt."
-        : "Most ILR applicants aged 18–64 must pass the Life in the UK test.",
+        : "This route requires the Life in the UK test for most applicants aged 18–64.",
     });
   } else {
     items.push({
@@ -152,7 +153,7 @@ export function assessEligibility(options: {
         ? lifeInUkMet(profile)
           ? "Life in the UK appears in place for citizenship."
           : "Naturalisation usually still needs the Life in the UK test unless you are exempt."
-        : "Not required for this status in the planner.",
+        : "Not required for ILR on this route in the planner.",
     });
   }
 

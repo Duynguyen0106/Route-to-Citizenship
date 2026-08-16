@@ -9,7 +9,7 @@ import {
   Plane,
   ShieldAlert,
 } from "lucide-react";
-import { PATHWAYS } from "@/lib/pathways";
+import { listRoutes } from "@/lib/routes";
 
 const features = [
   {
@@ -79,12 +79,14 @@ export default function HomePage() {
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h2 className="font-serif text-3xl text-navy">Routes in this MVP</h2>
         <div className="mt-8 grid gap-4 md:grid-cols-2">
-          {PATHWAYS.map((pathway) => (
-            <article key={pathway.id} className="rounded-2xl border border-navy/10 bg-paper-50 p-5">
-              <h3 className="font-serif text-xl text-navy">{pathway.title}</h3>
-              <p className="mt-2 text-sm text-ink-muted">{pathway.blurb}</p>
+          {listRoutes().map((route) => (
+            <article key={route.key} className="rounded-2xl border border-navy/10 bg-paper-50 p-5">
+              <h3 className="font-serif text-xl text-navy">{route.name}</h3>
+              <p className="mt-2 text-sm text-ink-muted">{route.notes}</p>
               <p className="mt-3 text-xs uppercase tracking-[0.14em] text-ink-faint">
-                {pathway.stages.map((stage) => stage.label).join(" → ")}
+                ILR: {route.minYearsToILR ? `${route.minYearsToILR} years` : "n/a"} · Absences:{" "}
+                {route.absenceLimit ?? "n/a"} days · English: {route.englishRequirement ?? "none"} ·
+                Life in the UK: {route.lifeInUKRequired ? "required" : "not required"}
               </p>
             </article>
           ))}

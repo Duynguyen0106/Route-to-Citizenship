@@ -1,46 +1,38 @@
 import { differenceInCalendarDays, parseISO } from "date-fns";
 import type { EnglishStatus, PathwayId, Profile, Reminder } from "../types";
 import { inferPathway } from "../pathways";
+import {
+  getRouteForPathway,
+  PATHWAY_TO_ROUTE,
+  visaIdToCurrentVisaType,
+  type CurrentVisaType,
+  type RouteId,
+} from "../routes";
 import { normalizeProfile } from "../storage";
 
-export const CURRENT_VISA_TYPES = [
-  "SKILLED_WORKER",
-  "FAMILY",
-  "STUDENT",
-  "GRADUATE",
-  "GLOBAL_TALENT",
-  "OTHER",
-] as const;
+export type { CurrentVisaType };
+export { visaIdToCurrentVisaType };
 
-export type CurrentVisaType = (typeof CURRENT_VISA_TYPES)[number];
-
-export const ROUTE_KEYS: Record<PathwayId, string> = {
-  "skilled-worker": "skilled-worker-ilr-citizenship",
-  family: "family-ilr-citizenship",
-  "student-to-skilled": "student-graduate-skilled-worker-ilr-citizenship",
-  "global-talent": "global-talent-ilr-citizenship",
-  "long-residence": "long-residence-ilr-citizenship",
+const LEGACY_ROUTE_KEYS: Record<string, PathwayId> = {
+  "skilled-worker-ilr-citizenship": "skilled-worker",
+  "family-ilr-citizenship": "family",
+  "student-graduate-skilled-worker-ilr-citizenship": "student-to-skilled",
+  "global-talent-ilr-citizenship": "global-talent",
+  "long-residence-ilr-citizenship": "long-residence",
 };
 
-const ROUTE_KEY_TO_PATHWAY = Object.fromEntries(
-  Object.entries(ROUTE_KEYS).map(([pathway, key]) => [key, pathway]),
-) as Record<string, PathwayId>;
-
-export function visaIdToCurrentVisaType(visaId: string): CurrentVisaType {
-  if (visaId === "skilled-worker" || visaId === "health-care-worker") return "SKILLED_WORKER";
-  if (visaId.startsWith("spouse") || visaId === "parent") return "FAMILY";
-  if (visaId === "student") return "STUDENT";
-  if (visaId === "graduate") return "GRADUATE";
-  if (visaId.startsWith("global-talent")) return "GLOBAL_TALENT";
-  return "OTHER";
-}
-
 export function pathwayToRouteKey(pathwayId: PathwayId): string {
-  return ROUTE_KEYS[pathwayId];
+  return getRouteForPathway(pathwayId).key;
 }
 
 export function routeKeyToPathway(routeKey: string): PathwayId {
-  return ROUTE_KEY_TO_PATHWAY[routeKey] ?? inferPathway(routeKey);
+  if (routeKey in LEGACY_ROUTE_KEYS) return LEGACY_ROUTE_KEYS[routeKey];
+  for (const [pathwayId, routeId] of Object.entries(PATHWAY_TO_ROUTE) as [PathwayId, RouteId][]) {
+    if (routeId === routeKey || getRouteForPathway(pathwayId).key === routeKey) {
+      return pathwayId;
+    }
+  }
+  return inferPathway(routeKey);
 }
 
 export function englishStatusToLevel(status: EnglishStatus): string | null {

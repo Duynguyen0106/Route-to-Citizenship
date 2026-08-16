@@ -20,9 +20,7 @@ describe("Prisma field mapping", () => {
   });
 
   it("uses the specified routeKey pattern", () => {
-    expect(pathwayToRouteKey("student-to-skilled")).toBe(
-      "student-graduate-skilled-worker-ilr-citizenship",
-    );
+    expect(pathwayToRouteKey("student-to-skilled")).toBe("student-graduate-skilled-worker");
   });
 
   it("maps English and relationship columns", () => {

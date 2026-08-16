@@ -2,7 +2,7 @@ import { addDays, formatISO, parseISO } from "date-fns";
 import { describe, expect, it } from "vitest";
 import { calculatePlan, ILR_EARLY_APPLY_DAYS } from "../lib/calculate";
 import { englishMet, lifeInUkMet } from "../lib/eligibility";
-import { getRoute } from "../lib/routes";
+import { getRoute } from "../lib/visas";
 import { SAMPLE_PROFILES } from "../lib/samples";
 import { normalizeProfile } from "../lib/storage";
 import { DEFAULT_REMINDER_PREFS, type Profile } from "../lib/types";

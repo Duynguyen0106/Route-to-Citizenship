@@ -7,7 +7,7 @@ import {
 } from "./calculate";
 import { estimateFees } from "./fees";
 import { SWITCH_TARGETS } from "./pathways";
-import { canSwitchInCountry, getRoute, isFamilyCombination, isQualifyingWorkCombination } from "./routes";
+import { canSwitchInCountry, getRoute, isFamilyCombination, isQualifyingWorkCombination } from "./visas";
 import type { FeeBreakdown, Profile } from "./types";
 
 export interface SwitchSimulation {

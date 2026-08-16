@@ -4,7 +4,7 @@ import {
   getRoute,
   isFamilyCombination,
   isQualifyingWorkCombination,
-} from "./routes";
+} from "./visas";
 import type {
   AlternativeRoute,
   PlanResult,
@@ -17,6 +17,7 @@ import { buildChecklist } from "./checklist";
 import { englishMet, lifeInUkMet, assessEligibility } from "./eligibility";
 import { defaultIhsYears, estimateFees } from "./fees";
 import { studentPathNeedsSwitch, SWITCH_TARGETS } from "./pathways";
+import { effectiveMinYearsToILR, getRouteForPathway, visaIdToCurrentVisaType } from "./routes";
 import { buildReminders } from "./reminders";
 import { normalizeProfile } from "./storage";
 
@@ -343,27 +344,34 @@ function summarise(
 export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanResult {
   const derived = withDerivedAbsenceTotals(normalizeProfile(profile), asOf);
   const pathwayId = derived.pathwayId ?? "skilled-worker";
+  const rule = getRouteForPathway(pathwayId);
   const route = getRoute(derived.currentVisaId);
   const alreadyHasIlr = route.id === "ilr";
   const residenceStart = fromIsoDate(derived.ukEntryDate || derived.qualifyingResidenceStart);
   const visaExpiry = fromIsoDate(derived.visaExpiresOn);
+  const currentVisaType = visaIdToCurrentVisaType(derived.currentVisaId);
 
   let qualifyingStart = fromIsoDate(derived.qualifyingResidenceStart);
-  let ilrRoute = route;
-  let projectedIlr = route.leadsToIlr;
-
-  if (pathwayId === "long-residence" && !alreadyHasIlr) {
-    ilrRoute = getRoute("long-residence");
-    projectedIlr = true;
-  }
+  let projectedYears = effectiveMinYearsToILR(rule, currentVisaType, {
+    plannedSwitch: Boolean(derived.plannedSwitchOn),
+    currentVisaId: derived.currentVisaId,
+  });
 
   if (studentPathNeedsSwitch(derived) && derived.plannedSwitchOn) {
     qualifyingStart = fromIsoDate(derived.plannedSwitchOn);
-    ilrRoute = getRoute(derived.plannedSwitchTo || "skilled-worker");
-    projectedIlr = true;
+    projectedYears = effectiveMinYearsToILR(rule, "SKILLED_WORKER", {
+      plannedSwitch: true,
+      currentVisaId: derived.plannedSwitchTo || "skilled-worker",
+    });
   }
 
-  const ilrOn = alreadyHasIlr ? asOf : projectedIlr ? ilrEligibleDate(ilrRoute, qualifyingStart) : null;
+  const projectedIlr = projectedYears !== null;
+  const ilrOn =
+    alreadyHasIlr
+      ? asOf
+      : projectedYears !== null
+        ? addCalendarYears(qualifyingStart, projectedYears)
+        : null;
   const applyFrom = ilrOn && !alreadyHasIlr ? ilrApplyFromDate(ilrOn) : null;
   const citizenshipOn = citizenshipEligibleDate({
     ilrEligibleOn: alreadyHasIlr ? fromIsoDate(derived.visaGrantedOn) : ilrOn,
@@ -385,6 +393,7 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
   const eligibility = assessEligibility({
     profile: derived,
     route,
+    rule,
     asOf,
     ilrOn,
     citizenshipOn,
