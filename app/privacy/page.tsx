@@ -41,6 +41,11 @@ export default function PrivacyPage() {
             sketched years to ILR) so averages can be shown once at least five similar sketches
             exist. Name and email are not included.
           </li>
+          <li>
+            may store a preview plan (Basic / Pro / Premium), service enquiries (email and a short
+            note), and employer worker sketches (staff label, visa type, dates, ticks). Card numbers
+            and passport numbers are not collected.
+          </li>
         </ul>
         <p>
           Accuracy reports may include an optional contact email. Do not put identity documents in

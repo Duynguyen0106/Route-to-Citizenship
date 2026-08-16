@@ -28,7 +28,8 @@ export default function DisclaimerPage() {
           <li>pre-fill or submit UKVI forms, or read your eVisa without you using GOV.UK;</li>
           <li>book IELTS, Trinity or Life in the UK slots, or read live appointment calendars;</li>
           <li>estimate a percentage chance that the Home Office will approve your case;</li>
-          <li>replace a regulated adviser — the on-site assistant is a FAQ, not OISC advice.</li>
+          <li>replace a regulated adviser — the on-site assistant is a FAQ, not OISC advice;</li>
+          <li>take card payments, instruct an adviser, or run a Home Office right-to-work check.</li>
         </ul>
         <p>
           Immigration rules, fees, and forms change — sometimes with little notice. Before you

@@ -17,6 +17,10 @@ model User {
   profiles     Profile[]
   visaHistory  VisaEvent[]
   reminders    Reminder[]
+  /// basic | pro | premium — preview only until billing is connected
+  plan         String   @default("basic")
+  organisations Organisation[]
+  enquiries    BillingEnquiry[]
 }
 
 model Profile {
@@ -152,4 +156,49 @@ model ShareLink {
   createdAt DateTime  @default(now())
 
   @@index([expiresAt])
+}
+
+/// Plan previews, one-off service requests, adviser introductions. No passport numbers.
+model BillingEnquiry {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email     String
+  kind      String
+  message   String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([kind])
+  @@index([email])
+}
+
+/// HR organisation. Worker sketches store visa type and dates — not passports or share codes.
+model Organisation {
+  id          String   @id @default(cuid())
+  name        String
+  ownerUserId String
+  owner       User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  seatLimit   Int      @default(3)
+  createdAt   DateTime @default(now())
+  workers     SponsoredWorker[]
+
+  @@index([ownerUserId])
+}
+
+model SponsoredWorker {
+  id             String   @id @default(cuid())
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  label          String
+  visaType       String
+  visaExpiresOn  DateTime
+  jobTitle       String?
+  rtwCheckedOn   DateTime?
+  hasCos         Boolean  @default(false)
+  hasBrpCopy     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([organisationId])
+  @@index([visaExpiresOn])
 }

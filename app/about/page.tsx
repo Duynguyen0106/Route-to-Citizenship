@@ -83,6 +83,12 @@ export default function AboutPage() {
           the last four characters of a detected identity number are kept.
         </p>
         <p>
+          You can preview Basic, Pro and Premium feature sets from the pricing page. Those prices are
+          indicative; this prototype does not take payment. Adviser cards are layout examples — always
+          use the official OISC / SRA registers. Employer tools sketch visa expiry and send you to
+          GOV.UK for right-to-work checks.
+        </p>
+        <p>
           <Link href="/plan" className="text-navy underline">
             Open the planner
           </Link>

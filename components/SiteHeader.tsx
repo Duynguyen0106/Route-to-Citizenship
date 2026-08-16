@@ -15,6 +15,9 @@ export function SiteHeader() {
   const onPlan = pathname === "/plan";
   const links = [
     { href: "/plan", label: t("nav.planner") },
+    { href: "/pricing", label: t("nav.pricing") },
+    { href: "/advisers", label: t("nav.advisers") },
+    { href: "/employers", label: t("nav.employers") },
     { href: "/intelligence", label: t("nav.intelligence") },
     { href: "/about", label: t("nav.about") },
     { href: "/disclaimer", label: t("nav.disclaimer") },

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Fraunces, Public_Sans } from "next/font/google";
 import "./globals.css";
 import { LocaleProvider } from "@/components/LocaleProvider";
+import { PlanProvider } from "@/components/PlanProvider";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 
@@ -31,6 +32,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en-GB" suppressHydrationWarning className={`${fraunces.variable} ${publicSans.variable}`}>
       <body className="min-h-dvh font-sans antialiased">
         <LocaleProvider>
+          <PlanProvider>
           <div className="paper-grid flex min-h-dvh flex-col">
             <SiteHeader />
             <main id="main" className="flex-1">
@@ -38,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </main>
             <SiteFooter />
           </div>
+          </PlanProvider>
         </LocaleProvider>
       </body>
     </html>

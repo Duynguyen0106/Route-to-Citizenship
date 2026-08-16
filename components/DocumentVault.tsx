@@ -8,6 +8,8 @@ import {
   type VaultDocKind,
 } from "@/lib/document-extract";
 import { addVaultFile, listVaultMeta, removeVaultFile } from "@/lib/document-vault";
+import { vaultAllowsAnother, vaultLimits } from "@/lib/billing";
+import { usePlan } from "@/components/PlanProvider";
 import { useLocale } from "@/components/LocaleProvider";
 import { formatLongDate } from "@/lib/format";
 import type { ChecklistItem } from "@/lib/types";
@@ -23,6 +25,7 @@ export function DocumentVault({
   asOf: string;
 }) {
   const { t } = useLocale();
+  const { plan } = usePlan();
   const [items, setItems] = useState<VaultItemMeta[]>([]);
   const [scan, setScan] = useState("");
   const [kind, setKind] = useState<VaultDocKind>("other");
@@ -56,8 +59,10 @@ export function DocumentVault({
     const file = fileList?.[0];
     if (!file) return;
     setError(null);
-    if (file.size > 8 * 1024 * 1024) {
-      setError("Keep files under 8 MB.");
+    const usedBytes = items.reduce((sum, item) => sum + item.bytes, 0);
+    const allowed = vaultAllowsAnother(plan, items.length, usedBytes, file.size);
+    if (!allowed.ok) {
+      setError(allowed.reason);
       return;
     }
     try {
@@ -82,6 +87,12 @@ export function DocumentVault({
   return (
     <div className="mt-6 space-y-6">
       <p className="text-sm text-ink-muted">{t("vault.intro")}</p>
+      {vaultLimits(plan) ? (
+        <p className="text-xs text-ink-muted">
+          Local cap on this preview: {vaultLimits(plan)?.maxFiles} files. Files never leave this
+          device.
+        </p>
+      ) : null}
 
       <label className="block text-sm font-medium text-navy">
         {t("vault.scan")}

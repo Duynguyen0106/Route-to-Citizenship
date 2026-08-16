@@ -65,6 +65,9 @@ export default function HomePage() {
           >
             Build my route <ArrowRight className="h-4 w-4" />
           </Link>
+          <Link href="/pricing" className="text-sm text-ink-muted underline-offset-4 hover:underline">
+            Plans from free
+          </Link>
           <Link href="/disclaimer" className="text-sm text-ink-muted underline-offset-4 hover:underline">
             Read the legal disclaimer first
           </Link>
@@ -76,7 +79,25 @@ export default function HomePage() {
         </div>
       </section>
 
-      <div className="hairline mx-auto max-w-6xl" />
+      <section className="mx-auto max-w-6xl px-4 pb-4 sm:px-6">
+        <div className="grid gap-3 sm:grid-cols-3">
+          <Link href="/pricing" className="rounded-2xl border border-navy/10 bg-paper-50 p-5 hover:border-navy/30">
+            <p className="text-xs uppercase tracking-[0.16em] text-moss">Plans</p>
+            <p className="mt-2 font-serif text-xl text-navy">Basic, Pro and Premium</p>
+            <p className="mt-1 text-sm text-ink-muted">Indicative prices. Preview features without paying.</p>
+          </Link>
+          <Link href="/advisers" className="rounded-2xl border border-navy/10 bg-paper-50 p-5 hover:border-navy/30">
+            <p className="text-xs uppercase tracking-[0.16em] text-moss">Advisers</p>
+            <p className="mt-2 font-serif text-xl text-navy">OISC / solicitor introductions</p>
+            <p className="mt-1 text-sm text-ink-muted">Official registers first. Directory cards are examples.</p>
+          </Link>
+          <Link href="/employers" className="rounded-2xl border border-navy/10 bg-paper-50 p-5 hover:border-navy/30">
+            <p className="text-xs uppercase tracking-[0.16em] text-moss">Employers</p>
+            <p className="mt-2 font-serif text-xl text-navy">Sponsored worker dashboard</p>
+            <p className="mt-1 text-sm text-ink-muted">Expiry alerts and GOV.UK right-to-work links.</p>
+          </Link>
+        </div>
+      </section>
 
       <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6">
         <h2 className="font-serif text-3xl text-navy">Featured routes</h2>

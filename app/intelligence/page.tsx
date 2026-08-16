@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { GoalInterpreter } from "@/components/GoalInterpreter";
 import { GuidanceChat } from "@/components/GuidanceChat";
+import { FeatureGate } from "@/components/FeatureGate";
 import { LEGAL_NOTICE } from "@/lib/legal";
 import { ENCODED_RULE_VERSIONS, listRuleKeys } from "@/lib/rule-versions";
 import { formatLongDate } from "@/lib/format";
@@ -52,7 +53,9 @@ export default function IntelligencePage() {
 
       <section className="mt-12">
         <h2 className="font-serif text-2xl text-navy">Guidance assistant</h2>
-        <GuidanceChat />
+        <FeatureGate feature="chat">
+          <GuidanceChat />
+        </FeatureGate>
       </section>
 
       <p className="mt-12 text-sm">

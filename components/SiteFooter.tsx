@@ -45,6 +45,18 @@ export function SiteFooter() {
             <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-white">
               {t("footer.privacy")}
             </Link>
+            <Link href="/pricing" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("nav.pricing")}
+            </Link>
+            <Link href="/advisers" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("nav.advisers")}
+            </Link>
+            <Link href="/partners" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("nav.partners")}
+            </Link>
+            <Link href="/employers" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("nav.employers")}
+            </Link>
             <Link href="/disclaimer" className="inline-flex min-h-11 items-center hover:text-white">
               {t("footer.disclaimer")}
             </Link>

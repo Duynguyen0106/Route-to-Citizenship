@@ -28,6 +28,11 @@ import { ApplicationPackPanel } from "@/components/ApplicationPackPanel";
 import { PartnerServicesPanel } from "@/components/PartnerServicesPanel";
 import { ShareExportPanel } from "@/components/ShareExportPanel";
 import { AbsenceImportTools } from "@/components/AbsenceImportTools";
+import { AbsenceForecastPanel } from "@/components/AbsenceForecastPanel";
+import { FeatureGate } from "@/components/FeatureGate";
+import { ExpertQaPanel } from "@/components/ExpertQaPanel";
+import { usePlan } from "@/components/PlanProvider";
+import { PLAN_CATALOGUE } from "@/lib/billing";
 import { SharePackView } from "@/components/SharePackView";
 import { listVaultMeta } from "@/lib/document-vault";
 import { buildSharePack } from "@/lib/share-pack";
@@ -52,6 +57,7 @@ export function Dashboard({
 }) {
   const [confirmReset, setConfirmReset] = useState(false);
   const { t } = useLocale();
+  const { plan: previewPlan } = usePlan();
   const pathway = getPathway(plan.pathwayId);
   const rule = getRouteForPathway(plan.pathwayId);
   const printPack = useMemo(() => buildSharePack(profile, plan, listVaultMeta()), [profile, plan]);
@@ -66,6 +72,13 @@ export function Dashboard({
             <LastReviewed date={rule.lastReviewedOn} />
           </p>
           <p className="mt-3 max-w-2xl text-ink-muted">{plan.summary}</p>
+          <p className="mt-2 text-xs text-ink-faint">
+            Preview plan: {PLAN_CATALOGUE[previewPlan].name} ·{" "}
+            <Link href="/pricing" className="underline">
+              change tier
+            </Link>{" "}
+            (no payment taken)
+          </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm sm:gap-3">
           <button type="button" onClick={onEdit} className="min-h-11 rounded-full border border-navy/20 px-4 py-2">
@@ -136,6 +149,7 @@ export function Dashboard({
           ["apply", t("nav.apply")],
           ["services", t("nav.services")],
           ["share", t("nav.share")],
+          ["expert", t("nav.expert")],
           ["reminders", t("nav.reminders")],
         ].map(([id, label]) => (
           <a
@@ -303,7 +317,9 @@ export function Dashboard({
 
       <section id="vault" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.vault")}</h2>
-        <DocumentVault checklist={plan.checklist} asOf={plan.asOf} />
+        <FeatureGate feature="vault">
+          <DocumentVault checklist={plan.checklist} asOf={plan.asOf} />
+        </FeatureGate>
       </section>
 
       <section id="absences" className="mt-14 scroll-mt-24">
@@ -312,19 +328,26 @@ export function Dashboard({
           Log trips outside the UK. Totals are calculated per 12-month period against the usual
           180-day ILR limit. This is not a Home Office calculation.
         </p>
-        <div className="mt-6">
-          <AbsenceImportTools
-            trips={profile.absences}
-            onChange={(absences) => onProfileChange({ ...profile, absences })}
-          />
-          <AbsenceTracker
-            trips={profile.absences}
-            qualifyingStart={profile.qualifyingResidenceStart || profile.ukEntryDate}
-            onChange={(absences) => onProfileChange({ ...profile, absences })}
-          />
-        </div>
-        <h3 className="mt-10 font-serif text-xl text-navy">{t("section.calendar")}</h3>
-        <ResidenceCalendar trips={profile.absences} asOf={plan.asOf} />
+        <FeatureGate feature="absences">
+          <div className="mt-6">
+            <AbsenceForecastPanel
+              trips={profile.absences}
+              asOf={plan.asOf}
+              qualifyingStart={profile.qualifyingResidenceStart || profile.ukEntryDate}
+            />
+            <AbsenceImportTools
+              trips={profile.absences}
+              onChange={(absences) => onProfileChange({ ...profile, absences })}
+            />
+            <AbsenceTracker
+              trips={profile.absences}
+              qualifyingStart={profile.qualifyingResidenceStart || profile.ukEntryDate}
+              onChange={(absences) => onProfileChange({ ...profile, absences })}
+            />
+          </div>
+          <h3 className="mt-10 font-serif text-xl text-navy">{t("section.calendar")}</h3>
+          <ResidenceCalendar trips={profile.absences} asOf={plan.asOf} />
+        </FeatureGate>
       </section>
 
       <section id="whatif" className="mt-14 scroll-mt-24">
@@ -333,7 +356,9 @@ export function Dashboard({
           Test a future trip without saving it. A 180-day breach can refuse ILR even when the
           sketched calendar date does not move.
         </p>
-        <WhatIfAbsence profile={profile} asOf={plan.asOf} />
+        <FeatureGate feature="whatif">
+          <WhatIfAbsence profile={profile} asOf={plan.asOf} />
+        </FeatureGate>
       </section>
 
       <section id="switch" className="mt-14 scroll-mt-24">
@@ -342,7 +367,9 @@ export function Dashboard({
           Compare staying put with switching on a date you choose. Use the cards above to apply a
           modelled in-country switch.
         </p>
-        <SwitchSimulator profile={profile} plan={plan} />
+        <FeatureGate feature="switch">
+          <SwitchSimulator profile={profile} plan={plan} />
+        </FeatureGate>
       </section>
 
       <section id="fees" className="mt-14 scroll-mt-24">
@@ -356,37 +383,51 @@ export function Dashboard({
 
       <section id="eligibility" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.eligibility")}</h2>
-        <EligibilityPanel items={plan.eligibility} check={plan.eligibilityCheck} />
+        <FeatureGate feature="eligibility">
+          <EligibilityPanel items={plan.eligibility} check={plan.eligibilityCheck} />
+        </FeatureGate>
       </section>
 
       <section id="rules" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.rules")}</h2>
-        <RuleUpdates profile={profile} />
+        <FeatureGate feature="rules">
+          <RuleUpdates profile={profile} />
+        </FeatureGate>
       </section>
 
       <section id="recommend" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.recommend")}</h2>
-        <RecommendationsPanel profile={profile} plan={plan} />
+        <FeatureGate feature="recommend">
+          <RecommendationsPanel profile={profile} plan={plan} />
+        </FeatureGate>
       </section>
 
       <section id="risk" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.risk")}</h2>
-        <RiskPanel profile={profile} plan={plan} />
+        <FeatureGate feature="risk">
+          <RiskPanel profile={profile} plan={plan} />
+        </FeatureGate>
       </section>
 
       <section id="benchmarks" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.benchmarks")}</h2>
-        <BenchmarkPanel profile={profile} plan={plan} />
+        <FeatureGate feature="benchmarks">
+          <BenchmarkPanel profile={profile} plan={plan} />
+        </FeatureGate>
       </section>
 
       <section id="goals" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.goals")}</h2>
-        <GoalInterpreter />
+        <FeatureGate feature="goals">
+          <GoalInterpreter />
+        </FeatureGate>
       </section>
 
       <section id="chat" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.chat")}</h2>
-        <GuidanceChat />
+        <FeatureGate feature="chat">
+          <GuidanceChat />
+        </FeatureGate>
       </section>
 
       <section id="apply" className="mt-14 scroll-mt-24">
@@ -396,12 +437,23 @@ export function Dashboard({
 
       <section id="services" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.services")}</h2>
-        <PartnerServicesPanel profile={profile} plan={plan} onProfileChange={onProfileChange} />
+        <FeatureGate feature="services">
+          <PartnerServicesPanel profile={profile} plan={plan} onProfileChange={onProfileChange} />
+        </FeatureGate>
       </section>
 
       <section id="share" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.share")}</h2>
-        <ShareExportPanel profile={profile} plan={plan} />
+        <FeatureGate feature="shareExport">
+          <ShareExportPanel profile={profile} plan={plan} />
+        </FeatureGate>
+      </section>
+
+      <section id="expert" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.expert")}</h2>
+        <FeatureGate feature="expertQa">
+          <ExpertQaPanel />
+        </FeatureGate>
       </section>
 
       <section id="reminders" className="mt-14 scroll-mt-24 pb-8">

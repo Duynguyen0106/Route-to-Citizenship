@@ -4,9 +4,11 @@ import { useState } from "react";
 import { buildSharePack, sharePackJson } from "@/lib/share-pack";
 import { listVaultMeta } from "@/lib/document-vault";
 import { LEGAL_NOTICE } from "@/lib/legal";
+import { usePlan } from "@/components/PlanProvider";
 import type { PlanResult, Profile } from "@/lib/types";
 
 export function ShareExportPanel({ profile, plan }: { profile: Profile; plan: PlanResult }) {
+  const { has } = usePlan();
   const [link, setLink] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [note, setNote] = useState<string | null>(null);
@@ -81,9 +83,16 @@ export function ShareExportPanel({ profile, plan }: { profile: Profile; plan: Pl
           <option value="employer">Employer / HR</option>
         </select>
       </label>
-      <button type="button" className="min-h-11 rounded-full border border-navy/20 px-4 py-2 text-sm" onClick={() => void createLink()}>
-        Create 7-day read-only link
-      </button>
+      {has("shareLink") ? (
+        <button type="button" className="min-h-11 rounded-full border border-navy/20 px-4 py-2 text-sm" onClick={() => void createLink()}>
+          Create 7-day read-only link
+        </button>
+      ) : (
+        <p className="text-sm text-ink-muted">
+          Revocable read-only links are a Premium preview feature. JSON and print stay available on
+          Pro.
+        </p>
+      )}
       {link ? (
         <p className="break-all text-sm">
           <a className="text-navy underline" href={link}>
