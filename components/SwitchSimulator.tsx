@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { fromIsoDate } from "@/lib/calculate";
 import { formatDayCount, formatGbp, formatLongDate } from "@/lib/format";
 import { SWITCH_TARGETS } from "@/lib/pathways";
-import { simulateSwitch } from "@/lib/simulate";
+import { getPossibleSwitches, simulateSwitch } from "@/lib/simulate";
 import { toIsoDate } from "@/lib/dates";
 import type { PlanResult, Profile } from "@/lib/types";
 
@@ -17,6 +17,11 @@ export function SwitchSimulator({ profile, plan }: { profile: Profile; plan: Pla
         : "global-talent-talent";
   const [toVisaId, setToVisaId] = useState(defaultTarget);
   const [switchOn, setSwitchOn] = useState(toIsoDate(new Date()));
+
+  const possible = useMemo(
+    () => getPossibleSwitches(profile, fromIsoDate(plan.asOf)),
+    [profile, plan.asOf],
+  );
 
   const simulation = useMemo(
     () =>
@@ -34,6 +39,44 @@ export function SwitchSimulator({ profile, plan }: { profile: Profile; plan: Pla
 
   return (
     <div className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 p-5">
+      {possible.length > 0 ? (
+        <div className="mb-6">
+          <p className="text-sm font-medium text-navy">In-country switches from your current visa</p>
+          <ul className="mt-3 grid gap-3 md:grid-cols-2">
+            {possible.map((option) => (
+              <li key={option.routeKey}>
+                <button
+                  type="button"
+                  onClick={() => setToVisaId(option.toVisaId)}
+                  className={`w-full rounded-xl border px-4 py-3 text-left ${
+                    toVisaId === option.toVisaId ? "border-moss bg-moss/10" : "border-navy/10 bg-white"
+                  }`}
+                >
+                  <p className="font-medium text-navy">{option.name}</p>
+                  <p className="mt-1 text-sm text-ink-muted">
+                    ILR:{" "}
+                    {option.estimatedILRDate
+                      ? formatLongDate(toIsoDate(option.estimatedILRDate))
+                      : "No ILR path"}
+                    {" · "}
+                    Citizenship:{" "}
+                    {option.estimatedCitizenshipDate
+                      ? formatLongDate(toIsoDate(option.estimatedCitizenshipDate))
+                      : "—"}
+                  </p>
+                  <p className="mt-2 text-xs text-ink-muted">{option.caveats[0]}</p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mb-6 text-sm text-ink-muted">
+          No in-country switch onto another MVP route is modelled from this visa type. Visitor leave
+          usually cannot be switched inside the UK.
+        </p>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm">
           <span className="font-medium text-navy">Switch onto</span>

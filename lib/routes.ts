@@ -196,3 +196,41 @@ export function switchingTargets(from: RouteDefinition): RouteDefinition[] {
 export function isSwitchingAllowed(from: RouteDefinition, to: RouteDefinition): boolean {
   return from.switchingAllowed && to.switchingAllowed && from.key !== to.key;
 }
+
+/**
+ * Typical in-country switches among the five MVP routes.
+ * Extra criteria (sponsor, endorsement, partner) are described by getPossibleSwitches.
+ */
+export const IN_COUNTRY_SWITCH_TARGETS: Record<CurrentVisaType, RouteId[]> = {
+  STUDENT: ["skilledWorker", "family", "globalTalent", "longResidence"],
+  GRADUATE: ["skilledWorker", "family", "globalTalent", "longResidence"],
+  SKILLED_WORKER: ["family", "globalTalent", "longResidence"],
+  FAMILY: ["skilledWorker", "globalTalent", "longResidence"],
+  GLOBAL_TALENT: ["skilledWorker", "family", "longResidence"],
+  OTHER: [],
+};
+
+export function canSwitchToRouteInCountry(
+  fromVisaType: CurrentVisaType,
+  toRoute: RouteDefinition,
+): boolean {
+  return IN_COUNTRY_SWITCH_TARGETS[fromVisaType].some((id) => ROUTES[id].key === toRoute.key);
+}
+
+/** Representative visa catalogue id used when modelling a switch onto this pathway. */
+export function switchTargetVisaId(route: RouteDefinition): string {
+  switch (route.key) {
+    case ROUTES.skilledWorker.key:
+      return "skilled-worker";
+    case ROUTES.family.key:
+      return "spouse-5";
+    case ROUTES.studentToGraduateToSkilled.key:
+      return "skilled-worker";
+    case ROUTES.globalTalent.key:
+      return "global-talent-talent";
+    case ROUTES.longResidence.key:
+      return "long-residence";
+    default:
+      return "skilled-worker";
+  }
+}

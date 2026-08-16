@@ -212,6 +212,18 @@ export interface AlternativeRoute {
   officialUrl: string;
 }
 
+export interface PossibleSwitch {
+  routeKey: string;
+  name: string;
+  toVisaId: string;
+  inCountrySwitch: boolean;
+  estimatedILRDate: Date | null;
+  estimatedCitizenshipDate: Date | null;
+  yearsToILR: number | null;
+  clockNote: string;
+  caveats: string[];
+}
+
 export interface ChecklistItem {
   id: string;
   label: string;
