@@ -37,6 +37,7 @@ export async function POST(request: Request) {
         label,
         payload: JSON.parse(json) as Prisma.InputJsonValue,
         expiresAt: addDays(new Date(), days),
+        userId: auth.user.id,
       },
     });
   } catch {

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ACCOUNT_DELETE_PHRASE,
-  ACCOUNT_EXPORT_SCHEMA,
   GUEST_EXPORT_SCHEMA,
 } from "@/lib/account-export";
 import { STORAGE_PLAN } from "@/lib/billing";
@@ -139,7 +138,7 @@ export function AccountPanel() {
             <dd className="mt-1 text-navy">{account.account.plan}</dd>
           </div>
           <p className="mt-3 text-ink-muted">
-            Export is a redacted JSON copy of the saved plan ({ACCOUNT_EXPORT_SCHEMA}). It does not
+            Export is a GDPR JSON copy of the saved plan and related server records. It does not
             include password hashes, vault files, or passport numbers.
           </p>
         </dl>

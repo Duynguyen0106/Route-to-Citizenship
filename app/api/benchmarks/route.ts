@@ -4,6 +4,7 @@ import { parseProfileInput } from "@/lib/api/profile-input";
 import { asJsonObject, badRequest, readJsonBody } from "@/lib/api/session";
 import { snapshotFromPlan } from "@/lib/benchmarks";
 import { benchmarkForPlan, saveAnonymousSnapshot } from "@/lib/benchmark-store";
+import { dispatch } from "@/lib/events/broker";
 
 export async function GET() {
   return NextResponse.json({
@@ -36,6 +37,10 @@ export async function POST(request: Request) {
       await saveAnonymousSnapshot({
         ...snap,
         reportedWaitWeeks: reported,
+      });
+      await dispatch("analytics.cohort.recorded", "analytics", {
+        pathwayId: snap.pathwayId,
+        nationalityGroup: snap.nationalityGroup,
       });
     } catch {
       return badRequest("Could not store the anonymous sketch. Try again after the database is migrated.");

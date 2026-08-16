@@ -1,5 +1,14 @@
+import {
+  aesGcmEncrypt,
+  base64ToBytes,
+  bytesToBase64,
+  generateAesGcmKeyBytes,
+  importAesGcmKey,
+} from "./crypto/aes-gcm";
 import type { VaultItemMeta } from "./document-completeness";
 import type { VaultDocKind } from "./document-extract";
+import { emit } from "./events/bus";
+import { wrapClientEncryptedObject, putEncryptedObjectToS3 } from "./object-storage";
 
 const DB_NAME = "rtc-vault";
 const STORE = "documents";
@@ -11,44 +20,22 @@ export interface VaultRecord extends VaultItemMeta {
   iv: string;
 }
 
-function bytesToBase64(bytes: Uint8Array): string {
-  let binary = "";
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary);
-}
-
-function base64ToBytes(value: string): Uint8Array {
-  const binary = atob(value);
-  const bytes = new Uint8Array(binary.length);
-  for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
-  }
-  return bytes;
-}
-
 async function getOrCreateKey(): Promise<CryptoKey> {
   const existing = window.localStorage.getItem(KEY_STORAGE);
   if (existing) {
-    return window.crypto.subtle.importKey(
-      "raw",
-      base64ToBytes(existing) as BufferSource,
-      { name: "AES-GCM" },
-      false,
-      ["encrypt", "decrypt"],
-    );
+    return importAesGcmKey(base64ToBytes(existing), window.crypto);
   }
-  const raw = window.crypto.getRandomValues(new Uint8Array(32));
+  const raw = await generateAesGcmKeyBytes(window.crypto);
   window.localStorage.setItem(KEY_STORAGE, bytesToBase64(raw));
-  return window.crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt", "decrypt"]);
+  return importAesGcmKey(raw, window.crypto);
 }
 
 async function encryptBytes(data: ArrayBuffer): Promise<{ ciphertext: string; iv: string }> {
   const key = await getOrCreateKey();
-  const iv = window.crypto.getRandomValues(new Uint8Array(12));
-  const encrypted = await window.crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, data);
-  return { ciphertext: bytesToBase64(new Uint8Array(encrypted)), iv: bytesToBase64(iv) };
+  const { iv, ciphertext } = await aesGcmEncrypt(data, key, window.crypto);
+  const wrapped = wrapClientEncryptedObject(iv, ciphertext);
+  await putEncryptedObjectToS3(wrapped);
+  return { ciphertext: wrapped.ciphertext, iv: wrapped.iv };
 }
 
 function openDb(): Promise<IDBDatabase> {
@@ -113,6 +100,12 @@ export async function addVaultFile(options: {
   });
   db.close();
   saveMeta([...loadMeta().filter((item) => item.id !== meta.id), meta]);
+  emit("documents.processed", "documents", {
+    kind: meta.kind,
+    bytes: meta.bytes,
+    onDevice: true,
+    uploaded: false,
+  });
   return meta;
 }
 

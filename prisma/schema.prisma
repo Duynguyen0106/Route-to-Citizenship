@@ -21,6 +21,7 @@ model User {
   plan         String   @default("basic")
   organisations Organisation[]
   enquiries    BillingEnquiry[]
+  shareLinks   ShareLink[]
 }
 
 model Profile {
@@ -154,8 +155,11 @@ model ShareLink {
   expiresAt DateTime
   revokedAt DateTime?
   createdAt DateTime  @default(now())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([expiresAt])
+  @@index([userId])
 }
 
 /// Plan previews, one-off service requests, adviser introductions. No passport numbers.

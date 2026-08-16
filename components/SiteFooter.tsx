@@ -45,6 +45,9 @@ export function SiteFooter() {
             <Link href="/account" className="inline-flex min-h-11 items-center hover:text-white">
               {t("nav.account")}
             </Link>
+            <Link href="/security" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("nav.security")}
+            </Link>
             <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-white">
               {t("footer.privacy")}
             </Link>

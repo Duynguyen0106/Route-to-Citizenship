@@ -60,6 +60,21 @@ export default function PrivacyPage() {
           Accuracy reports may include an optional contact email. Do not put identity documents in
           those reports.
         </p>
+        <h2 className="font-serif text-2xl text-navy">Your rights (UK GDPR)</h2>
+        <p>
+          Access, portability and erasure are on the{" "}
+          <Link href="/account" className="text-navy underline">
+            account page
+          </Link>
+          . A signed-in download is a JSON file that lists what we process. Vault files stay on this
+          device and are not in that file. Deleting the account also removes service enquiries and
+          share links tied to you. Opt-in anonymous benchmarks have no email, so they cannot be
+          matched back. More detail:{" "}
+          <Link href="/security" className="text-navy underline">
+            security and architecture
+          </Link>
+          .
+        </p>
         <p>
           <Link href="/disclaimer" className="text-navy underline">
             Read the full disclaimer

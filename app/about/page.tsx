@@ -93,6 +93,16 @@ export default function AboutPage() {
           four characters of a detected identity number are kept.
         </p>
         <p>
+          Route dates, absences and fees are calculated in this browser. Document scans are encrypted
+          on the device (AES-GCM) and are never uploaded to S3 or our API. Rule updates, reminder
+          requests and anonymous benchmarks use an in-process event bus — not Kafka or AWS SQS.
+          This is a modular monolith, not a mesh of microservices.{" "}
+          <Link href="/security" className="text-navy underline">
+            Security and architecture
+          </Link>
+          .
+        </p>
+        <p>
           You can preview Basic, Pro and Premium feature sets from the pricing page. Those prices are
           indicative; this prototype does not take payment. Adviser cards are layout examples — always
           use the official OISC / SRA registers. Employer tools sketch visa expiry and send you to

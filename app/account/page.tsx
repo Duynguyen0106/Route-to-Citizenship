@@ -11,7 +11,7 @@ export default function AccountPage() {
       <h1 className="mt-3 font-serif text-4xl text-navy">Your data</h1>
       <p className="mt-3 text-ink-muted">{LEGAL_NOTICE}</p>
       <p className="mt-3 text-sm text-ink-muted">
-        Download a redacted copy or delete what this planner holds. Vault files stay in this browser
+        Download a GDPR JSON copy or delete what this planner holds. Vault files stay in this browser
         and are never uploaded. Passport numbers are not collected.
       </p>
       <AccountPanel />

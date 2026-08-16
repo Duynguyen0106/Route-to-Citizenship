@@ -19,6 +19,7 @@ export function SiteHeader() {
     { href: "/advisers", label: t("nav.advisers") },
     { href: "/employers", label: t("nav.employers") },
     { href: "/intelligence", label: t("nav.intelligence") },
+    { href: "/security", label: t("nav.security") },
     { href: "/about", label: t("nav.about") },
     { href: "/disclaimer", label: t("nav.disclaimer") },
   ];

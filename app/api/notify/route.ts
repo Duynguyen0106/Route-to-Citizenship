@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { notifyConfigured, NOTIFY_UNAVAILABLE_REASON, sendGovukNotifyEmail } from "@/lib/notify";
 import { asJsonObject, badRequest, readJsonBody, requireUser } from "@/lib/api/session";
+import { dispatch } from "@/lib/events/broker";
 import type { Reminder } from "@/lib/types";
 
 export async function GET() {
@@ -23,5 +24,9 @@ export async function POST(request: Request) {
   const reminders = Array.isArray(body.reminders) ? (body.reminders as Reminder[]) : [];
   if (reminders.length === 0) return badRequest("Reminders are required.");
   const result = await sendGovukNotifyEmail(auth.user.email, reminders);
+  await dispatch("reminders.requested", "notifications", {
+    count: reminders.length,
+    sent: result.sent,
+  });
   return NextResponse.json(result, { status: result.sent ? 200 : 502 });
 }
