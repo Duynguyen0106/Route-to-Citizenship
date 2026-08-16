@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseISO } from "date-fns";
-import { analyseAbsences, totalsByYear } from "@/lib/absences";
+import { analyseAbsences, totalsByYear, twelveMonthPeriods } from "@/lib/absences";
 import { badRequest, notFound, requireUser } from "@/lib/api/session";
 import { daysAway, isoDate } from "@/lib/db/mappers";
 import { addAbsenceRecord, getPlannerProfileForUser, listAbsenceRecords } from "@/lib/db/plan-repository";
@@ -42,6 +42,13 @@ export async function GET() {
       reason: row.reason,
     })),
     totalsByYear: totalsByYear(trips),
+    twelveMonthPeriods: analysis
+      ? twelveMonthPeriods(
+          trips,
+          asOf,
+          parseISO(profile?.qualifyingResidenceStart || profile?.ukEntryDate || isoDate(asOf)),
+        )
+      : [],
     last12Months: analysis?.last12Months ?? 0,
     exceeded180DaysInAny12Months: analysis?.breached180 ?? false,
   });

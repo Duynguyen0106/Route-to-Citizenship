@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
 import { Dashboard } from "@/components/Dashboard";
-import { ProfileWizard } from "@/components/ProfileWizard";
+import { OnboardingQuestionnaire } from "@/components/OnboardingQuestionnaire";
 import { calculatePlan } from "@/lib/calculate";
 import { clearProfile, loadProfile, saveProfile } from "@/lib/storage";
 import type { Profile } from "@/lib/types";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 export function PlannerApp() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -94,11 +94,11 @@ export function PlannerApp() {
             Signed in — this plan is saved to your account.
           </p>
         )}
-        <ProfileWizard
+        <OnboardingQuestionnaire
           initial={profile}
-          onSave={persist}
+          onComplete={persist}
           onCancel={profile ? () => setEditing(false) : undefined}
-          onLoadSample={(sample) => persist(sample)}
+          onLoadSample={persist}
         />
       </>
     );

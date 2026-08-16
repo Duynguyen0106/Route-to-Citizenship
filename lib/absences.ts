@@ -2,6 +2,13 @@ import { differenceInCalendarDays, parseISO, subMonths, subYears } from "date-fn
 import { toIsoDate } from "./dates";
 import type { AbsenceAnalysis, AbsenceTrip, AbsenceWindow } from "./types";
 
+export interface TwelveMonthPeriod {
+  windowStart: string;
+  windowEnd: string;
+  days: number;
+  overLimit: boolean;
+}
+
 /** Whole days outside the UK: departure date up to (not including) the return date. */
 export function tripDays(trip: AbsenceTrip): number {
   return Math.max(0, differenceInCalendarDays(parseISO(trip.returnedOn), parseISO(trip.departedOn)));
@@ -102,12 +109,43 @@ export function daysAwayByYear(start: Date, end: Date): Record<string, number> {
 export function totalsByYear(trips: AbsenceTrip[]): Record<string, number> {
   const totals: Record<string, number> = {};
   for (const trip of trips) {
+    if (!trip.departedOn || !trip.returnedOn) continue;
     const chunk = daysAwayByYear(parseISO(trip.departedOn), parseISO(trip.returnedOn));
     for (const [year, days] of Object.entries(chunk)) {
       totals[year] = (totals[year] ?? 0) + days;
     }
   }
   return totals;
+}
+
+/** Days away in each 12-month window ending on a trip return date or as-of date. */
+export function twelveMonthPeriods(
+  trips: AbsenceTrip[],
+  asOf: Date,
+  qualifyingStart: Date,
+  limit = 180,
+): TwelveMonthPeriod[] {
+  const complete = trips.filter((trip) => trip.departedOn && trip.returnedOn);
+  const ends = [asOf, ...complete.map((trip) => parseISO(trip.returnedOn))];
+  const seen = new Set<string>();
+  const periods: TwelveMonthPeriod[] = [];
+
+  for (const end of ends) {
+    if (Number.isNaN(end.getTime()) || end < qualifyingStart) continue;
+    const windowEnd = toIsoDate(end);
+    if (seen.has(windowEnd)) continue;
+    seen.add(windowEnd);
+    const start = subMonths(end, 12);
+    const days = daysAbsentInRange(complete, start, end);
+    periods.push({
+      windowStart: toIsoDate(start),
+      windowEnd,
+      days,
+      overLimit: days > limit,
+    });
+  }
+
+  return periods.sort((a, b) => b.windowEnd.localeCompare(a.windowEnd));
 }
 
 export function emptyAbsenceAnalysis(asOf: Date): AbsenceAnalysis {

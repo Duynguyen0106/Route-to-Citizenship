@@ -4,7 +4,7 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
   const items: ChecklistItem[] = [
     {
       id: "passport",
-      label: "Current passport",
+      label: "Passport",
       detail:
         "Have a valid passport ready when you apply on GOV.UK. This planner never asks for or stores passport numbers.",
       required: true,
@@ -12,8 +12,9 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
     },
     {
       id: "evisa",
-      label: "eVisa / BRP details and share code",
-      detail: "Proof of your current immigration status (UKVI account share code or BRP if still held).",
+      label: "Biometric residence permit",
+      detail:
+        "BRP if still held, or your UKVI eVisa share code as proof of current immigration status.",
       required: true,
       group: "identity",
     },
@@ -34,8 +35,9 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
     },
     {
       id: "address-history",
-      label: "UK address history",
-      detail: "Where you have lived during the qualifying period (tenancy, mortgage, council tax, letters).",
+      label: "Proof of residence (council tax, utility bills)",
+      detail:
+        "Council tax, utility bills, tenancy or mortgage documents covering the qualifying period.",
       required: true,
       group: "residence",
     },
@@ -45,15 +47,9 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
     items.push(
       {
         id: "payslips",
-        label: "Payslips (usually 6 months)",
-        detail: "Recent payslips matching your sponsored employment or claimed work history.",
-        required: true,
-        group: "route",
-      },
-      {
-        id: "bank-salary",
-        label: "Bank statements showing salary",
-        detail: "Statements that show the same salary hitting your account.",
+        label: "Salary slips / bank statements",
+        detail:
+          "Usually six months of payslips and matching bank statements for work and talent routes.",
         required: true,
         group: "route",
       },
@@ -159,7 +155,7 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
   if (route.englishRequiredForIlr && profile.ageBand === "18_to_64") {
     items.push({
       id: "english-cert",
-      label: "English language evidence",
+      label: "Proof of English",
       detail: "Approved B1 SELT, degree taught in English (ECCTIS), or nationality exemption.",
       required: profile.englishStatus === "not_met",
       group: "english",
@@ -169,7 +165,7 @@ export function buildChecklist(profile: Profile, route: VisaRoute): ChecklistIte
   if (route.lifeInUkRequiredForIlr && profile.ageBand === "18_to_64") {
     items.push({
       id: "life-in-uk-pass",
-      label: "Life in the UK test pass notification",
+      label: "Life in UK test pass certificate",
       detail: "Unique reference number from a passed test. Book early — centres can have waits.",
       required: profile.lifeInUkStatus === "not_taken",
       group: "english",

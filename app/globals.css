@@ -43,3 +43,9 @@ body {
   stroke-dasharray: 400;
   animation: draw-path 1.4s ease forwards;
 }
+
+@layer components {
+  .field-input {
+    @apply mt-1 w-full rounded-lg border border-navy/15 bg-white px-3 py-2 font-normal text-ink;
+  }
+}

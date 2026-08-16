@@ -90,6 +90,19 @@ export function buildReminders(options: {
     .sort((a, b) => a.date.localeCompare(b.date));
 }
 
+/** One alert per dashboard category: visa expiry, ILR, citizenship, Life in the UK. */
+export function dashboardAlerts(reminders: Reminder[]): Reminder[] {
+  const visa =
+    reminders.find((item) => item.id === "visa-3m") ??
+    reminders.find((item) => item.kind === "visa_expiry");
+  const ilr = reminders.find((item) => item.kind === "ilr");
+  const citizenship = reminders.find((item) => item.kind === "citizenship");
+  const lifeInUk =
+    reminders.find((item) => item.id === "life-in-uk") ??
+    reminders.find((item) => item.kind === "test" && item.title.toLowerCase().includes("life in the uk"));
+  return [visa, ilr, citizenship, lifeInUk].filter((item): item is Reminder => Boolean(item));
+}
+
 function urgency(date: Date, asOf: Date): Reminder["urgency"] {
   if (isBefore(date, asOf)) return "overdue";
   const in30 = addDays(asOf, 30);

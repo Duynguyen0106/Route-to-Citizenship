@@ -1,9 +1,9 @@
 "use client";
 
-import { analyseAbsences, emptyAbsenceAnalysis, tripDays } from "@/lib/absences";
+import { parseISO } from "date-fns";
+import { analyseAbsences, emptyAbsenceAnalysis, tripDays, twelveMonthPeriods } from "@/lib/absences";
 import { formatLongDate } from "@/lib/format";
 import type { AbsenceTrip } from "@/lib/types";
-import { parseISO } from "date-fns";
 
 export function AbsenceTracker({
   trips,
@@ -16,10 +16,15 @@ export function AbsenceTracker({
   asOf?: Date;
   onChange: (trips: AbsenceTrip[]) => void;
 }) {
+  const complete = trips.filter((trip) => trip.departedOn && trip.returnedOn);
   const analysis =
-    trips.length > 0 && qualifyingStart
-      ? analyseAbsences(trips, asOf, parseISO(qualifyingStart))
+    complete.length > 0 && qualifyingStart
+      ? analyseAbsences(complete, asOf, parseISO(qualifyingStart))
       : emptyAbsenceAnalysis(asOf);
+  const periods = qualifyingStart
+    ? twelveMonthPeriods(complete, asOf, parseISO(qualifyingStart))
+    : [];
+  const overLimit = periods.filter((period) => period.overLimit);
 
   function addTrip() {
     onChange([
@@ -71,55 +76,71 @@ export function AbsenceTracker({
         />
       </div>
 
-      <ul className="divide-y divide-navy/10 rounded-2xl border border-navy/10 bg-paper-50">
-        {trips.length === 0 && (
-          <li className="px-4 py-4 text-sm text-ink-muted">
-            No trips yet. Add time spent outside the UK. Day of return is not counted.
-          </li>
-        )}
-        {trips.map((trip) => (
-          <li key={trip.id} className="grid gap-3 px-4 py-3 sm:grid-cols-[1fr_1fr_1fr_auto]">
-            <label className="text-xs text-ink-muted">
-              Left the UK
-              <input
-                type="date"
-                value={trip.departedOn}
-                onChange={(event) => update(trip.id, { departedOn: event.target.value })}
-                className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="text-xs text-ink-muted">
-              Returned
-              <input
-                type="date"
-                value={trip.returnedOn}
-                onChange={(event) => update(trip.id, { returnedOn: event.target.value })}
-                className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <label className="text-xs text-ink-muted">
-              Where
-              <input
-                type="text"
-                value={trip.place}
-                placeholder="Optional"
-                onChange={(event) => update(trip.id, { place: event.target.value })}
-                className="mt-1 w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5 text-sm text-ink"
-              />
-            </label>
-            <div className="flex items-end justify-between gap-2 pb-1 text-xs text-ink-muted">
-              <span>
-                {trip.departedOn && trip.returnedOn
-                  ? `${tripDays(trip)} day${tripDays(trip) === 1 ? "" : "s"}`
-                  : ""}
-              </span>
-              <button type="button" onClick={() => remove(trip.id)} className="text-clay">
-                Remove
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="overflow-x-auto rounded-2xl border border-navy/10 bg-paper-50">
+        <table className="min-w-full text-left text-sm">
+          <thead className="bg-navy/5 text-xs uppercase tracking-wide text-ink-muted">
+            <tr>
+              <th className="px-4 py-3 font-medium">Start date</th>
+              <th className="px-4 py-3 font-medium">End date</th>
+              <th className="px-4 py-3 font-medium">Days away</th>
+              <th className="px-4 py-3 font-medium">Reason</th>
+              <th className="px-4 py-3 font-medium">
+                <span className="sr-only">Remove</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {trips.length === 0 ? (
+              <tr>
+                <td colSpan={5} className="px-4 py-4 text-ink-muted">
+                  No trips yet. Add time spent outside the UK. The day of return is not counted.
+                </td>
+              </tr>
+            ) : (
+              trips.map((trip) => (
+                <tr key={trip.id} className="border-t border-navy/10">
+                  <td className="px-4 py-2">
+                    <input
+                      type="date"
+                      aria-label="Start date"
+                      value={trip.departedOn}
+                      onChange={(event) => update(trip.id, { departedOn: event.target.value })}
+                      className="w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
+                    />
+                  </td>
+                  <td className="px-4 py-2">
+                    <input
+                      type="date"
+                      aria-label="End date"
+                      value={trip.returnedOn}
+                      onChange={(event) => update(trip.id, { returnedOn: event.target.value })}
+                      className="w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
+                    />
+                  </td>
+                  <td className="px-4 py-2 whitespace-nowrap text-navy">
+                    {trip.departedOn && trip.returnedOn ? tripDays(trip) : "—"}
+                  </td>
+                  <td className="px-4 py-2">
+                    <input
+                      type="text"
+                      aria-label="Reason"
+                      value={trip.place}
+                      placeholder="Holiday, work, family…"
+                      onChange={(event) => update(trip.id, { place: event.target.value })}
+                      className="w-full rounded-lg border border-navy/15 bg-white px-2 py-1.5"
+                    />
+                  </td>
+                  <td className="px-4 py-2 text-right">
+                    <button type="button" onClick={() => remove(trip.id)} className="text-xs text-clay">
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
 
       <button
         type="button"
@@ -129,13 +150,27 @@ export function AbsenceTracker({
         Add a trip
       </button>
 
-      {analysis.breached180 && analysis.maxRolling12Months.days > 0 && (
+      {periods.length > 0 ? (
+        <div className="rounded-2xl border border-navy/10 bg-paper-50 p-4">
+          <p className="text-sm font-medium text-navy">Days away per 12-month period</p>
+          <ul className="mt-2 space-y-1 text-sm text-ink-muted">
+            {periods.map((period) => (
+              <li key={period.windowEnd} className={period.overLimit ? "text-clay-600" : ""}>
+                {formatLongDate(period.windowStart)} to {formatLongDate(period.windowEnd)}:{" "}
+                <strong>{period.days} days</strong>
+                {period.overLimit ? " — over the usual 180-day ILR limit" : ""}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
+
+      {overLimit.length > 0 || analysis.breached180 ? (
         <p className="text-sm text-clay-600">
-          The heaviest 12-month window in this log is {analysis.maxRolling12Months.days} days,
-          ending {formatLongDate(analysis.maxRolling12Months.windowEnd)}. That can break ILR
-          continuous residence.
+          At least one 12-month period exceeds 180 days away. That can break ILR continuous
+          residence. Recheck the dates on GOV.UK or with a regulated adviser.
         </p>
-      )}
+      ) : null}
     </div>
   );
 }

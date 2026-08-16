@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { AbsenceTracker } from "@/components/AbsenceTracker";
-import { AlternativeRoutes } from "@/components/AlternativeRoutes";
 import { ChecklistPanel } from "@/components/ChecklistPanel";
+import { DashboardAlerts } from "@/components/DashboardAlerts";
 import { EligibilityPanel } from "@/components/EligibilityPanel";
 import { FeeCalculator } from "@/components/FeeCalculator";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { RemindersPanel } from "@/components/RemindersPanel";
+import { RouteComparison } from "@/components/RouteComparison";
 import { SwitchSimulator } from "@/components/SwitchSimulator";
 import { Timeline } from "@/components/Timeline";
 import { LastReviewed } from "@/components/LastReviewed";
@@ -62,11 +63,10 @@ export function Dashboard({
         <Link href="/disclaimer" className="underline">
           Read the full disclaimer
         </Link>
-        .         Confirm everything on{" "}
+        . Confirm everything on{" "}
         <a href={plan.route.officialUrl} className="underline" target="_blank" rel="noreferrer">
           the GOV.UK page for this visa
-        </a>
-        {" "}
+        </a>{" "}
         or the{" "}
         <Link href={`/routes/${rule.key}`} className="underline">
           route notes
@@ -74,13 +74,16 @@ export function Dashboard({
         .
       </div>
 
+      <DashboardAlerts reminders={plan.reminders} />
+
       <nav className="mt-8 flex flex-wrap gap-2 text-sm">
         {[
           ["timeline", "Timeline"],
-          ["absences", "Absences"],
-          ["switch", "Switch"],
-          ["fees", "Fees"],
+          ["routes", "Routes"],
           ["checklist", "Checklist"],
+          ["absences", "Absences"],
+          ["switch", "Switch dates"],
+          ["fees", "Fees"],
           ["eligibility", "Eligibility"],
           ["reminders", "Reminders"],
         ].map(([id, label]) => (
@@ -109,7 +112,7 @@ export function Dashboard({
             plan.ilrApplyFrom
               ? `Apply from ${formatLongDate(plan.ilrApplyFrom)}`
               : plan.hasIlrPath
-                ? "Check the switch simulator"
+                ? "Check the route comparison"
                 : "Switch to a qualifying visa"
           }
         />
@@ -135,50 +138,30 @@ export function Dashboard({
       <section id="timeline" className="mt-12">
         <h2 className="font-serif text-3xl text-navy">Timeline</h2>
         <p className="mt-2 text-sm text-ink-muted">
-          A sketch of this pathway. Dates are estimates from the profile you entered.
+          Current date, visa expiry, ILR and citizenship markers. The bar is time already spent from
+          your UK residence start.
         </p>
-        <Timeline events={plan.timeline} />
+        <Timeline
+          events={plan.timeline}
+          residenceStart={profile.ukEntryDate || profile.qualifyingResidenceStart}
+          asOf={plan.asOf}
+        />
       </section>
 
-      <section id="absences" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Absence tracker</h2>
+      <section id="routes" className="mt-14">
+        <h2 className="font-serif text-3xl text-navy">Route comparison</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Log trips outside the UK. The planner checks the usual 180-day ILR rule and the
-          citizenship 90 / 270 / 450-day windows. This is not a Home Office calculation.
+          The five MVP routes. Switch only if the planner models an in-country move from your current
+          visa — it does not check whether you actually qualify.
         </p>
-        <div className="mt-6">
-          <AbsenceTracker
-            trips={profile.absences}
-            qualifyingStart={profile.qualifyingResidenceStart || profile.ukEntryDate}
-            onChange={(absences) => onProfileChange({ ...profile, absences })}
-          />
-        </div>
-      </section>
-
-      <section id="switch" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Switching simulator</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Compare staying put with switching onto another of the five MVP routes. It does not
-          check whether you actually qualify.
-        </p>
-        <SwitchSimulator profile={profile} plan={plan} />
-        <div className="mt-8">
-          <h3 className="font-serif text-xl text-navy">Suggested comparisons</h3>
-          <AlternativeRoutes alternatives={plan.alternatives} hasIlrPath={plan.hasIlrPath} />
-        </div>
-      </section>
-
-      <section id="fees" className="mt-14">
-        <h2 className="font-serif text-3xl text-navy">Fee calculator</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          A basic total using Home Office fees from 8 April 2026. IHS years and extras can be
-          toggled; live amounts on GOV.UK always win.
-        </p>
-        <FeeCalculator profile={profile} />
+        <RouteComparison profile={profile} plan={plan} onSwitch={onProfileChange} />
       </section>
 
       <section id="checklist" className="mt-14">
         <h2 className="font-serif text-3xl text-navy">Document checklist</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Typical evidence for the next application. Confirm the live list on GOV.UK.
+        </p>
         <ChecklistPanel
           items={plan.checklist}
           checkedIds={profile.checkedDocumentIds}
@@ -191,13 +174,46 @@ export function Dashboard({
         />
       </section>
 
+      <section id="absences" className="mt-14">
+        <h2 className="font-serif text-3xl text-navy">Absence tracker</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Log trips outside the UK. Totals are calculated per 12-month period against the usual
+          180-day ILR limit. This is not a Home Office calculation.
+        </p>
+        <div className="mt-6">
+          <AbsenceTracker
+            trips={profile.absences}
+            qualifyingStart={profile.qualifyingResidenceStart || profile.ukEntryDate}
+            onChange={(absences) => onProfileChange({ ...profile, absences })}
+          />
+        </div>
+      </section>
+
+      <section id="switch" className="mt-14">
+        <h2 className="font-serif text-3xl text-navy">Custom switch date</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Compare staying put with switching on a date you choose. Use the cards above to apply a
+          modelled in-country switch.
+        </p>
+        <SwitchSimulator profile={profile} plan={plan} />
+      </section>
+
+      <section id="fees" className="mt-14">
+        <h2 className="font-serif text-3xl text-navy">Fee calculator</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          A basic total using Home Office fees from 8 April 2026. IHS years and extras can be
+          toggled; live amounts on GOV.UK always win.
+        </p>
+        <FeeCalculator profile={profile} />
+      </section>
+
       <section id="eligibility" className="mt-14">
         <h2 className="font-serif text-3xl text-navy">Basic eligibility checks</h2>
         <EligibilityPanel items={plan.eligibility} check={plan.eligibilityCheck} />
       </section>
 
       <section id="reminders" className="mt-14 pb-8">
-        <h2 className="font-serif text-3xl text-navy">Reminders</h2>
+        <h2 className="font-serif text-navy text-3xl">All reminders</h2>
         <RemindersPanel
           reminders={plan.reminders}
           prefs={profile.reminderPrefs}
