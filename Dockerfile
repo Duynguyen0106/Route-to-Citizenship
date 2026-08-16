@@ -7,7 +7,7 @@ ARG NODE_VERSION=22-bookworm-slim
 FROM node:${NODE_VERSION} AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci --no-audit --no-fund
+RUN npm ci --ignore-scripts --no-audit --no-fund
 
 FROM node:${NODE_VERSION} AS builder
 WORKDIR /app
@@ -16,8 +16,7 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:./build.db"
-ENV SESSION_SECRET="build-only-not-used-at-runtime"
-RUN npx prisma generate && npx prisma migrate deploy && npm run build
+RUN npx prisma generate && npx prisma migrate deploy && npx next build
 
 FROM node:${NODE_VERSION} AS runner
 WORKDIR /app
