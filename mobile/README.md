@@ -30,14 +30,17 @@ eas build --platform ios --profile preview       # iOS simulator build
 eas build --platform all --profile production    # Play .aab + App Store IPA
 ```
 
-iOS device and App Store binaries need an Apple Developer account and a Mac or EAS. A Linux host cannot compile a signed IPA locally.
+iOS device and App Store binaries need an Apple Developer account and a Mac or EAS. A Linux host cannot compile a signed IPA locally. `npx expo prebuild --platform ios` still generates the Xcode project for a Mac.
 
-Android APK can also be built locally after installing the Android SDK:
+### Local Android APK (sideload)
+
+After installing the Android SDK and JDK:
 
 ```bash
 cd mobile
-npx expo prebuild --platform android
-cd android && ./gradlew assembleRelease
+./scripts/build-android-apk.sh
 ```
+
+The APK is at `android/app/build/outputs/apk/release/app-release.apk`. It is signed with the **debug keystore** so you can install it on a phone for testing. Play Store upload needs your own upload key.
 
 Bundle IDs: `uk.routetocitizenship.app`.
