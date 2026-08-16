@@ -5,7 +5,7 @@ import Link from "next/link";
 import { AbsenceTracker } from "@/components/AbsenceTracker";
 import { ApplicationWindows } from "@/components/ApplicationWindows";
 import { ChecklistPanel } from "@/components/ChecklistPanel";
-import { DashboardAlerts } from "@/components/DashboardAlerts";
+import { Next90Days } from "@/components/Next90Days";
 import { DocumentVault } from "@/components/DocumentVault";
 import { EligibilityPanel } from "@/components/EligibilityPanel";
 import { FeeCalculator } from "@/components/FeeCalculator";
@@ -122,13 +122,14 @@ export function Dashboard({
         .
       </div>
 
-      <DashboardAlerts reminders={plan.reminders} />
+      <Next90Days profile={profile} plan={plan} />
 
       <nav
         className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-1 text-sm sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
         aria-label={t("a11y.jump")}
       >
         {[
+          ["next", t("nav.next")],
           ["timeline", t("nav.timeline")],
           ["windows", t("nav.windows")],
           ["household", t("nav.household")],

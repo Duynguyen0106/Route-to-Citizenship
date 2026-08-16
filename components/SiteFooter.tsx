@@ -42,6 +42,9 @@ export function SiteFooter() {
           <div className="flex flex-wrap items-center gap-4">
             <LanguageSwitcher compact />
             <ReportInaccuracyButton variant="footer" />
+            <Link href="/account" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("nav.account")}
+            </Link>
             <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-white">
               {t("footer.privacy")}
             </Link>

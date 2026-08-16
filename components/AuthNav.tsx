@@ -36,6 +36,9 @@ export function AuthNav() {
   if (!user) {
     return (
       <div className="flex items-center gap-3 text-sm">
+        <Link href="/account" className="inline-flex min-h-11 items-center text-ink-muted hover:text-navy">
+          {t("nav.account")}
+        </Link>
         <Link href="/login" className="inline-flex min-h-11 items-center text-ink-muted hover:text-navy">
           {t("nav.signin")}
         </Link>
@@ -48,6 +51,9 @@ export function AuthNav() {
 
   return (
     <div className="flex items-center gap-3 text-sm">
+      <Link href="/account" className="inline-flex min-h-11 items-center text-ink-muted hover:text-navy">
+        {t("nav.account")}
+      </Link>
       <span className="hidden text-ink-muted sm:inline">{user.name || user.email}</span>
       <button type="button" onClick={logout} className="inline-flex min-h-11 items-center text-ink-muted hover:text-navy">
         {t("nav.signout")}

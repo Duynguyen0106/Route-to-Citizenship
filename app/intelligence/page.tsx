@@ -3,6 +3,7 @@ import Link from "next/link";
 import { GoalInterpreter } from "@/components/GoalInterpreter";
 import { GuidanceChat } from "@/components/GuidanceChat";
 import { FeatureGate } from "@/components/FeatureGate";
+import { OfficialLinkHealth } from "@/components/OfficialLinkHealth";
 import { LEGAL_NOTICE } from "@/lib/legal";
 import { ENCODED_RULE_VERSIONS, listRuleKeys } from "@/lib/rule-versions";
 import { formatLongDate } from "@/lib/format";
@@ -44,6 +45,17 @@ export default function IntelligencePage() {
             </li>
           ))}
         </ul>
+      </section>
+
+      <section className="mt-12">
+        <h2 className="font-serif text-2xl text-navy">Official URL check</h2>
+        <p className="mt-2 text-sm text-ink-muted">
+          Confirm that the GOV.UK and partner links encoded here are still https. A live probe is
+          optional and is never run just because you opened this page.
+        </p>
+        <div className="mt-4">
+          <OfficialLinkHealth />
+        </div>
       </section>
 
       <section className="mt-12">

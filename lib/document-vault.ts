@@ -135,5 +135,6 @@ export async function removeVaultFile(id: string): Promise<void> {
 export function clearVault(): void {
   if (typeof window === "undefined") return;
   window.localStorage.removeItem(META_STORAGE);
+  window.localStorage.removeItem(KEY_STORAGE);
   window.indexedDB.deleteDatabase(DB_NAME);
 }

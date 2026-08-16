@@ -23,7 +23,7 @@ export interface ApplicationPack {
   warnings: string[];
 }
 
-const APPLY_OVERRIDES: Record<string, string> = {
+export const APPLY_URLS: Record<string, string> = {
   "skilled-worker": "https://www.gov.uk/skilled-worker-visa/apply",
   "health-care-worker": "https://www.gov.uk/health-care-worker-visa/apply",
   student: "https://www.gov.uk/student-visa/apply",
@@ -38,7 +38,7 @@ const APPLY_OVERRIDES: Record<string, string> = {
 };
 
 export function applyUrlForVisa(visaId: string): string {
-  if (APPLY_OVERRIDES[visaId]) return APPLY_OVERRIDES[visaId];
+  if (APPLY_URLS[visaId]) return APPLY_URLS[visaId];
   return tryGetRoute(visaId)?.officialUrl ?? GOVUK.browse;
 }
 
@@ -97,12 +97,12 @@ export function buildApplicationPack(profile: Profile, plan: PlanResult): Applic
       },
       {
         label: "Indefinite leave to remain — apply",
-        url: APPLY_OVERRIDES.ilr,
+        url: APPLY_URLS.ilr,
         note: "Only when you are in the ILR window.",
       },
       {
         label: "British citizenship — apply",
-        url: APPLY_OVERRIDES.citizenship,
+        url: APPLY_URLS.citizenship,
         note: "Usually after ILR. Good character still applies.",
       },
     ],

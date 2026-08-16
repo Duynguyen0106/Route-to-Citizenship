@@ -23,6 +23,15 @@ export default function PrivacyPage() {
             absences, reminders) so you can reopen them;
           </li>
           <li>
+            lets you{" "}
+            <Link href="/account" className="text-navy underline">
+              download a redacted JSON copy
+            </Link>{" "}
+            of a signed-in plan, or delete the account (type DELETE to confirm). Guests can download
+            or clear this browser from the same page. Vault files stay on the device until you clear
+            them and are never uploaded;
+          </li>
+          <li>
             keeps optional document copies (passport scans, BRPs, payslips) only in this browser,
             encrypted with a key that never leaves the device. Detected identity numbers are reduced
             to the last four characters. Files are not uploaded to our server, and this is not a

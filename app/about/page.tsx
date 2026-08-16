@@ -76,11 +76,21 @@ export default function AboutPage() {
           disclaimer on every reply.
         </p>
         <p>
+          The dashboard opens on the next 90 days: visa expiry, tests, the ILR 28-day window, and
+          evidence still to gather, each tied to an encoded fact with an effective date. Cases that
+          look non-straightforward (for example visitor leave or a sketched 180-day absence risk)
+          point to the official adviser register, not a paid instruction inside this app.
+        </p>
+        <p>
           Signed-in accounts store the plan in a local database (email, visa type, dates, absences,
           route selection, reminders). Passport numbers are not collected. Guest plans stay in this
-          browser only. Optional document copies in the vault are encrypted on this device and never
-          uploaded; pasted text is scanned locally so expiry dates can populate reminders, and only
-          the last four characters of a detected identity number are kept.
+          browser only. You can export or delete that data from the{" "}
+          <Link href="/account" className="text-navy underline">
+            account page
+          </Link>
+          . Optional document copies in the vault are encrypted on this device and never uploaded;
+          pasted text is scanned locally so expiry dates can populate reminders, and only the last
+          four characters of a detected identity number are kept.
         </p>
         <p>
           You can preview Basic, Pro and Premium feature sets from the pricing page. Those prices are

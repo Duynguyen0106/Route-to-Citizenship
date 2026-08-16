@@ -91,6 +91,15 @@ export const ENCODED_RULE_VERSIONS: EncodedRuleVersion[] = [
     value: { level: "B1" },
     sourceUrl: GOVUK.ilr,
   },
+  {
+    ruleKey: "lifeInUk.ilr",
+    routeKeys: ["skilled-worker", "family", "global-talent", "long-residence"],
+    effectiveFrom: "2013-10-28",
+    effectiveTo: null,
+    summary: "Most ILR applications for people aged 18–64 need a Life in the UK test pass unless an exemption applies.",
+    value: { required: true },
+    sourceUrl: GOVUK.lifeInUk,
+  },
 ];
 
 export const ENCODED_RULE_NOTICES: EncodedRuleNotice[] = [
