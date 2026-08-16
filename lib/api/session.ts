@@ -1,0 +1,35 @@
+import { NextResponse } from "next/server";
+import { getSessionUser, type SessionUser } from "@/lib/auth";
+
+export async function requireUser(): Promise<
+  { user: SessionUser; error?: undefined } | { user?: undefined; error: NextResponse }
+> {
+  const user = await getSessionUser();
+  if (!user) {
+    return { error: NextResponse.json({ error: "Sign in required." }, { status: 401 }) };
+  }
+  return { user };
+}
+
+export function badRequest(message: string): NextResponse {
+  return NextResponse.json({ error: message }, { status: 400 });
+}
+
+export async function readJsonBody(
+  request: Request,
+): Promise<{ body: unknown; error?: undefined } | { body?: undefined; error: NextResponse }> {
+  try {
+    return { body: await request.json() };
+  } catch {
+    return { error: badRequest("Request body must be JSON.") };
+  }
+}
+
+export function notFound(message: string): NextResponse {
+  return NextResponse.json({ error: message }, { status: 404 });
+}
+
+export function asJsonObject(body: unknown): Record<string, unknown> | null {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  return body as Record<string, unknown>;
+}

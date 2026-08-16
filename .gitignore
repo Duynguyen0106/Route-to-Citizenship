@@ -1,0 +1,25 @@
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+
+# next
+/.next/
+/out/
+
+# misc
+.DS_Store
+*.pem
+npm-debug.log*
+.env
+.env.local
+.env*.local
+.vercel
+tsconfig.tsbuildinfo
+next-env.d.ts
+
+# sqlite
+/prisma/*.db
+/prisma/*.db-journal
+/prisma/dev.db

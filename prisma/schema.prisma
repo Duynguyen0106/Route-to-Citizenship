@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String?
+  name         String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  profiles     Profile[]
+  visaHistory  VisaEvent[]
+  reminders    Reminder[]
+  /// basic | pro | premium — preview only until billing is connected
+  plan         String   @default("basic")
+  organisations Organisation[]
+  enquiries    BillingEnquiry[]
+  shareLinks   ShareLink[]
+}
+
+model Profile {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  nationality           String
+  /// SKILLED_WORKER, FAMILY, STUDENT, GRADUATE, GLOBAL_TALENT, OTHER
+  currentVisaType       String
+  visaStartDate         DateTime
+  visaExpiryDate        DateTime
+  firstEntryUK          DateTime?
+  /// spouse, partner, none
+  relationshipToSettled String?
+  /// A1, B1, B2, degree, exempt
+  englishLevel          String?
+  lifeInUKPassed        Boolean  @default(false)
+  /// Planner extras (detailed visa id, pathway, checklist, reminder prefs).
+  plannerState          Json?
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  visaEvents            VisaEvent[]
+  absenceRecords        AbsenceRecord[]
+  routeSelections       RouteSelection[]
+
+  @@index([userId])
+}
+
+model VisaEvent {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId String
+  profile   Profile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  visaType  String
+  startDate DateTime
+  endDate   DateTime?
+  notes     String?
+  createdAt DateTime  @default(now())
+
+  @@index([profileId])
+  @@index([userId])
+}
+
+model AbsenceRecord {
+  id        String   @id @default(cuid())
+  profileId String
+  profile   Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  startDate DateTime
+  endDate   DateTime
+  daysAway  Int
+  reason    String?
+  createdAt DateTime @default(now())
+
+  @@index([profileId])
+}
+
+model RouteSelection {
+  id         String   @id @default(cuid())
+  profileId  String
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  /// e.g. "skilled-worker-ilr-citizenship"
+  routeKey   String
+  isCurrent  Boolean  @default(false)
+  selectedAt DateTime @default(now())
+
+  @@index([profileId])
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  profileId   String?
+  title       String
+  dueDate     DateTime
+  /// VISA_EXPIRY, ILR_ELIGIBILITY, CITIZENSHIP_ELIGIBILITY, LIFE_IN_UK_TEST
+  type        String
+  isCompleted Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([profileId])
+}
+
+/// Accuracy reports. Do not store passport numbers or other identity documents.
+model InaccuracyReport {
+  id           String   @id @default(cuid())
+  routeKey     String?
+  message      String
+  contactEmail String?
+  createdAt    DateTime @default(now())
+}
+
+/// Latest GOV.UK Content API polls. Stores title, description and timestamps only — not page HTML.
+model GovukSnapshot {
+  id              String    @id @default(cuid())
+  sourceKey       String
+  govukPath       String
+  title           String
+  description     String
+  publicUpdatedAt DateTime?
+  contentHash     String
+  fetchedAt       DateTime  @default(now())
+
+  @@index([sourceKey, fetchedAt])
+}
+
+/// Opt-in anonymous sketches. No email, name, or identity documents. Nationality is stored as a coarse group.
+model AnonymousBenchmark {
+  id                String   @id @default(cuid())
+  createdAt         DateTime @default(now())
+  pathwayId         String
+  currentVisaId     String
+  nationalityGroup  String
+  applyFromInside   Boolean
+  yearsToIlrTenths  Int?
+  typicalWaitWeeks  Int?
+  reportedWaitWeeks Int?
+  asOfMonth         String
+
+  @@index([pathwayId, currentVisaId])
+}
+
+/// Read-only share snapshots. Token is hashed. No vault files or passport numbers.
+model ShareLink {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  label     String
+  payload   Json
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+  @@index([userId])
+}
+
+/// Plan previews, one-off service requests, adviser introductions. No passport numbers.
+model BillingEnquiry {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email     String
+  kind      String
+  message   String
+  meta      Json?
+  createdAt DateTime @default(now())
+
+  @@index([kind])
+  @@index([email])
+}
+
+/// HR organisation. Worker sketches store visa type and dates — not passports or share codes.
+model Organisation {
+  id          String   @id @default(cuid())
+  name        String
+  ownerUserId String
+  owner       User     @relation(fields: [ownerUserId], references: [id], onDelete: Cascade)
+  seatLimit   Int      @default(3)
+  createdAt   DateTime @default(now())
+  workers     SponsoredWorker[]
+
+  @@index([ownerUserId])
+}
+
+model SponsoredWorker {
+  id             String   @id @default(cuid())
+  organisationId String
+  organisation   Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  label          String
+  visaType       String
+  visaExpiresOn  DateTime
+  jobTitle       String?
+  rtwCheckedOn   DateTime?
+  hasCos         Boolean  @default(false)
+  hasBrpCopy     Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  @@index([organisationId])
+  @@index([visaExpiresOn])
+}
