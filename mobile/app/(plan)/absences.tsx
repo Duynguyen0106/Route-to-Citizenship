@@ -31,18 +31,18 @@ export default function AbsencesScreen() {
 
   async function addTrip() {
     if (!departedOn || !returnedOn) {
-      setError("Enter departure and return dates as YYYY-MM-DD.");
+      setError(t("mobile.errDates"));
       return;
     }
     if (returnedOn <= departedOn) {
-      setError("Return date must be after departure.");
+      setError(t("mobile.errReturn"));
       return;
     }
     await patch((current) => ({
       ...current,
       absences: [
         ...current.absences,
-        { id: newLocalId("trip"), departedOn, returnedOn, place: place.trim() || "Outside the UK" },
+        { id: newLocalId("trip"), departedOn, returnedOn, place: place.trim() || t("mobile.defaultPlace") },
       ],
     }));
     setDepartedOn("");
@@ -55,22 +55,18 @@ export default function AbsencesScreen() {
     <ScrollScreen>
       <Kicker>{t("nav.absences")}</Kicker>
       <Title>{t("section.absences")}</Title>
-      <Subtitle>
-        ILR usually looks at 180 days in any 12 months. Citizenship uses different windows. This is a
-        sketch, not a Home Office calculation.
-      </Subtitle>
+      <Subtitle>{t("mobile.absencesLead")}</Subtitle>
       <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
-        <Stat label="Last 12 months" value={`${absences.last12Months} days`} warn={absences.breached180} />
-        <Stat label="Left under 180-day sketch" value={`${absences.remainingLast12} days`} />
-        <Stat label="Citizenship 12-month remainder" value={`${absences.remainingCitizenship12} days`} />
+        <Stat label={t("mobile.last12")} value={t("mobile.daysCount", { days: absences.last12Months })} warn={absences.breached180} />
+        <Stat label={t("mobile.left180")} value={t("mobile.daysCount", { days: absences.remainingLast12 })} />
+        <Stat label={t("mobile.cit12")} value={t("mobile.daysCount", { days: absences.remainingCitizenship12 })} />
       </View>
       {absences.breached180 ? (
         <Pressable onPress={() => openOfficial(GOVUK.ilr)}>
           <Card>
-            <Text style={{ color: colors.clay, fontWeight: "700" }}>180-day risk sketched</Text>
+            <Text style={{ color: colors.clay, fontWeight: "700" }}>{t("mobile.risk180")}</Text>
             <Text style={{ marginTop: 6, color: colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
-              Logged trips sketch more than 180 days outside the UK in a 12-month window. Confirm the
-              live rule on GOV.UK.
+              {t("mobile.risk180Body")}
             </Text>
           </Card>
         </Pressable>
@@ -91,7 +87,7 @@ export default function AbsencesScreen() {
             }
             style={{ marginTop: 10 }}
           >
-            <Text style={{ color: colors.clay, fontWeight: "700" }}>Remove</Text>
+            <Text style={{ color: colors.clay, fontWeight: "700" }}>{t("mobile.remove")}</Text>
           </Pressable>
         </Card>
       ))}
@@ -106,16 +102,15 @@ export default function AbsencesScreen() {
           fontWeight: "700",
         }}
       >
-        Add a trip
+        {t("mobile.addTrip")}
       </Text>
-      <Field label="Departed (YYYY-MM-DD)" value={departedOn} onChangeText={setDepartedOn} placeholder="2025-12-20" />
-      <Field label="Returned (YYYY-MM-DD)" value={returnedOn} onChangeText={setReturnedOn} placeholder="2026-01-10" />
-      <Field label="Place (optional)" value={place} onChangeText={setPlace} placeholder="Country or city" autoCapitalize="words" />
+      <Field label={t("mobile.departed")} value={departedOn} onChangeText={setDepartedOn} placeholder="2025-12-20" />
+      <Field label={t("mobile.returned")} value={returnedOn} onChangeText={setReturnedOn} placeholder="2026-01-10" />
+      <Field label={t("mobile.place")} value={place} onChangeText={setPlace} placeholder="Country or city" autoCapitalize="words" />
       {error ? <Text style={{ marginTop: 8, color: colors.clay }}>{error}</Text> : null}
-      <PrimaryButton label="Save trip on this device" onPress={addTrip} />
+      <PrimaryButton label={t("mobile.saveTrip")} onPress={addTrip} />
       <Text style={{ marginTop: 16, color: colors.inkFaint, fontSize: 12, lineHeight: 18 }}>
-        GPS import and the encrypted document vault stay on the website. This phone app only stores the
-        dates you type here.
+        {t("mobile.absencesNote")}
       </Text>
     </ScrollScreen>
   );

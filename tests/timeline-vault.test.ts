@@ -3,7 +3,8 @@ import { describe, expect, it } from "vitest";
 import { calculatePlan } from "../lib/calculate";
 import { assessDocumentCompleteness } from "../lib/document-completeness";
 import { extractDocumentFields, redactIdentityNumbers } from "../lib/document-extract";
-import { LOCALES, LOCALE_META, translate } from "../lib/i18n";
+import { extraAr, extraEn, extraPa, extraPl, extraRo, extraUr, extraVi } from "../lib/i18n-copy";
+import { LOCALES, LOCALE_META, extraCopyKeys, interpolate, translate } from "../lib/i18n";
 import { typicalProcessingWeeks } from "../lib/processing";
 import { buildResidenceCalendar } from "../lib/residence-calendar";
 import { SAMPLE_PROFILES } from "../lib/samples";
@@ -105,6 +106,32 @@ describe("i18n", () => {
 
   it("keeps legal copy in English when the UI is Vietnamese", () => {
     expect(translate("vi", "brand")).toBe("Route to Citizenship");
+  });
+
+  it("interpolates placeholders", () => {
+    expect(interpolate("Apply from {date}", { date: "1 March 2029" })).toBe("Apply from 1 March 2029");
+    expect(translate("vi", "dash.applyFrom", { date: "1 tháng 3 2029" })).toContain("1 tháng 3 2029");
+  });
+
+  it("translates homepage and onboarding body copy in every UI language", () => {
+    const keys = extraCopyKeys();
+    const extras = { vi: extraVi, pl: extraPl, ro: extraRo, pa: extraPa, ur: extraUr, ar: extraAr };
+    expect(keys).toContain("home.hero");
+    expect(keys).toContain("onboard.intro");
+    for (const [locale, dict] of Object.entries(extras)) {
+      expect(Object.keys(dict).sort()).toEqual(Object.keys(extraEn).sort());
+      expect(dict["home.hero"]).not.toBe(extraEn["home.hero"]);
+      expect(dict["onboard.intro"]).not.toBe(extraEn["onboard.intro"]);
+      expect(translate(locale as (typeof LOCALES)[number], "home.hero")).not.toMatch(/^home\./);
+    }
+  });
+
+  it("keeps Vietnamese homepage and onboarding strings in Vietnamese", () => {
+    expect(translate("vi", "home.hero")).toMatch(/visa/i);
+    expect(translate("vi", "home.hero")).toMatch(/quốc tịch/i);
+    expect(translate("vi", "onboard.intro")).toMatch(/hộ chiếu/i);
+    expect(translate("vi", "onboard.nationality")).toBe("Quốc tịch");
+    expect(translate("vi", "next90.horizon.now")).toBe("Làm ngay");
   });
 
   it("marks Arabic and Urdu as right-to-left", () => {

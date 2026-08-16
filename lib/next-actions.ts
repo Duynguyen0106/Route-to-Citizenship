@@ -21,6 +21,8 @@ export interface EncodedFactRef {
 
 export interface NextAction {
   id: string;
+  copyKey: string;
+  copyVars?: Record<string, string | number>;
   title: string;
   detail: string;
   dueOn: string | null;
@@ -38,7 +40,7 @@ export interface NextActionSet {
   horizonDays: number;
   focus: NextAction[];
   later: NextAction[];
-  milestones: { label: string; date: string }[];
+  milestones: { id: string; label: string; date: string }[];
   needsAdviser: boolean;
 }
 
@@ -111,6 +113,8 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
   if (profile.visaExpiresOn && profile.currentVisaId !== "ilr" && profile.currentVisaId !== "citizenship") {
     actions.push({
       id: "visa-expiry",
+      copyKey: visaDays !== null && visaDays < 0 ? "visaExpiryPast" : "visaExpiry",
+      copyVars: { date: profile.visaExpiresOn },
       title:
         visaDays !== null && visaDays < 0
           ? "Current leave has a sketched expiry in the past"
@@ -130,6 +134,8 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
   if (plan.absences.breached180 || plan.absences.remainingLast12 <= 30) {
     actions.push({
       id: "absences",
+      copyKey: plan.absences.breached180 ? "absencesBreach" : "absencesLow",
+      copyVars: { days: plan.absences.remainingLast12 },
       title: plan.absences.breached180
         ? "Logged trips sketch a 180-day continuous-residence risk"
         : `Only ${plan.absences.remainingLast12} days remain under the usual 180-day ILR limit`,
@@ -151,6 +157,7 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
     const dueOn = toIsoDate(target);
     actions.push({
       id: "english",
+      copyKey: "english",
       title: "Book an approved English test (usually B1)",
       detail: "SELT results can take time. Only tests on the live GOV.UK list count. Save the last four characters of the candidate number here if you want a reminder.",
       dueOn,
@@ -169,6 +176,7 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
     const dueOn = toIsoDate(Number.isNaN(target.getTime()) ? addMonths(asOf, 120) : target);
     actions.push({
       id: "life-in-uk",
+      copyKey: "lifeInUk",
       title: "Book the Life in the UK test",
       detail: "Centres fill up. You usually need the pass notification for ILR if you are aged 18–64 and not exempt.",
       dueOn,
@@ -185,6 +193,7 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
   if (plan.ilrApplyFrom && plan.hasIlrPath && plan.route.id !== "ilr") {
     actions.push({
       id: "ilr-window",
+      copyKey: "ilrWindow",
       title: "ILR can usually be submitted from this date",
       detail: "You can usually apply up to 28 days before the qualifying date. Applying earlier is often treated as premature.",
       dueOn: plan.ilrApplyFrom,
@@ -201,6 +210,7 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
   if (plan.citizenshipEligibleOn && plan.citizenshipPath !== "already_british" && plan.citizenshipPath !== "none") {
     actions.push({
       id: "citizenship",
+      copyKey: plan.citizenshipPath === "naturalisation_spouse" ? "citizenshipSpouse" : "citizenship",
       title: "Citizenship eligibility comes into view",
       detail:
         plan.citizenshipPath === "naturalisation_spouse"
@@ -222,6 +232,8 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
     const labels = missing.slice(0, 3).map((item) => item.label).join(", ");
     actions.push({
       id: "evidence",
+      copyKey: "evidence",
+      copyVars: { labels },
       title: "Gather evidence for the next application",
       detail: `Still open on this plan: ${labels}. Tick items as you collect them. Confirm the live list on GOV.UK.`,
       dueOn: plan.ilrApplyFrom,
@@ -238,6 +250,7 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
   if (profile.currentVisaId === "skilled-worker" || profile.currentVisaId === "health-care-worker") {
     actions.push({
       id: "salary-cos",
+      copyKey: "salaryCos",
       title: "Confirm salary, going rate and Certificate of Sponsorship",
       detail:
         "This planner does not check salary thresholds, going rates, or sponsor licences. Confirm them on GOV.UK before you extend or switch.",
@@ -258,6 +271,7 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
   ) {
     actions.push({
       id: "plan-switch",
+      copyKey: "planSwitch",
       title: "Student and Graduate leave do not lead to ILR on their own",
       detail: "Record a planned switch (usually to Skilled Worker) so the 5-year clock can be sketched.",
       dueOn: asOfIso,
@@ -275,6 +289,7 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
   if (needsAdviser) {
     actions.push({
       id: "adviser",
+      copyKey: "adviser",
       title: "This sketch looks non-straightforward — speak to a regulated adviser",
       detail:
         "Verify the person on the official OISC or SRA register before you pay anyone. This app is not immigration advice and does not instruct an adviser for you.",
@@ -297,11 +312,13 @@ export function buildNextActions(profile: Profile, plan: PlanResult, asOf: Date)
 
   const milestones = [
     profile.visaExpiresOn && profile.currentVisaId !== "ilr"
-      ? { label: "Leave expires", date: profile.visaExpiresOn }
+      ? { id: "leaveExpires", label: "Leave expires", date: profile.visaExpiresOn }
       : null,
-    plan.ilrApplyFrom ? { label: "ILR apply from", date: plan.ilrApplyFrom } : null,
-    plan.citizenshipEligibleOn ? { label: "Citizenship (sketch)", date: plan.citizenshipEligibleOn } : null,
-  ].filter((item): item is { label: string; date: string } => Boolean(item));
+    plan.ilrApplyFrom ? { id: "ilrApplyFrom", label: "ILR apply from", date: plan.ilrApplyFrom } : null,
+    plan.citizenshipEligibleOn
+      ? { id: "citizenshipSketch", label: "Citizenship (sketch)", date: plan.citizenshipEligibleOn }
+      : null,
+  ].filter((item): item is { id: string; label: string; date: string } => Boolean(item));
 
   return {
     asOf: asOfIso,

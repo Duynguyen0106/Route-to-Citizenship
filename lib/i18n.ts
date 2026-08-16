@@ -1,3 +1,15 @@
+import { daysUntil } from "./format";
+import {
+  extraAr,
+  extraEn,
+  extraPa,
+  extraPl,
+  extraRo,
+  extraUr,
+  extraVi,
+  type Dict,
+} from "./i18n-copy";
+
 export const LOCALES = ["en", "vi", "pl", "ro", "pa", "ur", "ar"] as const;
 export type Locale = (typeof LOCALES)[number];
 
@@ -16,7 +28,15 @@ export const LOCALE_META: Record<
 
 export const STORAGE_LOCALE = "rtc-locale";
 
-type Dict = Record<string, string>;
+export type TranslateVars = Record<string, string | number>;
+export type TranslateFn = (key: string, vars?: TranslateVars) => string;
+
+export function interpolate(template: string, vars?: TranslateVars): string {
+  if (!vars) return template;
+  return template.replace(/\{(\w+)\}/g, (_, name: string) =>
+    vars[name] !== undefined ? String(vars[name]) : `{${name}}`,
+  );
+}
 
 const en: Dict = {
   "skip": "Skip to content",
@@ -113,6 +133,7 @@ const en: Dict = {
   "whatif.run": "Test this trip",
   "a11y.lang": "Choose language",
   "a11y.jump": "On this page",
+  ...extraEn,
 };
 
 const pl: Dict = {
@@ -178,6 +199,7 @@ const pl: Dict = {
   "whatif.run": "Sprawdź ten wyjazd",
   "a11y.lang": "Wybierz język",
   "a11y.jump": "Na tej stronie",
+  ...extraPl,
 };
 
 const ro: Dict = {
@@ -243,6 +265,7 @@ const ro: Dict = {
   "whatif.run": "Testează această călătorie",
   "a11y.lang": "Alege limba",
   "a11y.jump": "Pe această pagină",
+  ...extraRo,
 };
 
 const pa: Dict = {
@@ -308,6 +331,7 @@ const pa: Dict = {
   "whatif.run": "ਇਸ ਯਾਤਰਾ ਦੀ ਜਾਂਚ",
   "a11y.lang": "ਭਾਸ਼ਾ ਚੁਣੋ",
   "a11y.jump": "ਇਸ ਸਫ਼ੇ ਤੇ",
+  ...extraPa,
 };
 
 const ur: Dict = {
@@ -373,6 +397,7 @@ const ur: Dict = {
   "whatif.run": "اس سفر کی جانچ",
   "a11y.lang": "زبان منتخب کریں",
   "a11y.jump": "اس صفحے پر",
+  ...extraUr,
 };
 
 const ar: Dict = {
@@ -438,6 +463,7 @@ const ar: Dict = {
   "whatif.run": "اختبر هذه الرحلة",
   "a11y.lang": "اختر اللغة",
   "a11y.jump": "في هذه الصفحة",
+  ...extraAr,
 };
 
 const vi: Dict = {
@@ -535,6 +561,7 @@ const vi: Dict = {
   "whatif.run": "Thử chuyến đi này",
   "a11y.lang": "Chọn ngôn ngữ",
   "a11y.jump": "Trên trang này",
+  ...extraVi,
 };
 
 const DICTS: Record<Locale, Dict> = { en, vi, pl, ro, pa, ur, ar };
@@ -543,6 +570,40 @@ export function isLocale(value: string | null | undefined): value is Locale {
   return Boolean(value && (LOCALES as readonly string[]).includes(value));
 }
 
-export function translate(locale: Locale, key: string): string {
-  return DICTS[locale][key] ?? DICTS.en[key] ?? key;
+export function translate(locale: Locale, key: string, vars?: TranslateVars): string {
+  const raw = DICTS[locale][key] ?? DICTS.en[key] ?? key;
+  return interpolate(raw, vars);
+}
+
+export function extraCopyKeys(): string[] {
+  return Object.keys(extraEn);
+}
+
+export function localiseActionCopy(
+  t: TranslateFn,
+  copyKey: string,
+  vars?: TranslateVars,
+): { title: string; detail: string; cta: string; officialLabel: string } {
+  return {
+    title: t(`action.${copyKey}.title`, vars),
+    detail: t(`action.${copyKey}.detail`, vars),
+    cta: t(`action.${copyKey}.cta`, vars),
+    officialLabel: t(`action.${copyKey}.official`, vars),
+  };
+}
+
+export function formatDaysUntilLabel(iso: string, t: TranslateFn, asOf: Date = new Date()): string {
+  const days = daysUntil(iso, asOf);
+  if (days === 0) return t("date.today");
+  if (days === 1) return t("date.tomorrow");
+  if (days === -1) return t("date.yesterday");
+  if (days > 0 && days < 60) return t("date.inDays", { days });
+  if (days >= 60) {
+    const months = Math.round(days / 30.44);
+    return months === 1 ? t("date.inMonth") : t("date.inMonths", { months });
+  }
+  const ago = Math.abs(days);
+  if (ago < 60) return t("date.daysAgo", { days: ago });
+  const months = Math.round(ago / 30.44);
+  return months === 1 ? t("date.monthAgo") : t("date.monthsAgo", { months });
 }

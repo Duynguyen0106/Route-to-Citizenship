@@ -1,4 +1,7 @@
+"use client";
+
 import { formatShortDate } from "@/lib/format";
+import { useLocale } from "@/components/LocaleProvider";
 import {
   TIMELINE_MARKER_COLOURS,
   daysSpentInUk,
@@ -7,15 +10,6 @@ import {
   timelineX,
 } from "@/lib/timeline";
 import type { TimelineEvent } from "@/lib/types";
-
-const KIND_LABEL: Partial<Record<TimelineEvent["kind"], string>> = {
-  now: "Today",
-  visa: "Visa expiry",
-  ilr: "ILR",
-  citizenship: "Citizenship",
-  window: "Application window",
-  processing: "Decision wait",
-};
 
 export function Timeline({
   events,
@@ -26,6 +20,15 @@ export function Timeline({
   residenceStart: string;
   asOf: string;
 }) {
+  const { t } = useLocale();
+  const kindLabel: Partial<Record<TimelineEvent["kind"], string>> = {
+    now: t("timeline.today"),
+    visa: t("timeline.visaExpiry"),
+    ilr: t("timeline.ilr"),
+    citizenship: t("timeline.citizenship"),
+    window: t("timeline.window"),
+    processing: t("timeline.processing"),
+  };
   const keyEvents = keyTimelineEvents(events);
   const scale = timelineScale(keyEvents, residenceStart, asOf);
   const spentDays = daysSpentInUk(residenceStart, asOf);
@@ -40,10 +43,12 @@ export function Timeline({
     <div className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 p-4 sm:mt-8 sm:p-5">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3 text-sm">
         <p className="text-ink-muted">
-          Time already counted from {formatShortDate(residenceStart)}:{" "}
-          <strong className="text-navy">{spentDays} days</strong>
+          {t("timeline.counted", { date: formatShortDate(residenceStart) })}{" "}
+          <strong className="text-navy">{t("timeline.days", { days: spentDays })}</strong>
         </p>
-        <p className="text-xs text-ink-muted">{Math.round(scale.progress * 100)}% of this sketch</p>
+        <p className="text-xs text-ink-muted">
+          {t("timeline.percent", { pct: Math.round(scale.progress * 100) })}
+        </p>
       </div>
 
       <div className="h-3 overflow-hidden rounded-full bg-navy/10" aria-hidden>
@@ -61,7 +66,7 @@ export function Timeline({
               style={{ background: TIMELINE_MARKER_COLOURS[marker.kind] }}
             />
             <div>
-              <p className="text-sm font-medium text-navy">{marker.label}</p>
+              <p className="text-sm font-medium text-navy">{kindLabel[marker.kind] ?? marker.label}</p>
               <p className="text-xs text-ink-muted">{formatShortDate(marker.date)}</p>
               {marker.note ? <p className="mt-1 text-xs text-clay-600">{marker.note}</p> : null}
             </div>
@@ -73,7 +78,7 @@ export function Timeline({
         viewBox="0 0 1000 210"
         className="mt-6 hidden w-full overflow-visible md:block"
         role="img"
-        aria-label="Immigration timeline with visa expiry, ILR and citizenship markers"
+        aria-label={t("timeline.aria")}
       >
         <line x1="48" y1="58" x2="952" y2="58" stroke="#1B2A4A" strokeOpacity="0.2" strokeWidth="4" />
         <rect
@@ -115,7 +120,7 @@ export function Timeline({
                 fontSize="13"
                 fontFamily="var(--font-public-sans), system-ui, sans-serif"
               >
-                {marker.label}
+                {kindLabel[marker.kind] ?? marker.label}
               </text>
               <text
                 x={cx}
@@ -139,7 +144,7 @@ export function Timeline({
               className="inline-block h-3 w-3 rounded-full"
               style={{ background: TIMELINE_MARKER_COLOURS[kind] }}
             />
-            {KIND_LABEL[kind]}
+            {kindLabel[kind]}
           </li>
         ))}
       </ul>

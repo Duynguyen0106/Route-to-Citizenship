@@ -61,20 +61,23 @@ export function WhatIfAbsence({ profile, asOf }: { profile: Profile; asOf: strin
       {result ? (
         <div className="mt-5 space-y-3 text-sm" aria-live="polite">
           <p className="text-ink-muted">
-            Extra trip: {formatLongDate(result.extraTrip.departedOn)} →{" "}
-            {formatLongDate(result.extraTrip.returnedOn)} ({days} days). Last-12-month absences rise by{" "}
-            {result.last12Delta} days.
+            {t("whatif.extraTrip", {
+              from: formatLongDate(result.extraTrip.departedOn),
+              to: formatLongDate(result.extraTrip.returnedOn),
+              days,
+              delta: result.last12Delta,
+            })}
           </p>
           <dl className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl border border-navy/10 px-3 py-2">
-              <dt className="text-xs uppercase tracking-wide text-ink-faint">ILR date</dt>
+              <dt className="text-xs uppercase tracking-wide text-ink-faint">{t("whatif.ilrDate")}</dt>
               <dd className="mt-1 text-navy">
                 {formatLongDate(result.baseline.ilrEligibleOn ?? "")} →{" "}
                 {formatLongDate(result.projected.ilrEligibleOn ?? "")}
               </dd>
             </div>
             <div className="rounded-xl border border-navy/10 px-3 py-2">
-              <dt className="text-xs uppercase tracking-wide text-ink-faint">Citizenship date</dt>
+              <dt className="text-xs uppercase tracking-wide text-ink-faint">{t("whatif.citizenshipDate")}</dt>
               <dd className="mt-1 text-navy">
                 {formatLongDate(result.baseline.citizenshipEligibleOn ?? "")} →{" "}
                 {formatLongDate(result.projected.citizenshipEligibleOn ?? "")}
@@ -88,9 +91,7 @@ export function WhatIfAbsence({ profile, asOf }: { profile: Profile; asOf: strin
           </ul>
         </div>
       ) : (
-        <p className="mt-4 text-sm text-ink-muted">
-          Example: 90 days away. This does not change your saved absences until you add a real trip.
-        </p>
+          <p className="mt-4 text-sm text-ink-muted">{t("whatif.example")}</p>
       )}
     </div>
   );

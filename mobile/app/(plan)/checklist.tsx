@@ -33,10 +33,7 @@ export default function ChecklistScreen() {
     <ScrollScreen>
       <Kicker>{t("nav.checklist")}</Kicker>
       <Title>{t("section.checklist")}</Title>
-      <Subtitle>
-        Tick items as you collect them. This planner never asks for passport numbers or Home Office
-        references. Confirm the live list on GOV.UK.
-      </Subtitle>
+      <Subtitle>{t("mobile.checklistLead")}</Subtitle>
       {grouped.map((row) => (
         <View key={row.group} style={{ marginTop: 8 }}>
           <Text
@@ -71,7 +68,7 @@ export default function ChecklistScreen() {
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontSize: 16, fontWeight: "700", color: colors.navy }}>
                         {item.label}
-                        {item.required ? "" : " (optional)"}
+                        {item.required ? "" : ` ${t("mobile.optional")}`}
                       </Text>
                       <Text style={{ marginTop: 6, color: colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
                         {item.detail}

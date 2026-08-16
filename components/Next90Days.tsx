@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useMemo } from "react";
 import { useLocale } from "@/components/LocaleProvider";
 import { formatLongDate } from "@/lib/format";
+import { localiseActionCopy, type TranslateFn } from "@/lib/i18n";
 import { GOVUK } from "@/lib/legal";
 import { buildNextActions, type ActionHorizon, type NextAction } from "@/lib/next-actions";
 import type { PlanResult, Profile } from "@/lib/types";
@@ -16,12 +17,17 @@ const HORIZON_STYLE: Record<ActionHorizon, string> = {
   later: "border-navy/10 bg-paper-50 text-ink-muted",
 };
 
-const HORIZON_LABEL: Record<ActionHorizon, string> = {
-  overdue: "Overdue",
-  now: "Do now",
-  soon: "Next 90 days",
-  later: "Later",
-};
+function horizonLabel(horizon: ActionHorizon, t: TranslateFn): string {
+  return t(`next90.horizon.${horizon}`);
+}
+
+function displayAction(action: NextAction, t: TranslateFn): NextAction {
+  const date = action.dueOn
+    ? formatLongDate(action.dueOn)
+    : String(action.copyVars?.date ?? "");
+  const copy = localiseActionCopy(t, action.copyKey, { ...action.copyVars, date });
+  return { ...action, ...copy };
+}
 
 export function Next90Days({ profile, plan }: { profile: Profile; plan: PlanResult }) {
   const { t } = useLocale();
@@ -35,16 +41,15 @@ export function Next90Days({ profile, plan }: { profile: Profile; plan: PlanResu
     <section id="next" className="mt-8 scroll-mt-24">
       <p className="text-xs uppercase tracking-[0.22em] text-moss">{t("nav.next")}</p>
       <h2 className="mt-2 font-serif text-2xl text-navy sm:text-3xl">{t("section.next")}</h2>
-      <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-        Dated next steps from your sketch and encoded GOV.UK facts. Confirm every date in your UKVI
-        account. This is not immigration advice and not a Home Office calculation.
-      </p>
+      <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("next90.intro")}</p>
 
       {set.milestones.length > 0 ? (
         <ol className="mt-6 grid gap-3 sm:grid-cols-3">
           {set.milestones.slice(0, 3).map((milestone) => (
-            <li key={`${milestone.label}-${milestone.date}`} className="rounded-2xl border border-navy/10 bg-white p-4 shadow-card">
-              <p className="text-xs uppercase tracking-[0.16em] text-ink-faint">{milestone.label}</p>
+            <li key={`${milestone.id}-${milestone.date}`} className="rounded-2xl border border-navy/10 bg-white p-4 shadow-card">
+              <p className="text-xs uppercase tracking-[0.16em] text-ink-faint">
+                {t(`milestone.${milestone.id}`)}
+              </p>
               <p className="mt-2 font-serif text-xl text-navy">{formatLongDate(milestone.date)}</p>
             </li>
           ))}
@@ -54,7 +59,7 @@ export function Next90Days({ profile, plan }: { profile: Profile; plan: PlanResu
       <ul className="mt-6 space-y-3">
         {set.focus.map((action) => (
           <li key={action.id}>
-            <ActionCard action={action} />
+            <ActionCard action={displayAction(action, t)} t={t} />
           </li>
         ))}
       </ul>
@@ -62,12 +67,12 @@ export function Next90Days({ profile, plan }: { profile: Profile; plan: PlanResu
       {set.later.length > 0 ? (
         <details className="mt-4 rounded-2xl border border-navy/10 bg-paper-50 px-4 py-3">
           <summary className="cursor-pointer text-sm font-medium text-navy">
-            Later on this path ({set.later.length})
+            {t("next90.laterPath", { count: set.later.length })}
           </summary>
           <ul className="mt-3 space-y-3">
             {set.later.map((action) => (
               <li key={action.id}>
-                <ActionCard action={action} compact />
+                <ActionCard action={displayAction(action, t)} t={t} compact />
               </li>
             ))}
           </ul>
@@ -75,13 +80,13 @@ export function Next90Days({ profile, plan }: { profile: Profile; plan: PlanResu
       ) : null}
 
       <p className="mt-4 text-xs text-ink-faint">
-        Verify anyone you pay on the official{" "}
+        {t("next90.adviserFooter")}{" "}
         <a href={GOVUK.adviser} className="underline" target="_blank" rel="noreferrer">
-          OISC / GOV.UK adviser register
+          {t("next90.adviserRegister")}
         </a>{" "}
-        or the SRA register before you instruct them.{" "}
+        {t("next90.orSra")}{" "}
         <Link href="/advisers" className="underline">
-          How introductions work
+          {t("next90.howIntro")}
         </Link>
         .
       </p>
@@ -89,24 +94,35 @@ export function Next90Days({ profile, plan }: { profile: Profile; plan: PlanResu
   );
 }
 
-function ActionCard({ action, compact = false }: { action: NextAction; compact?: boolean }) {
+function ActionCard({
+  action,
+  compact = false,
+  t,
+}: {
+  action: NextAction;
+  compact?: boolean;
+  t: TranslateFn;
+}) {
   const internal = action.href.startsWith("/");
 
   return (
     <article className={`rounded-2xl border px-4 py-4 ${HORIZON_STYLE[action.horizon]} ${compact ? "py-3" : ""}`}>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <p className="font-medium text-navy">{action.title}</p>
-        <span className="text-xs uppercase tracking-wide">{HORIZON_LABEL[action.horizon]}</span>
+        <span className="text-xs uppercase tracking-wide">{horizonLabel(action.horizon, t)}</span>
       </div>
       {action.dueOn ? (
-        <p className="mt-1 text-xs">Sketch date: {formatLongDate(action.dueOn)}</p>
+        <p className="mt-1 text-xs">{t("next90.sketchDate", { date: formatLongDate(action.dueOn) })}</p>
       ) : null}
       <p className="mt-2 text-sm">{action.detail}</p>
       {action.fact ? (
         <p className="mt-2 text-xs">
-          Encoded fact from {formatLongDate(action.fact.effectiveFrom)}: {action.fact.summary}{" "}
+          {t("next90.encodedFrom", {
+            date: formatLongDate(action.fact.effectiveFrom),
+            summary: action.fact.summary,
+          })}{" "}
           <a href={action.fact.sourceUrl} className="underline" target="_blank" rel="noreferrer">
-            Source
+            {t("next90.source")}
           </a>
         </p>
       ) : null}

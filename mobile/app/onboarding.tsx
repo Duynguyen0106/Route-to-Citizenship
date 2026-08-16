@@ -34,19 +34,6 @@ import { usePlan } from "../src/plan-context";
 import { useLocale } from "../src/locale-context";
 import { colors } from "../src/theme";
 
-const RELATIONSHIP = [
-  { id: "none", label: "No British or settled partner" },
-  { id: "british_citizen", label: "Partner is a British citizen" },
-  { id: "settled", label: "Partner has ILR or settled status" },
-] as const;
-
-const ENGLISH = [
-  { id: "none", label: "Not yet at B1" },
-  { id: "A2", label: "A2 (not usually enough for ILR)" },
-  { id: "B1", label: "B1 or equivalent" },
-  { id: "B2", label: "B2 or higher" },
-] as const;
-
 export default function OnboardingScreen() {
   const { profile, save } = usePlan();
   const { t } = useLocale();
@@ -72,7 +59,7 @@ export default function OnboardingScreen() {
     const relevant = current.fields.some((field) => paths.has(field));
     if (!relevant && step < ONBOARDING_STEPS.length - 1) return true;
     const issue = parsed.error.issues.find((item) => current.fields.includes(item.path[0] as never));
-    setError(issue?.message ?? parsed.error.issues[0]?.message ?? "Please check this step.");
+    setError(issue?.message ?? parsed.error.issues[0]?.message ?? t("mobile.checkStep"));
     return false;
   }
 
@@ -86,7 +73,7 @@ export default function OnboardingScreen() {
     if (!parsed.success) {
       const invalid = firstInvalidOnboardingStep(values) ?? 0;
       setStep(invalid);
-      setError("Please complete the highlighted fields before we can build a timeline.");
+      setError(t("onboard.formError"));
       return;
     }
     await save(onboardingToProfile(parsed.data, profile));
@@ -99,7 +86,8 @@ export default function OnboardingScreen() {
         <Kicker>{t("onboard.kicker")}</Kicker>
         <Title>{profile ? t("dash.edit") : t("onboard.title")}</Title>
         <Subtitle>
-          {t("onboard.kicker")} {step + 1}/{ONBOARDING_STEPS.length}: {current.title}. This is not an application.
+          {t("onboard.stepOf", { current: step + 1, total: ONBOARDING_STEPS.length })}:{" "}
+          {t(`onboard.step.${current.id}`)}. {t("onboard.notApplication")}
         </Subtitle>
         <View
           style={{
@@ -129,7 +117,7 @@ export default function OnboardingScreen() {
         {current.id === "visa" ? (
           <View style={{ marginTop: 8 }}>
             <Text style={{ marginTop: 8, color: colors.inkMuted, fontSize: 13, lineHeight: 19 }}>
-              Mapped pathway: {hint}
+              {t("mobile.mappedPathway", { pathway: hint })}
             </Text>
             {ONBOARDING_VISA_GROUPS.map((group) => (
               <View key={group.label} style={{ marginTop: 16 }}>
@@ -160,13 +148,13 @@ export default function OnboardingScreen() {
         {current.id === "dates" ? (
           <View>
             <Field
-              label="Visa start date (YYYY-MM-DD)"
+              label={t("mobile.visaStart")}
               value={values.visaGrantDate}
               onChangeText={(visaGrantDate) => patch({ visaGrantDate })}
               placeholder="2024-03-01"
             />
             <Field
-              label="Visa expiry date (YYYY-MM-DD)"
+              label={t("mobile.visaExpiry")}
               value={values.visaExpiryDate}
               onChangeText={(visaExpiryDate) => patch({ visaExpiryDate })}
               placeholder="2029-03-01"
@@ -177,26 +165,25 @@ export default function OnboardingScreen() {
         {current.id === "entry" ? (
           <View>
             <Field
-              label="First UK entry date (optional)"
+              label={t("mobile.entryDate")}
               value={values.ukEntryDate}
               onChangeText={(ukEntryDate) => patch({ ukEntryDate })}
-              placeholder="Leave blank if the same as visa start"
+              placeholder={t("mobile.entryPlaceholder")}
             />
             <Text style={{ marginTop: 10, color: colors.inkMuted, fontSize: 13, lineHeight: 19 }}>
-              Used for long residence and citizenship sketches. Confirm the live stamp or eVisa, not this
-              app.
+              {t("mobile.entryHint")}
             </Text>
           </View>
         ) : null}
 
         {current.id === "relationship" ? (
           <View style={{ marginTop: 8 }}>
-            {RELATIONSHIP.map((option) => (
+            {(["none", "british_citizen", "settled"] as const).map((id) => (
               <Choice
-                key={option.id}
-                label={option.label}
-                selected={values.relationship === option.id}
-                onPress={() => patch({ relationship: option.id })}
+                key={id}
+                label={t(`mobile.rel.${id === "british_citizen" ? "british" : id === "settled" ? "settled" : "none"}`)}
+                selected={values.relationship === id}
+                onPress={() => patch({ relationship: id })}
               />
             ))}
           </View>
@@ -204,12 +191,12 @@ export default function OnboardingScreen() {
 
         {current.id === "english" ? (
           <View style={{ marginTop: 8 }}>
-            {ENGLISH.map((option) => (
+            {(["none", "A2", "B1", "B2"] as const).map((id) => (
               <Choice
-                key={option.id}
-                label={option.label}
-                selected={values.englishLevel === option.id}
-                onPress={() => patch({ englishLevel: option.id })}
+                key={id}
+                label={t(`mobile.english.${id}`)}
+                selected={values.englishLevel === id}
+                onPress={() => patch({ englishLevel: id })}
               />
             ))}
           </View>
@@ -218,12 +205,12 @@ export default function OnboardingScreen() {
         {current.id === "lifeInUk" ? (
           <View style={{ marginTop: 8 }}>
             <Choice
-              label="I have passed the Life in the UK test"
+              label={t("mobile.lifeYes")}
               selected={values.lifeInUkPassed === "yes"}
               onPress={() => patch({ lifeInUkPassed: "yes" })}
             />
             <Choice
-              label="Not passed yet"
+              label={t("mobile.lifeNo")}
               selected={values.lifeInUkPassed === "no"}
               onPress={() => patch({ lifeInUkPassed: "no" })}
             />
@@ -241,7 +228,7 @@ export default function OnboardingScreen() {
           <SecondaryButton label={t("onboard.cancel")} onPress={() => router.back()} />
         )}
         <Pressable onPress={() => router.replace("/")} style={{ marginTop: 18, alignItems: "center" }}>
-          <Text style={{ color: colors.inkMuted, fontSize: 14 }}>Leave without saving</Text>
+          <Text style={{ color: colors.inkMuted, fontSize: 14 }}>{t("mobile.leaveUnsaved")}</Text>
         </Pressable>
       </ScrollScreen>
     </KeyboardAvoidingView>

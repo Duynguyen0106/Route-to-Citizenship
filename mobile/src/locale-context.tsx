@@ -7,13 +7,14 @@ import {
   isLocale,
   translate,
   type Locale,
+  type TranslateVars,
 } from "@/lib/i18n";
 
 type LocaleContextValue = {
   ready: boolean;
   locale: Locale;
   setLocale: (locale: Locale) => Promise<void>;
-  t: (key: string) => string;
+  t: (key: string, vars?: TranslateVars) => string;
 };
 
 const LocaleContext = createContext<LocaleContextValue | null>(null);
@@ -46,7 +47,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
       ready,
       locale,
       setLocale,
-      t: (key: string) => translate(locale, key),
+      t: (key: string, vars?: TranslateVars) => translate(locale, key, vars),
     }),
     [ready, locale],
   );

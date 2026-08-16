@@ -21,14 +21,14 @@ import { usePlan } from "../../src/plan-context";
 import { colors } from "../../src/theme";
 
 const OFFICIAL = [
-  { label: "Browse visas on GOV.UK", url: GOVUK.browse },
-  { label: "Indefinite leave to remain", url: GOVUK.ilr },
-  { label: "British citizenship", url: GOVUK.citizenship },
-  { label: "Prove your English", url: GOVUK.proveEnglish },
-  { label: "Life in the UK test", url: GOVUK.lifeInUk },
-  { label: "Find an immigration adviser", url: GOVUK.adviser },
-  { label: "UKVI account / eVisa", url: GOVUK.ukviAccount },
-];
+  { key: "govuk.browse", url: GOVUK.browse },
+  { key: "govuk.ilr", url: GOVUK.ilr },
+  { key: "govuk.citizenship", url: GOVUK.citizenship },
+  { key: "govuk.english", url: GOVUK.proveEnglish },
+  { key: "govuk.life", url: GOVUK.lifeInUk },
+  { key: "govuk.adviser", url: GOVUK.adviser },
+  { key: "govuk.ukvi", url: GOVUK.ukviAccount },
+] as const;
 
 export default function MoreScreen() {
   const { profile, plan, save, clear } = usePlan();
@@ -36,10 +36,10 @@ export default function MoreScreen() {
   if (!profile || !plan) return <LoadingScreen />;
 
   function confirmClear() {
-    Alert.alert("Clear this plan?", "The sketch is stored only on this phone. This cannot be undone.", [
-      { text: "Keep plan", style: "cancel" },
+    Alert.alert(t("mobile.clearTitle"), t("mobile.clearBody"), [
+      { text: t("mobile.keepPlan"), style: "cancel" },
       {
-        text: "Clear",
+        text: t("mobile.clear"),
         style: "destructive",
         onPress: async () => {
           await clear();
@@ -53,16 +53,13 @@ export default function MoreScreen() {
     <ScrollScreen>
       <Kicker>{t("nav.more")}</Kicker>
       <Title>{t("mobile.moreTitle")}</Title>
-      <Subtitle>
-        Official pages open in your phone browser. This app does not wrap GOV.UK, fill UKVI forms, or
-        take card payments.
-      </Subtitle>
+      <Subtitle>{t("mobile.moreLead")}</Subtitle>
       <LanguagePicker />
 
       <Card>
-        <Text style={{ fontWeight: "700", color: colors.navy, fontSize: 16 }}>Sketch fees</Text>
+        <Text style={{ fontWeight: "700", color: colors.navy, fontSize: 16 }}>{t("mobile.sketchFees")}</Text>
         <Text style={{ marginTop: 6, color: colors.inkMuted, fontSize: 13 }}>
-          Home Office table from {FEES_FROM}. Totals are illustrative.
+          {t("mobile.feesFrom", { date: FEES_FROM })}
         </Text>
         {plan.fees.lines.map((line) => (
           <View
@@ -91,18 +88,18 @@ export default function MoreScreen() {
           fontWeight: "700",
         }}
       >
-        Official pages
+        {t("mobile.officialPages")}
       </Text>
       <Pressable onPress={() => openOfficial(plan.route.officialUrl)}>
         <Card>
-          <Text style={{ fontWeight: "700", color: colors.navy }}>{plan.route.name} on GOV.UK</Text>
-          <Text style={{ marginTop: 4, color: colors.moss, fontWeight: "700" }}>Open official page →</Text>
+          <Text style={{ fontWeight: "700", color: colors.navy }}>{t("mobile.onGovuk", { name: plan.route.name })}</Text>
+          <Text style={{ marginTop: 4, color: colors.moss, fontWeight: "700" }}>{t("mobile.openOfficial")}</Text>
         </Card>
       </Pressable>
       {OFFICIAL.map((link) => (
         <Pressable key={link.url} onPress={() => openOfficial(link.url)}>
           <Card>
-            <Text style={{ fontWeight: "700", color: colors.navy }}>{link.label}</Text>
+            <Text style={{ fontWeight: "700", color: colors.navy }}>{t(link.key)}</Text>
           </Card>
         </Pressable>
       ))}
@@ -119,7 +116,7 @@ export default function MoreScreen() {
           fontWeight: "700",
         }}
       >
-        Load a featured sample
+        {t("mobile.loadSample")}
       </Text>
       {SAMPLE_PROFILES.map((sample) => (
         <Pressable
@@ -129,8 +126,10 @@ export default function MoreScreen() {
           }}
         >
           <Card>
-            <Text style={{ fontWeight: "700", color: colors.navy }}>{sample.title}</Text>
-            <Text style={{ marginTop: 4, color: colors.inkMuted, fontSize: 13 }}>{sample.blurb}</Text>
+            <Text style={{ fontWeight: "700", color: colors.navy }}>{t(`sample.${sample.id}.title`)}</Text>
+            <Text style={{ marginTop: 4, color: colors.inkMuted, fontSize: 13 }}>
+              {t(`sample.${sample.id}.blurb`)}
+            </Text>
           </Card>
         </Pressable>
       ))}
@@ -140,8 +139,7 @@ export default function MoreScreen() {
       <View style={{ marginTop: 28 }}>
         <Text style={{ color: colors.inkFaint, fontSize: 12, lineHeight: 18 }}>{LEGAL_NOTICE}</Text>
         <Text style={{ marginTop: 8, color: colors.inkFaint, fontSize: 12, lineHeight: 18 }}>
-          Rules last reviewed {RULES_REVIEWED_ON}. Guest plans stay in on-device storage. We never collect
-          full passport numbers. The encrypted document vault is website-only and is never uploaded.
+          {t("mobile.guestVault", { date: RULES_REVIEWED_ON })}
         </Text>
       </View>
     </ScrollScreen>

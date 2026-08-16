@@ -28,11 +28,11 @@ export default function TimelineScreen() {
       <Kicker>{t("nav.timeline")}</Kicker>
       <Title>{t("section.timeline")}</Title>
       <Subtitle>
-        {plan.summary} This is not a Home Office calculation and not an approval chance.
+        {plan.summary} {t("mobile.notCalculation")}
       </Subtitle>
       {plan.extensionNote ? (
         <Card>
-          <Text style={{ color: colors.clay, fontWeight: "700" }}>Leave may expire first</Text>
+          <Text style={{ color: colors.clay, fontWeight: "700" }}>{t("mobile.leaveMayExpire")}</Text>
           <Text style={{ marginTop: 6, color: colors.ink, fontSize: 14, lineHeight: 20 }}>
             {plan.extensionNote}
           </Text>

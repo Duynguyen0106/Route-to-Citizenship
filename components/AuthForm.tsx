@@ -3,9 +3,11 @@
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import Link from "next/link";
+import { useLocale } from "@/components/LocaleProvider";
 
 export function AuthForm({ mode }: { mode: "login" | "register" }) {
   const router = useRouter();
+  const { t } = useLocale();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -29,13 +31,13 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         body = {};
       }
       if (!response.ok) {
-        setError(body.error || "Something went wrong.");
+        setError(body.error || t("auth.error"));
         return;
       }
       router.push("/plan");
       router.refresh();
     } catch {
-      setError("Could not reach the server. Try again.");
+      setError(t("auth.offline"));
     } finally {
       setPending(false);
     }
@@ -45,7 +47,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
     <form onSubmit={onSubmit} className="mt-8 space-y-4">
       {mode === "register" && (
         <label className="block text-sm">
-          <span className="font-medium text-navy">Name (optional)</span>
+          <span className="font-medium text-navy">{t("auth.name")}</span>
           <input
             value={name}
             onChange={(event) => setName(event.target.value)}
@@ -54,7 +56,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         </label>
       )}
       <label className="block text-sm">
-        <span className="font-medium text-navy">Email</span>
+        <span className="font-medium text-navy">{t("auth.email")}</span>
         <input
           type="email"
           required
@@ -64,7 +66,7 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         />
       </label>
       <label className="block text-sm">
-        <span className="font-medium text-navy">Password</span>
+        <span className="font-medium text-navy">{t("auth.password")}</span>
         <input
           type="password"
           required
@@ -80,21 +82,21 @@ export function AuthForm({ mode }: { mode: "login" | "register" }) {
         disabled={pending}
         className="min-h-11 rounded-full bg-navy px-5 py-2 text-sm text-paper-50 disabled:opacity-60"
       >
-        {pending ? "Please wait…" : mode === "login" ? "Sign in" : "Create account"}
+        {pending ? t("auth.wait") : mode === "login" ? t("auth.signIn") : t("auth.create")}
       </button>
       <p className="text-sm text-ink-muted">
         {mode === "login" ? (
           <>
-            No account?{" "}
+            {t("auth.noAccount")}{" "}
             <Link href="/register" className="underline">
-              Register
+              {t("auth.registerLink")}
             </Link>
           </>
         ) : (
           <>
-            Already registered?{" "}
+            {t("auth.haveAccount")}{" "}
             <Link href="/login" className="underline">
-              Sign in
+              {t("auth.signInLink")}
             </Link>
           </>
         )}

@@ -38,7 +38,9 @@ export function SiteFooter() {
         </p>
         <p className="sr-only">{LEGAL_NOTICE}</p>
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-paper-200/70">
-          <p>Last reviewed: {formatLongDate(RULES_REVIEWED_ON)}.</p>
+          <p>
+            {t("reviewed.prefix")} {formatLongDate(RULES_REVIEWED_ON)}.
+          </p>
           <div className="flex flex-wrap items-center gap-4">
             <LanguageSwitcher compact />
             <ReportInaccuracyButton variant="footer" />

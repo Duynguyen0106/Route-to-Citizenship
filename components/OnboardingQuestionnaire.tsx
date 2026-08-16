@@ -18,6 +18,7 @@ import {
   type OnboardingValues,
 } from "@/lib/onboarding";
 import { EXTRA_SCENARIO_PROFILES, SAMPLE_PROFILES } from "@/lib/samples";
+import { useLocale } from "@/components/LocaleProvider";
 import type { Profile } from "@/lib/types";
 
 type Props = {
@@ -28,6 +29,7 @@ type Props = {
 };
 
 export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadSample }: Props) {
+  const { t } = useLocale();
   const [step, setStep] = useState(0);
   const [maxReached, setMaxReached] = useState(initial ? ONBOARDING_STEPS.length - 1 : 0);
   const [formError, setFormError] = useState<string | null>(null);
@@ -63,7 +65,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
     if (!parsed.success) {
       const invalid = firstInvalidOnboardingStep(values) ?? 0;
       setStep(invalid);
-      setFormError("Please complete the highlighted fields before we can build a timeline.");
+      setFormError(t("onboard.formError"));
       await form.trigger();
       return;
     }
@@ -72,15 +74,11 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6 sm:py-12">
-      <p className="text-xs uppercase tracking-[0.22em] text-moss">Onboarding</p>
+      <p className="text-xs uppercase tracking-[0.22em] text-moss">{t("onboard.kicker")}</p>
       <h1 className="mt-2 font-serif text-3xl text-navy sm:text-4xl">
-        {initial ? "Edit your immigration profile" : "Seven questions to sketch your route"}
+        {initial ? t("onboard.editTitle") : t("onboard.title")}
       </h1>
-      <p className="mt-3 text-sm text-ink-muted sm:text-base">
-        We map your answers onto the UK settlement routes we model — the original five plus
-        Innovator Founder, Scale-up, dependants, child registration and others. We never ask for
-        passport numbers. This is not immigration advice.
-      </p>
+      <p className="mt-3 text-sm text-ink-muted sm:text-base">{t("onboard.intro")}</p>
 
       {!initial && (
         <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -91,8 +89,8 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
               onClick={() => (onLoadSample ?? onComplete)({ ...sample.profile, id: crypto.randomUUID() })}
               className="min-h-16 rounded-xl border border-navy/10 bg-paper-50 p-4 text-left hover:border-moss/40"
             >
-              <p className="font-medium text-navy">{sample.title}</p>
-              <p className="mt-1 text-xs leading-relaxed text-ink-muted">{sample.blurb}</p>
+              <p className="font-medium text-navy">{t(`sample.${sample.id}.title`)}</p>
+              <p className="mt-1 text-xs leading-relaxed text-ink-muted">{t(`sample.${sample.id}.blurb`)}</p>
             </button>
           ))}
         </div>
@@ -101,8 +99,10 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
       <div className="mt-8">
         <div className="flex items-baseline justify-between gap-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-moss">
-            Step {step + 1} of {ONBOARDING_STEPS.length}
-            <span className="ml-2 normal-case tracking-normal text-ink-muted">· {current.title}</span>
+            {t("onboard.stepOf", { current: step + 1, total: ONBOARDING_STEPS.length })}
+            <span className="ml-2 normal-case tracking-normal text-ink-muted">
+              · {t(`onboard.step.${current.id}`)}
+            </span>
           </p>
           <p className="text-xs text-ink-muted">{Math.round(progress)}%</p>
         </div>
@@ -126,7 +126,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                     : "cursor-not-allowed bg-navy/10 text-ink-faint"
               }`}
             >
-              {index + 1}. {item.title}
+              {index + 1}. {t(`onboard.step.${item.id}`)}
             </button>
           </li>
         ))}
@@ -139,11 +139,11 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
           void next();
         }}
       >
-        <h2 className="font-serif text-2xl text-navy">{current.title}</h2>
+        <h2 className="font-serif text-2xl text-navy">{t(`onboard.step.${current.id}`)}</h2>
 
         <div className="mt-5 space-y-4">
           {step === 0 ? (
-            <Field label="Nationality" error={form.formState.errors.nationality?.message}>
+            <Field label={t("onboard.nationality")} error={form.formState.errors.nationality?.message}>
               <select className="field-input" {...form.register("nationality")}>
                 {NATIONALITY_OPTIONS.map((item) => (
                   <option key={item.code} value={item.code}>
@@ -151,14 +151,12 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                   </option>
                 ))}
               </select>
-              <p className="mt-2 text-xs font-normal text-ink-muted">
-                Used only as a coarse English-language exemption. Do not enter passport numbers.
-              </p>
+              <p className="mt-2 text-xs font-normal text-ink-muted">{t("onboard.nationalityHint")}</p>
             </Field>
           ) : null}
 
           {step === 1 ? (
-            <Field label="Current visa type" error={form.formState.errors.currentVisaId?.message}>
+            <Field label={t("onboard.visaType")} error={form.formState.errors.currentVisaId?.message}>
               <select className="field-input" {...form.register("currentVisaId")}>
                 {ONBOARDING_VISA_GROUPS.map((group) => (
                   <optgroup key={group.label} label={group.label}>
@@ -171,13 +169,10 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                 ))}
               </select>
               <p className="mt-2 text-xs font-normal text-ink-muted">
-                Maps to pathway: {pathwayHint(visaId, initial)}
+                {t("onboard.pathwayMaps", { pathway: pathwayHint(visaId, initial) })}
               </p>
               {visaId === "student" || visaId === "graduate" || visaId === "gbm" || visaId === "hpi" || visaId === "youth-mobility" ? (
-                <p className="mt-2 text-xs font-normal text-clay-600">
-                  This leave does not lead to ILR on its own. Add a planned switch, or count time toward
-                  10-year long residence.
-                </p>
+                <p className="mt-2 text-xs font-normal text-clay-600">{t("onboard.noIlrOwn")}</p>
               ) : null}
             </Field>
           ) : null}
@@ -185,21 +180,18 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
           {step === 2 ? (
             <div className="space-y-4">
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Visa start date" error={form.formState.errors.visaGrantDate?.message}>
+                <Field label={t("onboard.visaStart")} error={form.formState.errors.visaGrantDate?.message}>
                   <input className="field-input" type="date" {...form.register("visaGrantDate")} />
                 </Field>
-                <Field label="Visa expiry date" error={form.formState.errors.visaExpiryDate?.message}>
+                <Field label={t("onboard.visaExpiry")} error={form.formState.errors.visaExpiryDate?.message}>
                   <input className="field-input" type="date" {...form.register("visaExpiryDate")} />
                 </Field>
               </div>
-              <p className="text-xs text-ink-muted">
-                Optional: earlier leave and planned switches (Student → Graduate → Skilled Worker →
-                Global Talent).
-              </p>
+              <p className="text-xs text-ink-muted">{t("onboard.earlierHint")}</p>
               <div className="grid gap-4 sm:grid-cols-3">
-                <Field label="Earlier visa (optional)">
+                <Field label={t("onboard.earlierVisa")}>
                   <select className="field-input" {...form.register("priorVisaId")}>
-                    <option value="">None / skip</option>
+                    <option value="">{t("onboard.noneSkip")}</option>
                     {SWITCH_VISA_OPTIONS.filter((item) => item.id).map((item) => (
                       <option key={item.id} value={item.id}>
                         {item.label}
@@ -208,15 +200,15 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                     <option value="student">Student</option>
                   </select>
                 </Field>
-                <Field label="Earlier visa start">
+                <Field label={t("onboard.earlierStart")}>
                   <input className="field-input" type="date" {...form.register("priorVisaStart")} />
                 </Field>
-                <Field label="Earlier visa end">
+                <Field label={t("onboard.earlierEnd")}>
                   <input className="field-input" type="date" {...form.register("priorVisaEnd")} />
                 </Field>
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Next planned switch">
+                <Field label={t("onboard.nextSwitch")}>
                   <select className="field-input" {...form.register("plannedSwitch1To")}>
                     {SWITCH_VISA_OPTIONS.map((item) => (
                       <option key={item.id || "none"} value={item.id}>
@@ -225,10 +217,10 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                     ))}
                   </select>
                 </Field>
-                <Field label="Switch date">
+                <Field label={t("onboard.switchDate")}>
                   <input className="field-input" type="date" {...form.register("plannedSwitch1On")} />
                 </Field>
-                <Field label="Later planned switch">
+                <Field label={t("onboard.laterSwitch")}>
                   <select className="field-input" {...form.register("plannedSwitch2To")}>
                     {SWITCH_VISA_OPTIONS.map((item) => (
                       <option key={`2-${item.id || "none"}`} value={item.id}>
@@ -237,7 +229,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                     ))}
                   </select>
                 </Field>
-                <Field label="Later switch date">
+                <Field label={t("onboard.laterSwitchDate")}>
                   <input className="field-input" type="date" {...form.register("plannedSwitch2On")} />
                 </Field>
               </div>
@@ -247,33 +239,28 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
           {step === 3 ? (
             <div className="space-y-4">
               <Field
-                label="Date first entered the UK (optional)"
+                label={t("onboard.entryDate")}
                 error={form.formState.errors.ukEntryDate?.message}
               >
                 <input className="field-input" type="date" {...form.register("ukEntryDate")} />
-                <p className="mt-2 text-xs font-normal text-ink-muted">
-                  Used for 10-year long residence (combining different visas) and citizenship residence.
-                </p>
+                <p className="mt-2 text-xs font-normal text-ink-muted">{t("onboard.entryHint")}</p>
               </Field>
-              <Field label="Age band">
+              <Field label={t("onboard.ageBand")}>
                 <select className="field-input" {...form.register("ageBand")}>
-                  <option value="18_to_64">18 to 64</option>
-                  <option value="under_18">Under 18</option>
-                  <option value="65_plus">65 or over</option>
+                  <option value="18_to_64">{t("onboard.age18")}</option>
+                  <option value="under_18">{t("onboard.ageUnder18")}</option>
+                  <option value="65_plus">{t("onboard.age65")}</option>
                 </select>
               </Field>
               <label className="flex items-center gap-2 text-sm text-navy">
                 <input type="checkbox" {...form.register("bornInUk")} />
-                This applicant was born in the UK
+                {t("onboard.bornUk")}
               </label>
               <label className="flex items-center gap-2 text-sm text-navy">
                 <input type="checkbox" {...form.register("hasBritishParent")} />
-                At least one parent is a British citizen
+                {t("onboard.britishParent")}
               </label>
-              <p className="text-xs text-ink-muted">
-                Used for citizenship by registration (children born in the UK, or under 18 with a
-                British parent).
-              </p>
+              <p className="text-xs text-ink-muted">{t("onboard.registrationHint")}</p>
             </div>
           ) : null}
 
@@ -285,14 +272,14 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                 render={({ field }) => (
                   <fieldset>
                     <legend className="text-sm font-medium text-navy">
-                      Relationship to a British citizen or settled person
+                      {t("onboard.relationshipLegend")}
                     </legend>
                     <div className="mt-3 grid gap-2">
                       {(
                         [
-                          ["none", "None / not relying on a partner"],
-                          ["british_citizen", "Partner or spouse is a British citizen"],
-                          ["settled", "Partner or spouse is settled (ILR / settled status)"],
+                          ["none", t("onboard.rel.none")],
+                          ["british_citizen", t("onboard.rel.british")],
+                          ["settled", t("onboard.rel.settled")],
                         ] as const
                       ).map(([value, label]) => (
                         <label
@@ -311,14 +298,11 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                         </label>
                       ))}
                     </div>
-                    <p className="mt-2 text-xs text-ink-muted">
-                      Married to a British citizen: naturalisation is usually 3 years’ residence after
-                      ILR is held — not 12 months after ILR.
-                    </p>
+                    <p className="mt-2 text-xs text-ink-muted">{t("onboard.relHint")}</p>
                   </fieldset>
                 )}
               />
-              <Field label="How many dependants should we sketch ILR for?">
+              <Field label={t("onboard.dependants")}>
                 <input
                   className="field-input"
                   type="number"
@@ -328,7 +312,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                 />
               </Field>
               {(visaId === "dependant" || visaId === "child-registration") && (
-                <Field label="Main applicant’s ILR date (if known)">
+                <Field label={t("onboard.mainIlr")}>
                   <input className="field-input" type="date" {...form.register("mainApplicantIlrOn")} />
                 </Field>
               )}
@@ -336,12 +320,12 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
           ) : null}
 
           {step === 5 ? (
-            <Field label="English level" error={form.formState.errors.englishLevel?.message}>
+            <Field label={t("onboard.englishLevel")} error={form.formState.errors.englishLevel?.message}>
               <select className="field-input" {...form.register("englishLevel")}>
-                <option value="none">Not yet evidenced</option>
-                <option value="A2">A2</option>
-                <option value="B1">B1 (usual ILR / citizenship level)</option>
-                <option value="B2">B2 or higher</option>
+                <option value="none">{t("onboard.english.none")}</option>
+                <option value="A2">{t("onboard.english.A2")}</option>
+                <option value="B1">{t("onboard.english.B1")}</option>
+                <option value="B2">{t("onboard.english.B2")}</option>
               </select>
             </Field>
           ) : null}
@@ -352,7 +336,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
               name="lifeInUkPassed"
               render={({ field }) => (
                 <fieldset>
-                  <legend className="text-sm font-medium text-navy">Have you passed the Life in the UK test?</legend>
+                  <legend className="text-sm font-medium text-navy">{t("onboard.lifeLegend")}</legend>
                   <div className="mt-3 grid grid-cols-2 gap-3">
                     {(["yes", "no"] as const).map((value) => (
                       <label
@@ -367,7 +351,7 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
                           checked={field.value === value}
                           onChange={() => field.onChange(value)}
                         />
-                        {value === "yes" ? "Yes" : "No"}
+                        {value === "yes" ? t("onboard.yes") : t("onboard.no")}
                       </label>
                     ))}
                   </div>
@@ -386,19 +370,19 @@ export function OnboardingQuestionnaire({ initial, onComplete, onCancel, onLoadS
             disabled={step === 0}
             onClick={() => void goTo(step - 1)}
           >
-            Back
+            {t("onboard.back")}
           </button>
           <div className="flex gap-3">
             {onCancel ? (
               <button type="button" onClick={onCancel} className="min-h-11 px-2 text-sm text-ink-muted">
-                Cancel
+                {t("onboard.cancel")}
               </button>
             ) : null}
             <button
               type="submit"
               className="min-h-11 rounded-full bg-navy px-5 py-2 text-sm text-paper-50"
             >
-              {step === ONBOARDING_STEPS.length - 1 ? "See my timeline" : "Continue"}
+              {step === ONBOARDING_STEPS.length - 1 ? t("onboard.seeTimeline") : t("onboard.continue")}
             </button>
           </div>
         </div>

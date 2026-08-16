@@ -30,10 +30,7 @@ export default function WelcomeScreen() {
     <ScrollScreen>
       <Kicker>{t("brand.tag")}</Kicker>
       <Title>{t("brand")}</Title>
-      <Subtitle>
-        Sketch visa → ILR → British citizenship on your phone. The same encoded rules as the website.
-        Never enter a passport number.
-      </Subtitle>
+      <Subtitle>{t("mobile.welcomeLead")}</Subtitle>
       <DisclaimerBanner />
       <LanguagePicker />
       <PrimaryButton label={t("nav.start")} onPress={() => router.push("/onboarding")} />
@@ -47,10 +44,10 @@ export default function WelcomeScreen() {
           fontWeight: "600",
         }}
       >
-        Featured sample routes
+        {t("mobile.featuredSamples")}
       </Text>
       <Text style={{ marginTop: 6, color: colors.inkMuted, fontSize: 13, lineHeight: 19 }}>
-        Five common paths. Loading a sample stays on this device and is not an application.
+        {t("mobile.featuredLead")}
       </Text>
       {SAMPLE_PROFILES.map((sample) => (
         <Pressable
@@ -62,9 +59,9 @@ export default function WelcomeScreen() {
           }}
         >
           <Card>
-            <Text style={{ fontSize: 17, fontWeight: "700", color: colors.navy }}>{sample.title}</Text>
+            <Text style={{ fontSize: 17, fontWeight: "700", color: colors.navy }}>{t(`sample.${sample.id}.title`)}</Text>
             <Text style={{ marginTop: 6, color: colors.inkMuted, fontSize: 14, lineHeight: 20 }}>
-              {sample.blurb}
+              {t(`sample.${sample.id}.blurb`)}
             </Text>
           </Card>
         </Pressable>
@@ -76,7 +73,7 @@ export default function WelcomeScreen() {
       <View style={{ marginTop: 28 }}>
         <Text style={{ color: colors.inkFaint, fontSize: 12, lineHeight: 18 }}>{LEGAL_NOTICE}</Text>
         <Text style={{ marginTop: 8, color: colors.inkFaint, fontSize: 12 }}>
-          Rules last reviewed {RULES_REVIEWED_ON}. Fees follow the Home Office table from 8 April 2026.
+          {t("mobile.rulesFees", { date: RULES_REVIEWED_ON })}
         </Text>
       </View>
     </ScrollScreen>

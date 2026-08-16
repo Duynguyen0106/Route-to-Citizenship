@@ -7,13 +7,14 @@ import {
   isLocale,
   translate,
   type Locale,
+  type TranslateVars,
 } from "@/lib/i18n";
 
 const LocaleContext = createContext<{
   locale: Locale;
   dir: "ltr" | "rtl";
   setLocale: (locale: Locale) => void;
-  t: (key: string) => string;
+  t: (key: string, vars?: TranslateVars) => string;
 }>({
   locale: "en",
   dir: "ltr",
@@ -43,7 +44,7 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
         setLocaleState(next);
         window.localStorage.setItem(STORAGE_LOCALE, next);
       },
-      t: (key: string) => translate(locale, key),
+      t: (key: string, vars?: TranslateVars) => translate(locale, key, vars),
     }),
     [locale],
   );

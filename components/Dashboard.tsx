@@ -37,7 +37,8 @@ import { SharePackView } from "@/components/SharePackView";
 import { listVaultMeta } from "@/lib/document-vault";
 import { buildSharePack } from "@/lib/share-pack";
 import { useLocale } from "@/components/LocaleProvider";
-import { formatDaysUntil, formatGbp, formatLongDate } from "@/lib/format";
+import { formatGbp, formatLongDate } from "@/lib/format";
+import { formatDaysUntilLabel } from "@/lib/i18n";
 import { getPathway } from "@/lib/pathways";
 import { getRouteForPathway } from "@/lib/routes";
 import type { PlanResult, Profile } from "@/lib/types";
@@ -74,11 +75,11 @@ export function Dashboard({
           </p>
           <p className="mt-3 max-w-2xl text-ink-muted">{plan.summary}</p>
           <p className="mt-2 text-xs text-ink-faint">
-            Preview plan: {PLAN_CATALOGUE[previewPlan].name} ·{" "}
+            {t("dash.previewPlan", { name: PLAN_CATALOGUE[previewPlan].name })} ·{" "}
             <Link href="/pricing" className="underline">
-              change tier
+              {t("dash.changeTier")}
             </Link>{" "}
-            (no payment taken)
+            {t("dash.noPayment")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2 text-sm sm:gap-3">
@@ -112,13 +113,13 @@ export function Dashboard({
         <Link href="/disclaimer" className="underline">
           {t("dash.disclaimer")}
         </Link>
-        . Confirm everything on{" "}
+        . {t("dash.confirmOn")}{" "}
         <a href={plan.route.officialUrl} className="underline" target="_blank" rel="noreferrer">
-          the GOV.UK page for this visa
+          {t("dash.govukPage")}
         </a>{" "}
-        or the{" "}
+        {t("dash.orThe")}{" "}
         <Link href={`/routes/${rule.key}`} className="underline">
-          route notes
+          {t("dash.routeNotes")}
         </Link>
         .
       </div>
@@ -166,66 +167,68 @@ export function Dashboard({
 
       <dl className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Stat
-          label="Current visa expires"
+          label={t("dash.visaExpires")}
           value={formatLongDate(profile.visaExpiresOn)}
-          hint={formatDaysUntil(profile.visaExpiresOn)}
+          hint={formatDaysUntilLabel(profile.visaExpiresOn, t)}
         />
         <Stat
-          label="Estimated ILR eligibility"
+          label={t("dash.ilrEligibility")}
           value={
             plan.ilrEligibleOn && plan.route.id !== "ilr"
               ? formatLongDate(plan.ilrEligibleOn)
               : plan.route.id === "ilr"
-                ? "Already held"
-                : "No ILR path yet"
+                ? t("dash.alreadyHeld")
+                : t("dash.noIlrPath")
           }
           hint={
             plan.ilrApplyFrom
-              ? `Apply from ${formatLongDate(plan.ilrApplyFrom)}`
+              ? t("dash.applyFrom", { date: formatLongDate(plan.ilrApplyFrom) })
               : plan.hasIlrPath
-                ? "Check the route comparison"
-                : "Switch to a qualifying visa"
+                ? t("dash.checkComparison")
+                : t("dash.switchQualifying")
           }
         />
         <Stat
-          label="Estimated citizenship"
-          value={plan.citizenshipEligibleOn ? formatLongDate(plan.citizenshipEligibleOn) : plan.citizenshipPath === "already_british" ? "Already British" : "—"}
+          label={t("dash.citizenshipEst")}
+          value={
+            plan.citizenshipEligibleOn
+              ? formatLongDate(plan.citizenshipEligibleOn)
+              : plan.citizenshipPath === "already_british"
+                ? t("dash.alreadyBritish")
+                : "—"
+          }
           hint={
             plan.citizenshipPath === "naturalisation_spouse"
-              ? "3-year spouse route — ILR first"
+              ? t("dash.spouseHint")
               : plan.citizenshipPath === "registration_birth" || plan.citizenshipPath === "registration_parent"
-                ? "Citizenship by registration"
-                : "Standard 12-month ILR wait"
+                ? t("dash.registrationHint")
+                : t("dash.standardWait")
           }
         />
         <Stat
-          label="Path cost (estimate)"
+          label={t("dash.pathCost")}
           value={formatGbp(plan.fees.totalGbp)}
-          hint="Visa, IHS, ILR, tests and citizenship — see Fees"
+          hint={t("dash.pathCostHint")}
         />
       </dl>
 
       {plan.needsVisaExtension && plan.extensionNote && (
         <div className="mt-6 rounded-2xl border border-clay/40 bg-white px-5 py-4 text-sm text-clay-600">
-          <strong className="font-semibold">Extension likely needed. </strong>
+          <strong className="font-semibold">{t("dash.extensionNeeded")} </strong>
           {plan.extensionNote}
         </div>
       )}
 
       {plan.longResidenceIlrOn && plan.longResidenceIlrOn !== plan.ilrEligibleOn ? (
         <div className="mt-6 rounded-2xl border border-navy/10 bg-paper-50 px-5 py-4 text-sm text-ink-muted">
-          <strong className="font-semibold text-navy">Parallel 10-year clock. </strong>
-          Combining lawful leave (including switches) gives a long-residence ILR estimate of{" "}
-          {formatLongDate(plan.longResidenceIlrOn)}. Visitor leave does not count.
+          <strong className="font-semibold text-navy">{t("dash.parallelClock")} </strong>
+          {t("dash.parallelBody", { date: formatLongDate(plan.longResidenceIlrOn) })}
         </div>
       ) : null}
 
       <section id="timeline" className="mt-12 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.timeline")}</h2>
-        <p className="mt-2 text-sm text-ink-muted">
-          Current date, visa expiry, ILR and citizenship markers, plus application windows and
-          typical decision waits. The bar is time already spent from your UK residence start.
-        </p>
+        <p className="mt-2 text-sm text-ink-muted">{t("dash.timelineIntro")}</p>
         <Timeline
           events={plan.timeline}
           residenceStart={profile.ukEntryDate || profile.qualifyingResidenceStart}
@@ -235,35 +238,29 @@ export function Dashboard({
 
       <section id="windows" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.windows")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          ILR can usually be applied for up to 28 days before the qualifying date. Decision waits are
-          typical published periods, not a Home Office promise.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.windowsIntro")}</p>
         <ApplicationWindows windows={plan.applicationWindows} processing={plan.processingEstimates} />
       </section>
 
       <section id="household" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.household")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Dependant ILR usually follows the main applicant after 5 years. Children born in the UK, or
-          under 18 with a British parent, may register as British instead of naturalising.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.householdIntro")}</p>
         {plan.switchChain.length > 0 ? (
           <ol className="mt-6 space-y-3">
             {plan.switchChain.map((hop, index) => (
               <li key={`${hop.toVisaId}-${hop.on}`} className="rounded-xl border border-navy/10 bg-paper-50 px-4 py-3 text-sm">
                 <p className="font-medium text-navy">
-                  {index + 1}. Switch to {hop.toVisaId} on {formatLongDate(hop.on)}
+                  {index + 1}. {t("dash.switchTo", { visa: hop.toVisaId, date: formatLongDate(hop.on) })}
                 </p>
                 <p className="mt-1 text-ink-muted">{hop.note}</p>
                 {hop.ilrEligibleOn ? (
-                  <p className="mt-1 text-xs text-ink-faint">ILR from this hop: {formatLongDate(hop.ilrEligibleOn)}</p>
+                  <p className="mt-1 text-xs text-ink-faint">{t("dash.ilrFromHop", { date: formatLongDate(hop.ilrEligibleOn) })}</p>
                 ) : null}
               </li>
             ))}
           </ol>
         ) : (
-          <p className="mt-4 text-sm text-ink-muted">No extra planned switches recorded beyond your current visa.</p>
+          <p className="mt-4 text-sm text-ink-muted">{t("dash.noSwitches")}</p>
         )}
         {plan.dependantPlans.length > 0 ? (
           <ul className="mt-6 grid gap-3 md:grid-cols-2">
@@ -272,39 +269,32 @@ export function Dashboard({
                 <p className="font-medium text-navy">{dependant.label}</p>
                 <p className="mt-1 text-sm text-ink-muted">{dependant.summary}</p>
                 <p className="mt-2 text-xs text-ink-faint">
-                  ILR: {dependant.ilrEligibleOn ? formatLongDate(dependant.ilrEligibleOn) : "—"}
+                  {t("timeline.ilr")}: {dependant.ilrEligibleOn ? formatLongDate(dependant.ilrEligibleOn) : "—"}
                   {" · "}
-                  Citizenship:{" "}
+                  {t("timeline.citizenship")}:{" "}
                   {dependant.citizenshipEligibleOn
                     ? formatLongDate(dependant.citizenshipEligibleOn)
                     : dependant.citizenshipPath === "already_british"
-                      ? "Already British"
+                      ? t("dash.alreadyBritish")
                       : "—"}
                 </p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="mt-4 text-sm text-ink-muted">
-            No dependants on this plan. Add a count in Edit profile if you want household ILR dates.
-          </p>
+          <p className="mt-4 text-sm text-ink-muted">{t("dash.noDependants")}</p>
         )}
       </section>
 
       <section id="routes" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.routes")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Featured settlement routes plus your current path. Switch only if the planner models an
-          in-country move from your current visa — it does not check whether you actually qualify.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.routesIntro")}</p>
         <RouteComparison profile={profile} plan={plan} onSwitch={onProfileChange} />
       </section>
 
       <section id="checklist" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.checklist")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Typical evidence for the next application. Confirm the live list on GOV.UK.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.checklistIntro")}</p>
         <ChecklistPanel
           items={plan.checklist}
           checkedIds={profile.checkedDocumentIds}
@@ -326,10 +316,7 @@ export function Dashboard({
 
       <section id="absences" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.absences")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Log trips outside the UK. Totals are calculated per 12-month period against the usual
-          180-day ILR limit. This is not a Home Office calculation.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.absencesIntro")}</p>
         <FeatureGate feature="absences">
           <div className="mt-6">
             <AbsenceForecastPanel
@@ -354,10 +341,7 @@ export function Dashboard({
 
       <section id="whatif" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.whatif")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Test a future trip without saving it. A 180-day breach can refuse ILR even when the
-          sketched calendar date does not move.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.whatifIntro")}</p>
         <FeatureGate feature="whatif">
           <WhatIfAbsence profile={profile} asOf={plan.asOf} />
         </FeatureGate>
@@ -365,10 +349,7 @@ export function Dashboard({
 
       <section id="switch" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.switch")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          Compare staying put with switching on a date you choose. Use the cards above to apply a
-          modelled in-country switch.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.switchIntro")}</p>
         <FeatureGate feature="switch">
           <SwitchSimulator profile={profile} plan={plan} />
         </FeatureGate>
@@ -376,10 +357,7 @@ export function Dashboard({
 
       <section id="fees" className="mt-14 scroll-mt-24">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.fees")}</h2>
-        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
-          A basic total using Home Office fees from 8 April 2026. IHS years and extras can be
-          toggled; live amounts on GOV.UK always win.
-        </p>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">{t("dash.feesIntro")}</p>
         <FeeCalculator profile={profile} />
       </section>
 
