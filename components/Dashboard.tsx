@@ -3,17 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { AbsenceTracker } from "@/components/AbsenceTracker";
+import { ApplicationWindows } from "@/components/ApplicationWindows";
 import { ChecklistPanel } from "@/components/ChecklistPanel";
 import { DashboardAlerts } from "@/components/DashboardAlerts";
+import { DocumentVault } from "@/components/DocumentVault";
 import { EligibilityPanel } from "@/components/EligibilityPanel";
 import { FeeCalculator } from "@/components/FeeCalculator";
 import { PathwayStrip } from "@/components/PathwayStrip";
 import { RemindersPanel } from "@/components/RemindersPanel";
+import { ResidenceCalendar } from "@/components/ResidenceCalendar";
 import { RouteComparison } from "@/components/RouteComparison";
 import { SwitchSimulator } from "@/components/SwitchSimulator";
 import { Timeline } from "@/components/Timeline";
+import { WhatIfAbsence } from "@/components/WhatIfAbsence";
 import { LastReviewed } from "@/components/LastReviewed";
 import { ReportInaccuracyButton } from "@/components/ReportInaccuracyButton";
+import { useLocale } from "@/components/LocaleProvider";
 import { formatDaysUntil, formatGbp, formatLongDate } from "@/lib/format";
 import { getPathway } from "@/lib/pathways";
 import { getRouteForPathway } from "@/lib/routes";
@@ -33,6 +38,7 @@ export function Dashboard({
   onProfileChange: (profile: Profile) => void;
 }) {
   const [confirmReset, setConfirmReset] = useState(false);
+  const { t } = useLocale();
   const pathway = getPathway(plan.pathwayId);
   const rule = getRouteForPathway(plan.pathwayId);
 
@@ -49,7 +55,7 @@ export function Dashboard({
         </div>
         <div className="flex flex-wrap gap-2 text-sm sm:gap-3">
           <button type="button" onClick={onEdit} className="min-h-11 rounded-full border border-navy/20 px-4 py-2">
-            Edit profile
+            {t("dash.edit")}
           </button>
           <ReportInaccuracyButton routeKey={rule.key} />
           <button
@@ -66,7 +72,7 @@ export function Dashboard({
               confirmReset ? "bg-clay text-white" : "text-ink-muted"
             }`}
           >
-            {confirmReset ? "Confirm start over" : "Start over"}
+            {confirmReset ? t("dash.resetConfirm") : t("dash.reset")}
           </button>
         </div>
       </div>
@@ -74,9 +80,9 @@ export function Dashboard({
       <PathwayStrip pathwayId={plan.pathwayId} currentVisaId={profile.currentVisaId} />
 
       <div className="mt-4 rounded-xl border border-clay/25 bg-clay/10 px-4 py-3 text-sm text-clay-600">
-        Not immigration advice.{" "}
+        {t("dash.notAdvice")}{" "}
         <Link href="/disclaimer" className="underline">
-          Read the full disclaimer
+          {t("dash.disclaimer")}
         </Link>
         . Confirm everything on{" "}
         <a href={plan.route.officialUrl} className="underline" target="_blank" rel="noreferrer">
@@ -91,22 +97,28 @@ export function Dashboard({
 
       <DashboardAlerts reminders={plan.reminders} />
 
-      <nav className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-1 text-sm sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+      <nav
+        className="-mx-4 mt-8 flex gap-2 overflow-x-auto px-4 pb-1 text-sm sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+        aria-label={t("a11y.jump")}
+      >
         {[
-          ["timeline", "Timeline"],
-          ["household", "Household"],
-          ["routes", "Routes"],
-          ["checklist", "Checklist"],
-          ["absences", "Absences"],
-          ["switch", "Switch dates"],
-          ["fees", "Fees"],
-          ["eligibility", "Eligibility"],
-          ["reminders", "Reminders"],
+          ["timeline", t("nav.timeline")],
+          ["windows", t("nav.windows")],
+          ["household", t("nav.household")],
+          ["routes", t("nav.routes")],
+          ["checklist", t("nav.checklist")],
+          ["vault", t("nav.vault")],
+          ["absences", t("nav.absences")],
+          ["whatif", t("nav.whatif")],
+          ["switch", t("nav.switch")],
+          ["fees", t("nav.fees")],
+          ["eligibility", t("nav.eligibility")],
+          ["reminders", t("nav.reminders")],
         ].map(([id, label]) => (
           <a
             key={id}
             href={`#${id}`}
-            className="shrink-0 rounded-full bg-navy/10 px-3 py-2 text-navy hover:bg-navy/15"
+            className="inline-flex min-h-11 shrink-0 items-center rounded-full bg-navy/10 px-3 py-2 text-navy hover:bg-navy/15"
           >
             {label}
           </a>
@@ -170,10 +182,10 @@ export function Dashboard({
       ) : null}
 
       <section id="timeline" className="mt-12 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Timeline</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.timeline")}</h2>
         <p className="mt-2 text-sm text-ink-muted">
-          Current date, visa expiry, ILR and citizenship markers. The bar is time already spent from
-          your UK residence start.
+          Current date, visa expiry, ILR and citizenship markers, plus application windows and
+          typical decision waits. The bar is time already spent from your UK residence start.
         </p>
         <Timeline
           events={plan.timeline}
@@ -182,8 +194,17 @@ export function Dashboard({
         />
       </section>
 
+      <section id="windows" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.windows")}</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          ILR can usually be applied for up to 28 days before the qualifying date. Decision waits are
+          typical published periods, not a Home Office promise.
+        </p>
+        <ApplicationWindows windows={plan.applicationWindows} processing={plan.processingEstimates} />
+      </section>
+
       <section id="household" className="mt-14 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Household and switch chain</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.household")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Dependant ILR usually follows the main applicant after 5 years. Children born in the UK, or
           under 18 with a British parent, may register as British instead of naturalising.
@@ -232,7 +253,7 @@ export function Dashboard({
       </section>
 
       <section id="routes" className="mt-14 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Route comparison</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.routes")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Featured settlement routes plus your current path. Switch only if the planner models an
           in-country move from your current visa — it does not check whether you actually qualify.
@@ -241,7 +262,7 @@ export function Dashboard({
       </section>
 
       <section id="checklist" className="mt-14 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Document checklist</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.checklist")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Typical evidence for the next application. Confirm the live list on GOV.UK.
         </p>
@@ -257,8 +278,13 @@ export function Dashboard({
         />
       </section>
 
+      <section id="vault" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.vault")}</h2>
+        <DocumentVault checklist={plan.checklist} asOf={plan.asOf} />
+      </section>
+
       <section id="absences" className="mt-14 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Absence tracker</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.absences")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Log trips outside the UK. Totals are calculated per 12-month period against the usual
           180-day ILR limit. This is not a Home Office calculation.
@@ -270,10 +296,21 @@ export function Dashboard({
             onChange={(absences) => onProfileChange({ ...profile, absences })}
           />
         </div>
+        <h3 className="mt-10 font-serif text-xl text-navy">{t("section.calendar")}</h3>
+        <ResidenceCalendar trips={profile.absences} asOf={plan.asOf} />
+      </section>
+
+      <section id="whatif" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.whatif")}</h2>
+        <p className="mt-2 max-w-2xl text-sm text-ink-muted">
+          Test a future trip without saving it. A 180-day breach can refuse ILR even when the
+          sketched calendar date does not move.
+        </p>
+        <WhatIfAbsence profile={profile} asOf={plan.asOf} />
       </section>
 
       <section id="switch" className="mt-14 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Custom switch date</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.switch")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           Compare staying put with switching on a date you choose. Use the cards above to apply a
           modelled in-country switch.
@@ -282,7 +319,7 @@ export function Dashboard({
       </section>
 
       <section id="fees" className="mt-14 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Fee calculator</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.fees")}</h2>
         <p className="mt-2 max-w-2xl text-sm text-ink-muted">
           A basic total using Home Office fees from 8 April 2026. IHS years and extras can be
           toggled; live amounts on GOV.UK always win.
@@ -291,12 +328,12 @@ export function Dashboard({
       </section>
 
       <section id="eligibility" className="mt-14 scroll-mt-24">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">Basic eligibility checks</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.eligibility")}</h2>
         <EligibilityPanel items={plan.eligibility} check={plan.eligibilityCheck} />
       </section>
 
       <section id="reminders" className="mt-14 scroll-mt-24 pb-8">
-        <h2 className="font-serif text-2xl text-navy sm:text-3xl">All reminders</h2>
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.reminders")}</h2>
         <RemindersPanel
           reminders={plan.reminders}
           prefs={profile.reminderPrefs}

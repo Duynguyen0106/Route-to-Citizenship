@@ -31,6 +31,11 @@ import {
   ilrApplyFromDate,
   ilrEligibleDate,
 } from "./settlement";
+import {
+  buildApplicationWindows,
+  buildProcessingEstimates,
+  processingTimelineEvents,
+} from "./processing";
 
 export { ILR_EARLY_APPLY_DAYS, addCalendarYears, citizenshipEligibleDate, ilrApplyFromDate, ilrEligibleDate };
 
@@ -501,6 +506,31 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
   });
 
   const longResidenceIlrOn = longResidenceOn ? toIsoDate(longResidenceOn) : null;
+  const applicationWindows = buildApplicationWindows({
+    profile: derived,
+    route,
+    asOf,
+    ilrApplyFrom: applyFrom,
+    ilrOn: alreadyHasIlr ? null : ilrOn,
+    citizenshipOn,
+  });
+  const processingEstimates = buildProcessingEstimates({
+    profile: derived,
+    route,
+    asOf,
+    ilrApplyFrom: applyFrom,
+    ilrOn: alreadyHasIlr ? null : ilrOn,
+    citizenshipOn,
+  });
+  const timeline = [
+    ...buildTimeline(derived, route, asOf, alreadyHasIlr ? null : ilrOn, citizenshipOn, {
+      switchChain,
+      longResidenceIlrOn,
+      citizenshipPath: citizenship.kind,
+      citizenshipDetail: citizenship.detail,
+    }),
+    ...processingTimelineEvents(applicationWindows, processingEstimates),
+  ].sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 
   return {
     asOf: toIsoDate(asOf),
@@ -514,14 +544,11 @@ export function calculatePlan(profile: Profile, asOf: Date = new Date()): PlanRe
     longResidenceIlrOn,
     switchChain,
     dependantPlans,
+    applicationWindows,
+    processingEstimates,
     needsVisaExtension: Boolean(needsExt),
     extensionNote,
-    timeline: buildTimeline(derived, route, asOf, alreadyHasIlr ? null : ilrOn, citizenshipOn, {
-      switchChain,
-      longResidenceIlrOn,
-      citizenshipPath: citizenship.kind,
-      citizenshipDetail: citizenship.detail,
-    }),
+    timeline,
     eligibility,
     eligibilityCheck,
     alternatives,

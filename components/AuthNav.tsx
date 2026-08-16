@@ -2,10 +2,12 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useLocale } from "@/components/LocaleProvider";
 
 type User = { id: string; email: string; name: string | null };
 
 export function AuthNav() {
+  const { t } = useLocale();
   const [user, setUser] = useState<User | null | undefined>(undefined);
 
   useEffect(() => {
@@ -34,11 +36,11 @@ export function AuthNav() {
   if (!user) {
     return (
       <div className="flex items-center gap-3 text-sm">
-        <Link href="/login" className="text-ink-muted hover:text-navy">
-          Sign in
+        <Link href="/login" className="inline-flex min-h-11 items-center text-ink-muted hover:text-navy">
+          {t("nav.signin")}
         </Link>
-        <Link href="/register" className="rounded-full border border-navy/20 px-3 py-1.5 text-navy">
-          Create account
+        <Link href="/register" className="inline-flex min-h-11 items-center rounded-full border border-navy/20 px-3 py-1.5 text-navy">
+          {t("nav.register")}
         </Link>
       </div>
     );
@@ -47,8 +49,8 @@ export function AuthNav() {
   return (
     <div className="flex items-center gap-3 text-sm">
       <span className="hidden text-ink-muted sm:inline">{user.name || user.email}</span>
-      <button type="button" onClick={logout} className="text-ink-muted hover:text-navy">
-        Sign out
+      <button type="button" onClick={logout} className="inline-flex min-h-11 items-center text-ink-muted hover:text-navy">
+        {t("nav.signout")}
       </button>
     </div>
   );

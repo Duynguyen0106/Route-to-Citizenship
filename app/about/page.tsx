@@ -34,6 +34,13 @@ export default function AboutPage() {
           April 2026 plus a typical English-test estimate.
         </p>
         <p>
+          The timeline includes typical Home Office decision waits and application windows — for
+          example, ILR can usually be submitted up to 28 days before the qualifying date. A
+          colour-coded calendar sketches continuous residence from logged trips, and a “what if”
+          tool lets you test an extra absence without saving it. Decision waits and calendar colours
+          are estimates, not a Home Office calculation.
+        </p>
+        <p>
           Encoded rules were last reviewed on <strong>{RULES_REVIEWED_ON}</strong>. Official
           explanations live on GOV.UK, including{" "}
           <a className="underline" href="https://www.gov.uk/indefinite-leave-to-remain">
@@ -52,7 +59,9 @@ export default function AboutPage() {
         <p>
           Signed-in accounts store the plan in a local database (email, visa type, dates, absences,
           route selection, reminders). Passport numbers are not collected. Guest plans stay in this
-          browser only.
+          browser only. Optional document copies in the vault are encrypted on this device and never
+          uploaded; pasted text is scanned locally so expiry dates can populate reminders, and only
+          the last four characters of a detected identity number are kept.
         </p>
         <p>
           <Link href="/plan" className="text-navy underline">

@@ -1,10 +1,16 @@
+"use client";
+
 import Link from "next/link";
 import { GOVUK, LEGAL_NOTICE } from "@/lib/legal";
 import { RULES_REVIEWED_ON } from "@/lib/types";
 import { formatLongDate } from "@/lib/format";
 import { ReportInaccuracyButton } from "@/components/ReportInaccuracyButton";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLocale } from "@/components/LocaleProvider";
 
 export function SiteFooter() {
+  const { t } = useLocale();
+
   return (
     <footer className="border-t border-navy/10 bg-navy text-paper-100">
       <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6">
@@ -34,15 +40,16 @@ export function SiteFooter() {
         <div className="mt-6 flex flex-wrap items-center justify-between gap-3 text-xs text-paper-200/70">
           <p>Last reviewed: {formatLongDate(RULES_REVIEWED_ON)}.</p>
           <div className="flex flex-wrap items-center gap-4">
+            <LanguageSwitcher compact />
             <ReportInaccuracyButton variant="footer" />
-            <Link href="/privacy" className="hover:text-white">
-              Privacy
+            <Link href="/privacy" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("footer.privacy")}
             </Link>
-            <Link href="/disclaimer" className="hover:text-white">
-              Full disclaimer
+            <Link href="/disclaimer" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("footer.disclaimer")}
             </Link>
-            <Link href="/about" className="hover:text-white">
-              Sources
+            <Link href="/about" className="inline-flex min-h-11 items-center hover:text-white">
+              {t("footer.sources")}
             </Link>
           </div>
         </div>

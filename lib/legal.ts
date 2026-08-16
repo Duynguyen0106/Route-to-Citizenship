@@ -42,4 +42,4 @@ export const SETTLEMENT_LINKS: OfficialLink[] = [
 export const DEFAULT_LAST_REVIEWED_ON = RULES_REVIEWED_ON;
 
 export const DATA_MINIMISATION_NOTE =
-  "We store only what the planner needs: visa type, dates, nationality (for English-language exemptions), and optional account email. Never enter passport numbers, Home Office references, or biometric IDs.";
+  "We store only what the planner needs: visa type, dates, nationality (for English-language exemptions), and optional account email. Never enter passport numbers, Home Office references, or biometric IDs. Optional document copies stay in this browser only, encrypted on this device; at most the last four characters of a detected identity number are kept, and those files are never uploaded to our server.";

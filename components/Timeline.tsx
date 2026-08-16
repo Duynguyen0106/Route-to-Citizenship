@@ -13,6 +13,8 @@ const KIND_LABEL: Partial<Record<TimelineEvent["kind"], string>> = {
   visa: "Visa expiry",
   ilr: "ILR",
   citizenship: "Citizenship",
+  window: "Application window",
+  processing: "Decision wait",
 };
 
 export function Timeline({
@@ -131,7 +133,7 @@ export function Timeline({
       </svg>
 
       <ul className="mt-4 hidden flex-wrap gap-4 text-xs text-ink-muted md:flex">
-        {(["now", "visa", "ilr", "citizenship"] as const).map((kind) => (
+        {(["now", "visa", "ilr", "citizenship", "window", "processing"] as const).map((kind) => (
           <li key={kind} className="flex items-center gap-2">
             <span
               className="inline-block h-3 w-3 rounded-full"
@@ -148,6 +150,7 @@ export function Timeline({
             <li key={event.id} className="text-ink-muted">
               <span className="font-medium text-navy">{event.label}</span>
               <span className="mt-0.5 block text-xs">{formatShortDate(event.date)}</span>
+              {event.note ? <span className="mt-1 block text-xs text-ink-faint">{event.note}</span> : null}
             </li>
           ))}
         </ol>

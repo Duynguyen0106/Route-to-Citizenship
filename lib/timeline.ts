@@ -9,6 +9,8 @@ export const TIMELINE_MARKER_COLOURS: Record<TimelineEvent["kind"], string> = {
   citizenship: "#1B2A4A",
   warning: "#B85C38",
   stage: "#24365E",
+  window: "#3A7356",
+  processing: "#B08D3E",
 };
 
 export interface TimelineScale {

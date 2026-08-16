@@ -209,7 +209,7 @@ export interface TimelineEvent {
   id: string;
   label: string;
   date: string;
-  kind: "past" | "now" | "visa" | "ilr" | "citizenship" | "warning" | "stage";
+  kind: "past" | "now" | "visa" | "ilr" | "citizenship" | "warning" | "stage" | "window" | "processing";
   note?: string;
 }
 
@@ -305,6 +305,24 @@ export interface SwitchChainHop {
   note: string;
 }
 
+export interface ApplicationWindow {
+  id: string;
+  title: string;
+  opensOn: string;
+  closesOn: string | null;
+  detail: string;
+  kind: "ilr" | "extension" | "citizenship" | "switch";
+}
+
+export interface ProcessingEstimate {
+  id: string;
+  label: string;
+  applyOn: string;
+  decisionOn: string;
+  typicalWeeks: number;
+  caveat: string;
+}
+
 export interface PlanResult {
   asOf: string;
   pathwayId: PathwayId;
@@ -317,6 +335,8 @@ export interface PlanResult {
   longResidenceIlrOn: string | null;
   switchChain: SwitchChainHop[];
   dependantPlans: DependantPlan[];
+  applicationWindows: ApplicationWindow[];
+  processingEstimates: ProcessingEstimate[];
   needsVisaExtension: boolean;
   extensionNote: string | null;
   timeline: TimelineEvent[];

@@ -20,7 +20,13 @@ export default function PrivacyPage() {
           <li>stores guest plans in this browser only;</li>
           <li>
             stores signed-in plans in a local database (email, optional name, visa type, dates,
-            absences, reminders) so you can reopen them.
+            absences, reminders) so you can reopen them;
+          </li>
+          <li>
+            keeps optional document copies (passport scans, BRPs, payslips) only in this browser,
+            encrypted with a key that never leaves the device. Detected identity numbers are reduced
+            to the last four characters. Files are not uploaded to our server, and this is not a
+            cloud OCR service.
           </li>
         </ul>
         <p>
