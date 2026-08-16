@@ -172,6 +172,20 @@ export interface Profile {
   sponsorshipOverThreeYears: boolean;
   reminderPrefs: ReminderPrefs;
   checkedDocumentIds: string[];
+  englishTest: EnglishTestRecord | null;
+  lifeInUkBooking: LifeInUkBooking | null;
+}
+
+export interface EnglishTestRecord {
+  provider: "ielts-ukvi" | "trinity" | "languagecert" | "psi" | "other";
+  takenOn: string;
+  level: "A1" | "A2" | "B1" | "B2" | "C1" | "C2";
+  last4: string | null;
+}
+
+export interface LifeInUkBooking {
+  centre: string;
+  bookedOn: string;
 }
 
 export interface ReminderPrefs {

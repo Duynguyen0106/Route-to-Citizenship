@@ -140,3 +140,16 @@ model AnonymousBenchmark {
 
   @@index([pathwayId, currentVisaId])
 }
+
+/// Read-only share snapshots. Token is hashed. No vault files or passport numbers.
+model ShareLink {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  label     String
+  payload   Json
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([expiresAt])
+}

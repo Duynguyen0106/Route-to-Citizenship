@@ -1,4 +1,4 @@
-import { addDays, addMonths, isBefore } from "date-fns";
+import { addDays, addMonths, isBefore, parseISO } from "date-fns";
 import type { Profile, Reminder, VisaRoute } from "./types";
 import { englishMet, lifeInUkMet } from "./eligibility";
 import { toIsoDate } from "./dates";
@@ -70,6 +70,20 @@ export function buildReminders(options: {
         kind: "test",
         detail: "Test centres fill up. You need the pass notification for most ILR applications.",
         urgency: urgency(date, asOf),
+      });
+    }
+  }
+
+  if (profile.reminderPrefs.tests && profile.lifeInUkBooking?.bookedOn) {
+    const booked = parseISO(profile.lifeInUkBooking.bookedOn);
+    if (!Number.isNaN(booked.getTime())) {
+      reminders.push({
+        id: "life-in-uk-booking",
+        title: `Life in the UK test (${profile.lifeInUkBooking.centre})`,
+        date: profile.lifeInUkBooking.bookedOn,
+        kind: "test",
+        detail: "Confirm the appointment on GOV.UK. This planner cannot see Pearson/PSI slots.",
+        urgency: urgency(booked, asOf),
       });
     }
   }

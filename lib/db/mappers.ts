@@ -92,6 +92,8 @@ export interface PlannerState {
   lifeInUkStatus: Profile["lifeInUkStatus"];
   marriedToBritishCitizen: boolean;
   hasSettledPartner: boolean;
+  englishTest: Profile["englishTest"];
+  lifeInUkBooking: Profile["lifeInUkBooking"];
 }
 
 export function plannerStateFromProfile(profile: Profile): PlannerState {
@@ -116,6 +118,8 @@ export function plannerStateFromProfile(profile: Profile): PlannerState {
     lifeInUkStatus: profile.lifeInUkStatus,
     marriedToBritishCitizen: profile.marriedToBritishCitizen,
     hasSettledPartner: profile.hasSettledPartner,
+    englishTest: profile.englishTest,
+    lifeInUkBooking: profile.lifeInUkBooking,
   };
 }
 
@@ -204,6 +208,8 @@ export function dbProfileToPlanner(row: DbProfileShape): Profile {
     hasSettledPartner:
       state.hasSettledPartner ??
       (row.relationshipToSettled === "partner" || row.relationshipToSettled === "spouse"),
+    englishTest: state.englishTest ?? null,
+    lifeInUkBooking: state.lifeInUkBooking ?? null,
   });
 }
 

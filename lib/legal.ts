@@ -27,6 +27,18 @@ export const GOVUK = {
   euss: "https://www.gov.uk/settled-status-eu-citizens-families",
   dependants: "https://www.gov.uk/skilled-worker-visa/family-members",
   adviser: "https://www.gov.uk/find-an-immigration-adviser",
+  applyUk: "https://www.gov.uk/apply-to-come-to-the-uk",
+  viewProve: "https://www.gov.uk/view-prove-immigration-status",
+  ukviAccount: "https://www.gov.uk/evisa",
+  ihs: "https://www.gov.uk/healthcare-immigration-application",
+  ihsHowMuch: "https://www.gov.uk/healthcare-immigration-application/how-much-pay",
+  englishLanguage: "https://www.gov.uk/english-language",
+  proveEnglish: "https://www.gov.uk/guidance/prove-your-knowledge-of-english-language",
+  lifeInUk: "https://www.gov.uk/life-in-the-uk-test",
+  findTranslatorIti: "https://www.iti.org.uk/find-a-professional/find-a-translator-or-interpreter",
+  findTranslatorNrpsi: "https://www.nrpsi.org.uk/",
+  vfsUk: "https://visa.vfsglobal.com/gbp/en/gbr",
+  tlsContact: "https://uk.tlscontact.com/",
 } as const;
 
 export interface OfficialLink {
@@ -42,4 +54,4 @@ export const SETTLEMENT_LINKS: OfficialLink[] = [
 export const DEFAULT_LAST_REVIEWED_ON = RULES_REVIEWED_ON;
 
 export const DATA_MINIMISATION_NOTE =
-  "We store only what the planner needs: visa type, dates, nationality (for English-language exemptions), and optional account email. Never enter passport numbers, Home Office references, or biometric IDs. Optional document copies stay in this browser only, encrypted on this device; at most the last four characters of a detected identity number are kept, and those files are never uploaded to our server. GOV.UK polls store page titles, descriptions and update timestamps only. Opt-in benchmarks store a visa category, coarse nationality region and sketched dates — not your name or email. Guidance questions are not saved.";
+  "We store only what the planner needs: visa type, dates, nationality (for English-language exemptions), and optional account email. Never enter passport numbers, Home Office references, or biometric IDs. Optional document copies stay in this browser only, encrypted on this device; at most the last four characters of a detected identity number are kept, and those files are never uploaded to our server. GOV.UK polls store page titles, descriptions and update timestamps only. Opt-in benchmarks store a visa category, coarse nationality region and sketched dates — not your name or email. Guidance questions are not saved. Optional read-only share links store a redacted snapshot until they expire or you revoke them; passport numbers and vault files are never included.";

@@ -36,6 +36,8 @@ export function emptyProfile(): Omit<Profile, "id" | "updatedAt"> {
     sponsorshipOverThreeYears: true,
     reminderPrefs: { ...DEFAULT_REMINDER_PREFS },
     checkedDocumentIds: [],
+    englishTest: null,
+    lifeInUkBooking: null,
   };
 }
 
@@ -58,6 +60,8 @@ export function normalizeProfile(profile: Partial<Profile> & Pick<Profile, "curr
     absences: profile.absences ?? [],
     reminderPrefs: { ...DEFAULT_REMINDER_PREFS, ...profile.reminderPrefs },
     checkedDocumentIds: profile.checkedDocumentIds ?? [],
+    englishTest: profile.englishTest ?? null,
+    lifeInUkBooking: profile.lifeInUkBooking ?? null,
     dependantCount: profile.dependantCount ?? 0,
     applyFromInsideUk: profile.applyFromInsideUk ?? true,
     sponsorshipOverThreeYears: profile.sponsorshipOverThreeYears ?? true,

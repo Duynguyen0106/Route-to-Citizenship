@@ -1,6 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { remindersToIcs } from "@/lib/reminders";
+import { reminderMailto } from "@/lib/notify";
 import { formatLongDate } from "@/lib/format";
 import type { Reminder, ReminderPrefs } from "@/lib/types";
 
@@ -19,6 +21,16 @@ export function RemindersPanel({
   prefs: ReminderPrefs;
   onPrefsChange: (prefs: ReminderPrefs) => void;
 }) {
+  const [notifyNote, setNotifyNote] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/notify")
+      .then(async (response) => (await response.json()) as { available?: boolean; reason?: string | null })
+      .then((body) => {
+        if (!body.available) setNotifyNote(body.reason ?? null);
+      })
+      .catch(() => undefined);
+  }, []);
   function downloadIcs() {
     const blob = new Blob([remindersToIcs(reminders)], { type: "text/calendar" });
     const url = URL.createObjectURL(blob);
@@ -75,23 +87,55 @@ export function RemindersPanel({
             {label}
           </label>
         ))}
+        <a
+          href={reminderMailto(reminders)}
+          className="flex min-h-11 w-full items-center justify-center rounded-full border border-navy/20 px-4 py-2 text-center"
+        >
+          Email these reminders to yourself
+        </a>
+        <button
+          type="button"
+          onClick={() => {
+            void fetch("/api/notify", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ reminders }),
+            })
+              .then(async (response) => {
+                const body = (await response.json()) as { error?: string; sent?: boolean };
+                if (response.status === 401) {
+                  setNotifyNote("Sign in to send reminders to your account email. Notify is only used if this deployment has a public-sector API key.");
+                  return;
+                }
+                setNotifyNote(
+                  body.sent
+                    ? "Sent to your account email (planner reminders, not Home Office messages)."
+                    : (body.error ?? "Could not send via GOV.UK Notify."),
+                );
+              })
+              .catch(() => setNotifyNote("Could not reach the reminder service."));
+          }}
+          className="min-h-11 w-full rounded-full border border-navy/20 px-4 py-2"
+        >
+          Send to my account email
+        </button>
         <button
           type="button"
           onClick={downloadIcs}
-          className="w-full rounded-full border border-navy/20 px-4 py-2"
+          className="min-h-11 w-full rounded-full border border-navy/20 px-4 py-2"
         >
           Download calendar (.ics)
         </button>
         <button
           type="button"
           onClick={enableBrowserNotifications}
-          className="w-full rounded-full bg-navy px-4 py-2 text-paper-50"
+          className="min-h-11 w-full rounded-full bg-navy px-4 py-2 text-paper-50"
         >
           {prefs.browserNotifications ? "Browser alerts on" : "Enable browser alerts"}
         </button>
         <p className="text-xs text-ink-muted">
-          There is no email server in this MVP. Reminders run when you open the app, via calendar
-          export, or as a one-off browser notification.
+          {notifyNote ??
+            "GOV.UK Notify is not used unless an API key is configured for a public-sector deployment. SMS from UKVI partners is not available here."}
         </p>
       </aside>
     </div>

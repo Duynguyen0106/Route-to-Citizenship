@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { englishMet, lifeInUkMet } from "@/lib/eligibility";
 import { defaultIhsYears, estimateFees, FEES_FROM, FEES_SOURCE } from "@/lib/fees";
 import { formatGbp } from "@/lib/format";
+import { GOVUK } from "@/lib/legal";
 import type { Profile } from "@/lib/types";
 
 export function FeeCalculator({ profile }: { profile: Profile }) {
@@ -69,7 +70,15 @@ export function FeeCalculator({ profile }: { profile: Profile }) {
           <a href={FEES_SOURCE} className="underline" target="_blank" rel="noreferrer">
             Official fee table
           </a>
-          .
+          . IHS is paid in the official service —{" "}
+          <a href={GOVUK.ihsHowMuch} className="underline" target="_blank" rel="noreferrer">
+            how much you pay
+          </a>{" "}
+          and{" "}
+          <a href={GOVUK.ihs} className="underline" target="_blank" rel="noreferrer">
+            pay the surcharge
+          </a>
+          . GOV.UK pages cannot be embedded in this app.
         </p>
       </div>
       <aside className="space-y-3 rounded-2xl border border-navy/10 bg-paper-50 p-5 text-sm">

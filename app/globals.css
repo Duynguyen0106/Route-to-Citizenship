@@ -20,6 +20,23 @@ html {
   }
 }
 
+@media print {
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+    color: #111;
+  }
+
+  .paper-grid {
+    background: none;
+  }
+}
+
 body {
   font-family: var(--font-public-sans), "Segoe UI", "Noto Sans", "Noto Sans Arabic",
     "Noto Nastaliq Urdu", "Noto Sans Gurmukhi", system-ui, sans-serif;

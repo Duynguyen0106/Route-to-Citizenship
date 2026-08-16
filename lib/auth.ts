@@ -33,9 +33,13 @@ export async function readSessionToken(token: string): Promise<SessionUser | nul
 }
 
 export async function getSessionUser(): Promise<SessionUser | null> {
-  const token = (await cookies()).get(COOKIE)?.value;
-  if (!token) return null;
-  return readSessionToken(token);
+  try {
+    const token = (await cookies()).get(COOKIE)?.value;
+    if (!token) return null;
+    return readSessionToken(token);
+  } catch {
+    return null;
+  }
 }
 
 export async function setSessionCookie(user: SessionUser): Promise<void> {

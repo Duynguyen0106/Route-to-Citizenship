@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import { AbsenceTracker } from "@/components/AbsenceTracker";
 import { ApplicationWindows } from "@/components/ApplicationWindows";
@@ -24,6 +24,13 @@ import { RecommendationsPanel } from "@/components/RecommendationsPanel";
 import { BenchmarkPanel } from "@/components/BenchmarkPanel";
 import { GoalInterpreter } from "@/components/GoalInterpreter";
 import { GuidanceChat } from "@/components/GuidanceChat";
+import { ApplicationPackPanel } from "@/components/ApplicationPackPanel";
+import { PartnerServicesPanel } from "@/components/PartnerServicesPanel";
+import { ShareExportPanel } from "@/components/ShareExportPanel";
+import { AbsenceImportTools } from "@/components/AbsenceImportTools";
+import { SharePackView } from "@/components/SharePackView";
+import { listVaultMeta } from "@/lib/document-vault";
+import { buildSharePack } from "@/lib/share-pack";
 import { useLocale } from "@/components/LocaleProvider";
 import { formatDaysUntil, formatGbp, formatLongDate } from "@/lib/format";
 import { getPathway } from "@/lib/pathways";
@@ -47,6 +54,7 @@ export function Dashboard({
   const { t } = useLocale();
   const pathway = getPathway(plan.pathwayId);
   const rule = getRouteForPathway(plan.pathwayId);
+  const printPack = useMemo(() => buildSharePack(profile, plan, listVaultMeta()), [profile, plan]);
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
@@ -125,6 +133,9 @@ export function Dashboard({
           ["benchmarks", t("nav.benchmarks")],
           ["goals", t("nav.goals")],
           ["chat", t("nav.chat")],
+          ["apply", t("nav.apply")],
+          ["services", t("nav.services")],
+          ["share", t("nav.share")],
           ["reminders", t("nav.reminders")],
         ].map(([id, label]) => (
           <a
@@ -302,6 +313,10 @@ export function Dashboard({
           180-day ILR limit. This is not a Home Office calculation.
         </p>
         <div className="mt-6">
+          <AbsenceImportTools
+            trips={profile.absences}
+            onChange={(absences) => onProfileChange({ ...profile, absences })}
+          />
           <AbsenceTracker
             trips={profile.absences}
             qualifyingStart={profile.qualifyingResidenceStart || profile.ukEntryDate}
@@ -374,6 +389,21 @@ export function Dashboard({
         <GuidanceChat />
       </section>
 
+      <section id="apply" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.apply")}</h2>
+        <ApplicationPackPanel profile={profile} plan={plan} />
+      </section>
+
+      <section id="services" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.services")}</h2>
+        <PartnerServicesPanel profile={profile} plan={plan} onProfileChange={onProfileChange} />
+      </section>
+
+      <section id="share" className="mt-14 scroll-mt-24">
+        <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.share")}</h2>
+        <ShareExportPanel profile={profile} plan={plan} />
+      </section>
+
       <section id="reminders" className="mt-14 scroll-mt-24 pb-8">
         <h2 className="font-serif text-2xl text-navy sm:text-3xl">{t("section.reminders")}</h2>
         <RemindersPanel
@@ -382,6 +412,10 @@ export function Dashboard({
           onPrefsChange={(reminderPrefs) => onProfileChange({ ...profile, reminderPrefs })}
         />
       </section>
+
+      <div className="hidden print:block">
+        <SharePackView pack={printPack} />
+      </div>
     </div>
   );
 }

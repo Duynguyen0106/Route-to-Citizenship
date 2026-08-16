@@ -29,6 +29,10 @@ export default function PrivacyPage() {
             cloud OCR service;
           </li>
           <li>
+            stores a redacted snapshot for signed-in read-only share links (no vault files, no
+            passport numbers). Links expire and can be revoked;
+          </li>
+          <li>
             polls GOV.UK’s public Content API for page titles, descriptions and update timestamps
             (not full HTML, and not your plan);
           </li>

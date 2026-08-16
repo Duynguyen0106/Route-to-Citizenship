@@ -41,6 +41,16 @@ export default function AboutPage() {
           are estimates, not a Home Office calculation.
         </p>
         <p>
+          Official application forms stay on GOV.UK and in your UKVI account. This planner can copy
+          dates into a pack for you to paste, but it cannot pre-fill or submit a Home Office form,
+          check eVisa status, or read VFS/TLS appointment slots. English and Life in the UK tests are
+          booked on the provider or GOV.UK sites; results are saved here only if you type them.
+          Calendar (.ics) import and optional GPS can suggest absences — there is no Google, Outlook
+          or TripIt login. Reminders are calendar files, browser alerts, or your own email — GOV.UK
+          Notify is only for public-sector services. You can export a redacted JSON or PDF, or
+          (when signed in) a revocable read-only link.
+        </p>
+        <p>
           Encoded rules were last reviewed on <strong>{RULES_REVIEWED_ON}</strong>. The planner can
           poll the official GOV.UK Content API for page update timestamps (not HTML scraping) and
           keeps a versioned list of facts it actually encodes — for example the 8 April 2026 fee
