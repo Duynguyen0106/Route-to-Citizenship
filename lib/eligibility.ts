@@ -269,7 +269,7 @@ export function assessEligibility(options: {
   citizenshipOn: Date | null;
   alreadyHasIlr: boolean;
 }): EligibilityItem[] {
-  const { profile, route, rule, asOf, ilrOn, alreadyHasIlr } = options;
+  const { profile, rule, asOf, ilrOn, alreadyHasIlr } = options;
   const check = checkEligibility(profile, rule, asOf);
   const items: EligibilityItem[] = [];
   const absenceLimit = rule.absenceLimitPerYear;
