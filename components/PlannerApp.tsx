@@ -19,13 +19,29 @@ export function PlannerApp() {
     let cancelled = false;
     (async () => {
       try {
-        const me = await fetch("/api/auth/me").then((response) => response.json());
+        const meResponse = await fetch("/api/auth/me");
+        let me: { user?: { id: string } | null } = {};
+        try {
+          me = (await meResponse.json()) as { user?: { id: string } | null };
+        } catch {
+          me = {};
+        }
         if (cancelled) return;
         if (me.user) {
           setSignedIn(true);
-          const payload = await fetch("/api/plan").then((response) => response.json());
-          if (cancelled) return;
-          setProfile(payload.profile ?? null);
+          try {
+            const planResponse = await fetch("/api/plan");
+            const payload = (await planResponse.json()) as { profile?: Profile | null; error?: string };
+            if (cancelled) return;
+            if (!planResponse.ok) {
+              throw new Error(payload.error || "Could not load the plan saved to your account.");
+            }
+            setProfile(payload.profile ?? null);
+          } catch (error) {
+            if (cancelled) return;
+            setProfile(loadProfile());
+            setSaveError(error instanceof Error ? error.message : "Could not load the plan saved to your account.");
+          }
         } else {
           setSignedIn(false);
           setProfile(loadProfile());

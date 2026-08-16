@@ -88,6 +88,7 @@ export function needsExtension(
   visaExpiresOn: Date,
   ilrEligibleOn: Date | null,
 ): boolean {
+  if (Number.isNaN(visaExpiresOn.getTime())) return true;
   if (!ilrEligibleOn) {
     return true;
   }

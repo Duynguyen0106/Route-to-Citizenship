@@ -28,3 +28,8 @@ export async function readJsonBody(
 export function notFound(message: string): NextResponse {
   return NextResponse.json({ error: message }, { status: 404 });
 }
+
+export function asJsonObject(body: unknown): Record<string, unknown> | null {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return null;
+  return body as Record<string, unknown>;
+}

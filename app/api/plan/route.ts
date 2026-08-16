@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readJsonBody } from "@/lib/api/session";
+import { asJsonObject, readJsonBody } from "@/lib/api/session";
 import { getSessionUser } from "@/lib/auth";
 import {
   deletePlannerProfile,
@@ -21,11 +21,15 @@ export async function GET() {
 export async function PUT(request: Request) {
   const parsed = await readJsonBody(request);
   if (parsed.error) return parsed.error;
+  const record = asJsonObject(parsed.body);
+  if (!record) {
+    return NextResponse.json({ error: "A complete profile is required." }, { status: 400 });
+  }
   const user = await getSessionUser();
   if (!user) {
     return NextResponse.json({ error: "Sign in required." }, { status: 401 });
   }
-  const body = parsed.body as { profile?: Profile };
+  const body = record as { profile?: Profile };
   if (!body.profile?.currentVisaId || !body.profile.visaGrantedOn) {
     return NextResponse.json({ error: "A complete profile is required." }, { status: 400 });
   }

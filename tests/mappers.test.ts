@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  daysAway,
   dbProfileToPlanner,
   englishStatusToLevel,
   pathwayToRouteKey,
@@ -82,5 +83,11 @@ describe("Prisma field mapping", () => {
     expect(profile.pathwayId).toBe("skilled-worker");
     expect(profile.absences[0]?.place).toBe("India");
     expect(profile.absences[0]?.departedOn).toBe("2025-12-20");
+  });
+
+  it("counts absence days as 0 when dates are invalid", () => {
+    expect(daysAway("2025-12-20", "2026-01-10")).toBe(21);
+    expect(daysAway("", "2026-01-10")).toBe(0);
+    expect(daysAway("nope", "still-nope")).toBe(0);
   });
 });

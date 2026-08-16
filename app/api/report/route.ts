@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return badRequest("Request body must be JSON.");
   }
 
-  const parsed = validateInaccuracyReport(body as Parameters<typeof validateInaccuracyReport>[0]);
+  const parsed = validateInaccuracyReport(body);
   if ("error" in parsed) return badRequest(parsed.error);
   if (parsed.routeKey && !tryGetRouteByKey(parsed.routeKey)) {
     return badRequest("Unknown route key.");

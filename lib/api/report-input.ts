@@ -1,9 +1,13 @@
-export function validateInaccuracyReport(input: {
-  routeKey?: string | null;
-  message?: string;
-  contactEmail?: string | null;
-}): { error: string } | { routeKey: string | null; message: string; contactEmail: string | null } {
-  const message = input.message?.trim() ?? "";
+export function validateInaccuracyReport(input: unknown): { error: string } | { routeKey: string | null; message: string; contactEmail: string | null } {
+  if (!input || typeof input !== "object" || Array.isArray(input)) {
+    return { error: "Please describe the inaccuracy in at least 20 characters." };
+  }
+  const record = input as {
+    routeKey?: string | null;
+    message?: string;
+    contactEmail?: string | null;
+  };
+  const message = record.message?.trim() ?? "";
   if (message.length < 20) {
     return { error: "Please describe the inaccuracy in at least 20 characters." };
   }
@@ -14,8 +18,8 @@ export function validateInaccuracyReport(input: {
     return { error: "Do not include passport numbers. Describe the rule or page instead." };
   }
 
-  const routeKey = input.routeKey?.trim() || null;
-  const contactEmail = input.contactEmail?.trim() || null;
+  const routeKey = record.routeKey?.trim() || null;
+  const contactEmail = record.contactEmail?.trim() || null;
   if (contactEmail && !contactEmail.includes("@")) {
     return { error: "Enter a valid email address or leave it blank." };
   }

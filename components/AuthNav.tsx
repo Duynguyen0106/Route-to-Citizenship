@@ -10,8 +10,14 @@ export function AuthNav() {
 
   useEffect(() => {
     fetch("/api/auth/me")
-      .then((response) => response.json())
-      .then((body: { user: User | null }) => setUser(body.user))
+      .then(async (response) => {
+        try {
+          return (await response.json()) as { user: User | null };
+        } catch {
+          return { user: null };
+        }
+      })
+      .then((body) => setUser(body.user))
       .catch(() => setUser(null));
   }, []);
 

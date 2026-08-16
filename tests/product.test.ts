@@ -146,6 +146,14 @@ describe("API error handling and happy paths", () => {
     expect((await postReport(jsonRequest("http://localhost/api/report", "POST", undefined, "oops"))).status).toBe(400);
   });
 
+  it("rejects null or array JSON bodies without crashing", async () => {
+    expect((await postLogin(jsonRequest("http://localhost/api/auth/login", "POST", null))).status).toBe(400);
+    expect((await postLogin(jsonRequest("http://localhost/api/auth/login", "POST", []))).status).toBe(400);
+    expect((await postRegister(jsonRequest("http://localhost/api/auth/register", "POST", null))).status).toBe(400);
+    expect((await postReport(jsonRequest("http://localhost/api/report", "POST", null))).status).toBe(400);
+    expect((await putPlan(jsonRequest("http://localhost/api/plan", "PUT", []))).status).toBe(400);
+  });
+
   it("lists routes and calculates / checklists every sample profile", async () => {
     const listed = await (await getRoutes()).json();
     expect(listed.routes).toHaveLength(5);

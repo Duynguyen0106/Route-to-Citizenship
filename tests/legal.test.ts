@@ -13,6 +13,7 @@ describe("legal copy", () => {
 describe("inaccuracy reports", () => {
   it("rejects short messages and passport numbers", () => {
     expect(validateInaccuracyReport({ message: "too short" })).toMatchObject({ error: expect.any(String) });
+    expect(validateInaccuracyReport(null)).toMatchObject({ error: expect.any(String) });
     expect(
       validateInaccuracyReport({
         message: "The Skilled Worker page lists passport 12345678 incorrectly.",

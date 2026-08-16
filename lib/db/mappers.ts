@@ -115,7 +115,10 @@ export function isoDate(value: Date | string): string {
 }
 
 export function daysAway(start: string, end: string): number {
-  return Math.max(0, differenceInCalendarDays(parseISO(end), parseISO(start)));
+  const from = parseISO(start);
+  const to = parseISO(end);
+  if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) return 0;
+  return Math.max(0, differenceInCalendarDays(to, from));
 }
 
 export interface DbProfileShape {
