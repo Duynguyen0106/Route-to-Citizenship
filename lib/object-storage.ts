@@ -36,7 +36,7 @@ export function wrapClientEncryptedObject(
 }
 
 export async function putEncryptedObjectToS3(
-  _object: ClientEncryptedObject,
+  object: ClientEncryptedObject,
 ): Promise<{ stored: false; reason: string }> {
-  return { stored: false, reason: OBJECT_STORAGE_REASON };
+  return { stored: false, reason: `${OBJECT_STORAGE_REASON} (${object.schema})` };
 }

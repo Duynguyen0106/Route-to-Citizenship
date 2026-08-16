@@ -42,10 +42,10 @@ export async function dispatch(
   };
 }
 
-export async function publishToSqs(_event: DomainEvent): Promise<{ published: false; reason: string }> {
-  return { published: false, reason: EVENT_BROKER_REASON };
+export async function publishToSqs(event: DomainEvent): Promise<{ published: false; reason: string }> {
+  return { published: false, reason: `${EVENT_BROKER_REASON} (${event.type})` };
 }
 
-export async function publishToKafka(_event: DomainEvent): Promise<{ published: false; reason: string }> {
-  return { published: false, reason: EVENT_BROKER_REASON };
+export async function publishToKafka(event: DomainEvent): Promise<{ published: false; reason: string }> {
+  return { published: false, reason: `${EVENT_BROKER_REASON} (${event.type})` };
 }

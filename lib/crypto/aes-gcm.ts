@@ -44,11 +44,15 @@ export async function aesGcmEncrypt(
 }
 
 export async function aesGcmDecrypt(
-  ciphertext: BufferSource,
-  iv: BufferSource,
+  ciphertext: Uint8Array,
+  iv: Uint8Array,
   key: CryptoKey,
   cryptoObj: Crypto = globalThis.crypto,
 ): Promise<Uint8Array> {
-  const plain = await cryptoObj.subtle.decrypt({ name: "AES-GCM", iv }, key, ciphertext);
+  const plain = await cryptoObj.subtle.decrypt(
+    { name: "AES-GCM", iv: iv as BufferSource },
+    key,
+    ciphertext as BufferSource,
+  );
   return new Uint8Array(plain);
 }
